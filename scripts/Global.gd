@@ -155,6 +155,7 @@ func unregister_game_ui():
 	print("🗑️ Game UI удален из Global")
 
 # Функция для регистрации игрока
+# Функция для регистрации игрока
 func register_player(player_node):
 	if player_node == null:
 		print("❌ Попытка зарегистрировать null игрока!")
@@ -164,6 +165,9 @@ func register_player(player_node):
 	
 	if player_node is Node:
 		print("✅ Игрок зарегистрирован: ", player_node.name)
+		
+		# ВАЖНО: Применяем артефакты сразу после регистрации
+		apply_all_artifacts_to_player()
 	else:
 		print("❌ Player node не является Node!")
 
@@ -224,3 +228,164 @@ func debug_print_state():
 		print("Character data keys: ", character_data.keys())
 	print("Character scenes: ", character_player_scenes)
 	print("==========================")
+# ============================================
+# СИСТЕМА АРТЕФАКТОВ
+# ============================================
+
+# Собранные артефакты игрока
+var collected_artifacts: Array = []
+
+# База данных всех артефактов
+var artifacts_database = {
+	"hermes_wings": {
+		"name": "Крылья Гермеса",
+		"description": "Легендарные крылатые сандалии, дарующие способность к двойному прыжку",
+		"icon": "res://assets/artifacts/hermes_wings.png",
+		"ability": "double_jump",
+		"rarity": "legendary",
+		"effect_text": "Позволяет совершить второй прыжок в воздухе"
+	},
+	"griffin_feather": {
+		"name": "Перо Грифона",
+		"description": "Магическое перо мифического существа, позволяющее парить в воздухе",
+		"icon": "res://assets/artifacts/griffin_feather.png",
+		"ability": "double_jump",
+		"rarity": "epic",
+		"effect_text": "Дарует возможность двойного прыжка"
+	},
+	"wind_ring": {
+		"name": "Кольцо Ветра",
+		"description": "Древнее кольцо с силой воздушной стихии",
+		"icon": "res://assets/artifacts/wind_ring.png",
+		"ability": "double_jump",
+		"rarity": "rare",
+		"effect_text": "Усиливает прыжки, позволяя прыгать дважды"
+	},
+	"eagle_amulet": {
+		"name": "Амулет Орла",
+		"description": "Амулет с духом великого орла",
+		"icon": "res://assets/artifacts/eagle_amulet.png",
+		"ability": "double_jump",
+		"rarity": "epic",
+		"effect_text": "Дух орла помогает взлететь выше"
+	},
+	"dash_boots": {
+		"name": "Сапоги Рывка",
+		"description": "Магические сапоги увеличивающие скорость",
+		"icon": "res://assets/artifacts/dash_boots.png",
+		"ability": "dash",
+		"rarity": "rare",
+		"effect_text": "Увеличивает скорость передвижения на 30%"
+	},
+	"health_crystal": {
+		"name": "Кристалл Здоровья",
+		"description": "Светящийся кристалл усиливающий жизненную силу",
+		"icon": "res://assets/artifacts/health_crystal.png",
+		"ability": "max_health",
+		"rarity": "common",
+		"effect_text": "Увеличивает максимальное здоровье на 20"
+	}
+}
+
+# Сигнал для уведомления об артефакте
+signal artifact_collected(artifact_id: String)
+
+# Функция проверки наличия артефакта
+func has_artifact(artifact_id: String) -> bool:
+	return collected_artifacts.has(artifact_id)
+
+# Функция проверки наличия способности
+func has_ability(ability_name: String) -> bool:
+	for artifact_id in collected_artifacts:
+		if artifacts_database.has(artifact_id):
+			var artifact = artifacts_database[artifact_id]
+			if artifact.has("ability") and artifact["ability"] == ability_name:
+				return true
+	return false
+
+# Функция добавления артефакта
+func collect_artifact(artifact_id: String) -> bool:
+	if not artifacts_database.has(artifact_id):
+		print("❌ Артефакт не найден в базе: ", artifact_id)
+		return false
+	
+	if collected_artifacts.has(artifact_id):
+		print("⚠️ Артефакт уже собран: ", artifact_id)
+		return false
+	
+	collected_artifacts.append(artifact_id)
+	var artifact = artifacts_database[artifact_id]
+	print("✨ Получен артефакт: ", artifact["name"])
+	
+	# Применяем эффект к текущему игроку
+	if current_player:
+		apply_artifact_effect(artifact_id)
+	
+	# Отправляем сигнал
+	artifact_collected.emit(artifact_id)
+	return true
+
+# Функция применения эффекта артефакта
+# Функция применения эффекта артефакта
+func apply_artifact_effect(artifact_id: String):
+	if not current_player:
+		print("⚠️ current_player is null, cannot apply artifact")
+		return
+	
+	if not artifacts_database.has(artifact_id):
+		print("❌ Артефакт не найден в базе: ", artifact_id)
+		return
+	
+	var artifact = artifacts_database[artifact_id]
+	
+	print("🎁 Применяем эффект артефакта: ", artifact["name"])
+	
+	match artifact["ability"]:
+		"double_jump":
+			# ИСПРАВЛЕНО: используем "in" вместо has()
+			if "enable_double_jump" in current_player:
+				current_player.enable_double_jump = true
+				print("🦘 Двойной прыжок активирован!")
+			else:
+				print("⚠️ Переменная enable_double_jump не найдена у персонажа")
+		
+		"dash":
+			if "base_speed" in current_player and "current_speed" in current_player:
+				current_player.base_speed = int(current_player.base_speed * 1.3)
+				current_player.current_speed = current_player.base_speed
+				print("⚡ Скорость увеличена до: ", current_player.current_speed)
+			else:
+				print("⚠️ Переменные скорости не найдены у персонажа")
+		
+		"max_health":
+			if "max_health" in current_player and "current_health" in current_player:
+				current_player.max_health += 20
+				current_player.current_health += 20
+				if current_player.has_signal("health_changed"):
+					current_player.health_changed.emit(current_player.current_health)
+				print("❤️ Здоровье увеличено до: ", current_player.max_health)
+			else:
+				print("⚠️ Переменные здоровья не найдены у персонажа")
+		
+		_:
+			print("⚠️ Неизвестная способность: ", artifact["ability"])
+
+# Функция применения всех артефактов к игроку
+func apply_all_artifacts_to_player():
+	if not current_player:
+		return
+	
+	print("🎁 Применяем артефакты к игроку...")
+	for artifact_id in collected_artifacts:
+		apply_artifact_effect(artifact_id)
+
+# Функция получения данных артефакта
+func get_artifact_data(artifact_id: String):
+	if artifacts_database.has(artifact_id):
+		return artifacts_database[artifact_id]
+	return null
+
+# Функция сброса артефактов (для новой игры)
+func reset_artifacts():
+	collected_artifacts.clear()
+	print("🔄 Артефакты сброшены")

@@ -37,7 +37,13 @@ var max_speed: float = 300.0
 var acceleration: float = 1500.0
 var friction: float = 1200.0
 var jump_velocity: float = -400.0
+
+# СИСТЕМА СПОСОБНОСТЕЙ (управляется артефактами)
+var enable_double_jump: bool = false  # Включается при получении артефакта
 var has_double_jumped: bool = false
+var can_double_jump: bool = false
+var coyote_time: float = 0.1
+var coyote_timer: float = 0.0
 
 # Ноды
 var animated_sprite: AnimatedSprite2D
@@ -65,12 +71,28 @@ func _ready():
 	else:
 		print("⚠️ PlayerController не найден для: ", character_name)
 	
+	# Применяем артефакты из Global
+	call_deferred("apply_artifacts")
+	
 	# Запускаем анимацию покоя
 	if animated_sprite:
 		if animated_sprite.sprite_frames != null and animated_sprite.sprite_frames.has_animation("idle"):
 			animated_sprite.play("idle")
 		else:
 			print("⚠️ Нет анимации idle или SpriteFrames для: ", character_name)
+
+func apply_artifacts():
+	"""Применяем все собранные артефакты к персонажу"""
+	if Global:
+		Global.apply_all_artifacts_to_player()
+		
+		# Проверяем наличие двойного прыжка
+		if Global.has_ability("double_jump"):
+			enable_double_jump = true
+			print("🦘 Двойной прыжок доступен для ", character_name)
+		else:
+			enable_double_jump = false
+			print("🚫 Двойной прыжок недоступен для ", character_name)
 
 func _physics_process(delta):
 	if is_dead:
@@ -79,8 +101,12 @@ func _physics_process(delta):
 	# Применяем гравитацию
 	if not is_on_floor():
 		velocity.y += gravity * delta
+		if coyote_timer > 0:
+			coyote_timer -= delta
 	else:
 		has_double_jumped = false
+		can_double_jump = false
+		coyote_timer = coyote_time
 
 	handle_movement(delta)
 	handle_animations()
@@ -112,30 +138,46 @@ func handle_movement(delta):
 	if not is_blocking:
 		if direction != 0:
 			velocity.x = move_toward(velocity.x, direction * current_speed, acceleration * delta)
-			# Поворачиваем спрайт в направлении движения
 			if animated_sprite:
 				animated_sprite.flip_h = direction < 0
 		else:
 			velocity.x = move_toward(velocity.x, 0, friction * delta)
 	else:
-		# Во время блока замедляемся
 		velocity.x = move_toward(velocity.x, 0, friction * delta * 2)
 	
-	# ИСПРАВЛЕННАЯ логика прыжков
+	# ПРЫЖКИ С ПРОВЕРКОЙ АРТЕФАКТА
 	if is_jumping and not is_blocking:
-		if is_on_floor():
+		# Обычный прыжок с земли
+		if is_on_floor() or coyote_timer > 0:
 			velocity.y = jump_velocity
+			can_double_jump = enable_double_jump  # Разрешаем если есть артефакт
 			has_double_jumped = false
-		elif not has_double_jumped:
+			coyote_timer = 0
+			print("🦘 ", character_name, " прыгает!")
+		# Двойной прыжок - ТОЛЬКО ЕСЛИ ЕСТЬ АРТЕФАКТ
+		elif enable_double_jump and can_double_jump and not has_double_jumped:
 			velocity.y = jump_velocity * 0.8
 			has_double_jumped = true
+			can_double_jump = false
+			print("🦘✨ ", character_name, " использует двойной прыжок!")
+			# Визуальный эффект
+			_show_double_jump_effect()
+
+func _show_double_jump_effect():
+	"""Визуальный эффект при двойном прыжке"""
+	if animated_sprite:
+		# Небольшая вспышка
+		var original_modulate = animated_sprite.modulate
+		animated_sprite.modulate = Color(1.5, 1.5, 2.0, 1.0)  # Голубоватое свечение
+		
+		var tween = create_tween()
+		tween.tween_property(animated_sprite, "modulate", original_modulate, 0.3)
 
 func handle_animations():
 	if is_dead:
 		play_animation("death")
 		return
 	
-	# ИСПРАВЛЕНО: проверяем блок ПЕРЕД атакой
 	if is_blocking:
 		play_animation("shield_defence")
 		return
@@ -164,7 +206,6 @@ func handle_animations():
 
 func play_animation(anim_name: String):
 	if animated_sprite and animated_sprite.sprite_frames != null:
-		# Проверяем разные варианты написания
 		var actual_anim_name = anim_name
 		if anim_name == "shield_defence" and animated_sprite.sprite_frames.has_animation("shield defence"):
 			actual_anim_name = "shield defence"
@@ -175,7 +216,7 @@ func play_animation(anim_name: String):
 			if animated_sprite.animation != actual_anim_name:
 				animated_sprite.play(actual_anim_name)
 		else:
-			if anim_name not in ["fall", "jump"]:  # Не спамим для частых анимаций
+			if anim_name not in ["fall", "jump"]:
 				print("❌ Анимация '", anim_name, "' не найдена для ", character_name)
 
 func get_available_animations() -> Array:
@@ -225,7 +266,6 @@ func slide():
 	print("🔽 ", character_name, " базовый подкат")
 	pass
 
-# Базовые методы для блока
 func block():
 	pass
 

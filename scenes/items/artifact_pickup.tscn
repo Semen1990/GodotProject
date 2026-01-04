@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://ca65ny24d3vpv"]
+
+[ext_resource type="Script" uid="uid://c0y2cqfgpq40l" path="res://scripts/artifact_pickup.gd" id="1_37fbc"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_gobwt"]
+radius = 30.0
+
+[node name="ArtifactPickup" type="Area2D"]
+script = ExtResource("1_37fbc")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_gobwt")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+
+[node name="Label" type="Label" parent="."]
+offset_left = -21.0
+offset_top = -56.0
+offset_right = 19.0
+offset_bottom = -33.0
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="."]
