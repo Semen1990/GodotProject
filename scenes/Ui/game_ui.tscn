@@ -1,0 +1,90 @@
+[gd_scene load_steps=2 format=3 uid="uid://6lwt8fuq8uah"]
+
+[ext_resource type="Script" uid="uid://yqteppxep2oc" path="res://scripts/game_ui.gd" id="1_lfcoq"]
+
+[node name="GameUI" type="CanvasLayer"]
+script = ExtResource("1_lfcoq")
+
+[node name="MainContainer" type="MarginContainer" parent="."]
+offset_left = 1.0
+offset_top = 2.0
+offset_right = 537.0
+offset_bottom = 58.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = -20
+theme_override_constants/margin_bottom = -20
+
+[node name="MainVertical" type="VBoxContainer" parent="MainContainer"]
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="StatsContainer" type="HBoxContainer" parent="MainContainer/MainVertical"]
+layout_mode = 2
+
+[node name="HealthSection" type="VBoxContainer" parent="MainContainer/MainVertical/StatsContainer"]
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="HealthLabel" type="Label" parent="MainContainer/MainVertical/StatsContainer/HealthSection"]
+layout_mode = 2
+text = "ЗДОРОВЬЕ"
+horizontal_alignment = 1
+
+[node name="HealthContainer" type="HBoxContainer" parent="MainContainer/MainVertical/StatsContainer/HealthSection"]
+layout_mode = 2
+
+[node name="HealthIcon" type="TextureRect" parent="MainContainer/MainVertical/StatsContainer/HealthSection/HealthContainer"]
+layout_mode = 2
+
+[node name="HealthBar" type="TextureProgressBar" parent="MainContainer/MainVertical/StatsContainer/HealthSection/HealthContainer"]
+custom_minimum_size = Vector2(200, 20)
+layout_mode = 2
+value = 100.0
+
+[node name="ManaSection" type="VBoxContainer" parent="MainContainer/MainVertical/StatsContainer"]
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="ManaLabel" type="Label" parent="MainContainer/MainVertical/StatsContainer/ManaSection"]
+layout_mode = 2
+text = "МАНА"
+horizontal_alignment = 1
+
+[node name="ManaContainer" type="HBoxContainer" parent="MainContainer/MainVertical/StatsContainer/ManaSection"]
+layout_mode = 2
+
+[node name="ManaIcon" type="TextureRect" parent="MainContainer/MainVertical/StatsContainer/ManaSection/ManaContainer"]
+layout_mode = 2
+
+[node name="ManaBar" type="TextureProgressBar" parent="MainContainer/MainVertical/StatsContainer/ManaSection/ManaContainer"]
+custom_minimum_size = Vector2(200, 20)
+layout_mode = 2
+value = 100.0
+
+[node name="ArmorSection" type="VBoxContainer" parent="MainContainer/MainVertical/StatsContainer"]
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="ArmorLabel" type="Label" parent="MainContainer/MainVertical/StatsContainer/ArmorSection"]
+layout_mode = 2
+text = "БРОНЯ"
+horizontal_alignment = 1
+
+[node name="ArmorContainer" type="HBoxContainer" parent="MainContainer/MainVertical/StatsContainer/ArmorSection"]
+layout_mode = 2
+
+[node name="ArmorIcon" type="TextureRect" parent="MainContainer/MainVertical/StatsContainer/ArmorSection/ArmorContainer"]
+layout_mode = 2
+
+[node name="ArmorValue" type="Label" parent="MainContainer/MainVertical/StatsContainer/ArmorSection/ArmorContainer"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+
+[node name="KeysContainer" type="HBoxContainer" parent="MainContainer/MainVertical"]
+layout_mode = 2

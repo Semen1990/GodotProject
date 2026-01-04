@@ -1,0 +1,44 @@
+[gd_scene load_steps=3 format=3 uid="uid://cyba2cbpi2wmd"]
+
+[ext_resource type="Script" uid="uid://dem7jj6y1dhfb" path="res://scripts/main_menu.gd" id="1_7d3fr"]
+[ext_resource type="Texture2D" uid="uid://dey8r1wiicpdo" path="res://assets/background/Lucid_Origin_pixel_art_game_background_sideview_castle_interio_3.jpg" id="1_n47tl"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_7d3fr")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -5.0
+offset_top = -3.0
+offset_right = -5.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_n47tl")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+texture_filter = 1
+layout_mode = 0
+offset_left = 845.0
+offset_top = 461.0
+offset_right = 975.0
+offset_bottom = 543.0
+scale = Vector2(2, 2)
+theme_override_constants/separation = 20
+
+[node name="Start" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Начать игру"
+
+[node name="Exit" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Выйти из игры"

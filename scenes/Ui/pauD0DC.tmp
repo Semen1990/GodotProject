@@ -1,0 +1,56 @@
+[gd_scene load_steps=2 format=3 uid="uid://21lr5hq12dg8"]
+
+[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_glunw"]
+
+[node name="CanvasLayer" type="CanvasLayer"]
+script = ExtResource("1_glunw")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.000113828, 0.000113828, 0.000113828, 1)
+
+[node name="Panel" type="Panel" parent="."]
+custom_minimum_size = Vector2(300, 150)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -154.0
+offset_top = -69.0
+offset_right = 146.0
+offset_bottom = 81.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 103.0
+offset_top = 7.0
+offset_right = 156.0
+offset_bottom = 31.0
+text = "ПАУЗА"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 0
+offset_left = 41.0
+offset_top = 39.0
+offset_right = 236.0
+offset_bottom = 111.0
+theme_override_constants/separation = 10
+
+[node name="Button" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Продолжить"
+
+[node name="Button2" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Выйти в главное меню"
+
+[connection signal="pressed" from="Panel/VBoxContainer/Button" to="." method="_on_continue_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/Button2" to="." method="_on_menu_pressed"]

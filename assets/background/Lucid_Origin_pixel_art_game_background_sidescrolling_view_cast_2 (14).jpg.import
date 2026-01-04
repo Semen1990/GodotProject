@@ -1,0 +1,34 @@
+[remap]
+
+importer="texture"
+type="CompressedTexture2D"
+uid="uid://bllirlnx660jk"
+path="res://.godot/imported/Lucid_Origin_pixel_art_game_background_sidescrolling_view_cast_2 (14).jpg-bd6c393c22d2525125994c39eacca591.ctex"
+metadata={
+"vram_texture": false
+}
+
+[deps]
+
+source_file="res://assets/background/Lucid_Origin_pixel_art_game_background_sidescrolling_view_cast_2 (14).jpg"
+dest_files=["res://.godot/imported/Lucid_Origin_pixel_art_game_background_sidescrolling_view_cast_2 (14).jpg-bd6c393c22d2525125994c39eacca591.ctex"]
+
+[params]
+
+compress/mode=0
+compress/high_quality=false
+compress/lossy_quality=0.7
+compress/hdr_compression=1
+compress/normal_map=0
+compress/channel_pack=0
+mipmaps/generate=false
+mipmaps/limit=-1
+roughness/mode=0
+roughness/src_normal=""
+process/fix_alpha_border=true
+process/premult_alpha=false
+process/normal_map_invert_y=false
+process/hdr_as_srgb=false
+process/hdr_clamp_exposure=false
+process/size_limit=0
+detect_3d/compress_to=1
