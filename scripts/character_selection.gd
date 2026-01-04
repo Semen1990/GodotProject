@@ -26,28 +26,27 @@ func initialize_nodes():
 	characters_container = get_node_or_null("CharactersContainer")
 	description_panel = get_node_or_null("DescriptionPanel")
 	
-	# Ищем StartButton в разных возможных местах
-	start_button = get_node_or_null("StartButton")
+	# ИСПРАВЛЕНО: ищем кнопку в правильных местах
+	start_button = get_node_or_null("DescriptionPanel/MarginContainer/VBoxContainer/StartButton")
+	
+	if start_button == null:
+		start_button = get_node_or_null("StartButton")
+	
 	if start_button == null:
 		start_button = get_node_or_null("DescriptionPanel/StartButton")
-	if start_button == null:
-		start_button = get_node_or_null("MarginContainer/StartButton")
-	if start_button == null:
-		start_button = get_node_or_null("VBoxContainer/StartButton")
-	if start_button == null:
-		start_button = get_node_or_null("DescriptionPanel/MarginContainer/VBoxContainer/StartButton")
 	
-	# Если кнопка все еще не найдена, создадим ее программно
-	if start_button == null:
-		print("❌ StartButton not found, creating one programmatically")
-		start_button = Button.new()
-		start_button.text = "Начать игру"
-		start_button.name = "StartButton"
-		add_child(start_button)
-		start_button.position = Vector2(500, 600)  # Позиция по умолчанию
+	# ВАЖНО: Подключаем сигнал если кнопка найдена
+	if start_button:
+		print("✅ StartButton найдена!")
+		# Отключаем все старые подключения
+		if start_button.pressed.is_connected(_on_start_button_pressed):
+			start_button.pressed.disconnect(_on_start_button_pressed)
+		# Подключаем заново
 		start_button.pressed.connect(_on_start_button_pressed)
+	else:
+		print("❌ StartButton НЕ НАЙДЕНА в сцене!")
 	
-	# Получаем остальные UI элементы если description_panel существует
+	# Получаем остальные UI элементы
 	if description_panel:
 		character_name_label = get_node_or_null("DescriptionPanel/MarginContainer/VBoxContainer/CharacterName")
 		health_value = get_node_or_null("DescriptionPanel/MarginContainer/VBoxContainer/StatsContainer/HealthContainer/HealthValue")
@@ -55,11 +54,9 @@ func initialize_nodes():
 		armor_value = get_node_or_null("DescriptionPanel/MarginContainer/VBoxContainer/StatsContainer/ArmorContainer/ArmorValue")
 		abilities_list = get_node_or_null("DescriptionPanel/MarginContainer/VBoxContainer/AbilitiesList")
 	
-	# Отладочная информация
-	print("CharactersContainer: ", characters_container != null)
-	print("DescriptionPanel: ", description_panel != null)
-	print("StartButton: ", start_button != null)
-	print("CharacterNameLabel: ", character_name_label != null)
+	print("📊 CharactersContainer: ", characters_container != null)
+	print("📊 DescriptionPanel: ", description_panel != null)
+	print("📊 StartButton: ", start_button != null)
 
 func initialize_characters():
 	print("=== 🔍 ИНИЦИАЛИЗАЦИЯ ПЕРСОНАЖЕЙ ===")
@@ -233,16 +230,25 @@ func _on_start_button_pressed():
 		OS.alert("Выберите персонажа!", "Внимание")
 
 func get_character_key(character_name: String) -> String:
+	"""Преобразует отображаемое имя в ключ для Global"""
+	print("🔑 Получаем ключ для: ", character_name)
+	
+	var key = ""
 	match character_name:
 		"Воин":
-			return "warrior"
+			key = "warrior"
 		"Берсерк":
-			return "berserk" 
+			key = "berserk"
 		"Разбойник":
-			return "rogue"
+			key = "rogue"
 		"Паладин":
-			return "paladin"
-	return "warrior" # fallback
+			key = "paladin"
+		_:
+			print("⚠️ Неизвестное имя персонажа: ", character_name)
+			key = "warrior"  # Fallback
+	
+	print("✅ Ключ: ", key)
+	return key
 
 func _on_back_button_pressed():
 	print("🔙 BACK BUTTON PRESSED")

@@ -27,20 +27,18 @@ func heal():
 	if current_mana >= 10 and heal_cooldown <= 0 and not is_attacking and not is_blocking and not is_sliding:
 		is_casting = true
 		current_mana -= 10
+		mana_changed.emit(current_mana)
 		
-		# Проигрываем анимацию заклинания
 		play_animation("spellcast")
-		print("✨ Паладин произносит заклинание исцеления!")
+		print("✨ Паладин лечится!")
 		
-		# Ждем окончания анимации
 		if animated_sprite:
 			await animated_sprite.animation_finished
 		
-		# Восстанавливаем здоровье после анимации
 		current_health = min(current_health + 25, max_health)
 		heal_cooldown = 5.0
 		health_changed.emit(current_health)
 		is_casting = false
 		
-		print("✨ Паладин исцеляет себя! Здоровье: ", current_health, "/", max_health)
+		print("❤️ Здоровье: ", current_health, "/", max_health)
 		handle_animations()

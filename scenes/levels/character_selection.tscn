@@ -5,13 +5,13 @@
 [ext_resource type="PackedScene" uid="uid://bxkhxb22c1a3r" path="res://scenes/characters/berserk.tscn" id="3_pjefg"]
 [ext_resource type="PackedScene" uid="uid://c2f3brcpnbfmq" path="res://scenes/characters/rogue.tscn" id="3_ytn4t"]
 [ext_resource type="PackedScene" uid="uid://t7vi0ab1x20r" path="res://scenes/characters/paladin.tscn" id="4_8u4g5"]
-[ext_resource type="PackedScene" uid="uid://blg16q5rxnvrw" path="res://scenes/characters/warriors.tscn" id="4_gvd7t"]
+[ext_resource type="PackedScene" uid="uid://blg16q5rxnvrw" path="res://scenes/characters/warrior.tscn" id="4_gvd7t"]
 [ext_resource type="PackedScene" uid="uid://ceck3rjiaby11" path="res://scenes/Ui/simple_pause_menu.tscn" id="6_corwa"]
 [ext_resource type="Texture2D" uid="uid://depyifnyk23en" path="res://assets/icon/heart.jpg" id="6_k67mm"]
 [ext_resource type="Texture2D" uid="uid://gp3lyexce4j5" path="res://assets/icon/shield.png" id="7_100ye"]
 [ext_resource type="Texture2D" uid="uid://defwvenqtljdy" path="res://assets/icon/mana.png" id="8_m6x4y"]
 
-[node name="CharacterSelectio" type="CanvasLayer"]
+[node name="CharacterSelection" type="CanvasLayer"]
 script = ExtResource("1_cdix0")
 
 [node name="Background" type="TextureRect" parent="."]
@@ -148,21 +148,22 @@ layout_mode = 2
 layout_mode = 2
 alignment = 1
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-
-[node name="StartButton" type="Button" parent="CanvasLayer"]
+[node name="StartButton" type="Button" parent="DescriptionPanel"]
 texture_filter = 1
+layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 731.0
-offset_top = -137.0
-offset_right = -963.66675
-offset_bottom = -106.0
+offset_left = -766.0
+offset_top = 75.0
+offset_right = -1058.0
+offset_bottom = 106.0
 grow_horizontal = 2
 grow_vertical = 0
 scale = Vector2(3, 3)
 text = "Начать игру"
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="PauseMenu" parent="." instance=ExtResource("6_corwa")]

@@ -1,7 +1,5 @@
 extends "res://scripts/game_characters/base_game_character.gd"
 
-var original_scale: Vector2 = Vector2.ONE
-
 func _ready():
 	character_name = "Берсерк"
 	max_health = 120
@@ -16,21 +14,12 @@ func _ready():
 	
 	print("🔪 Берсерк наполнен яростью!")
 	super()
-	
-	# Сохраняем оригинальный масштаб
-	if animated_sprite:
-		original_scale = animated_sprite.scale
-
-func _physics_process(delta):
-	super(delta)
-	# ФИКСИРУЕМ МАСШТАБ - решаем проблему уменьшения
-	if animated_sprite:
-		animated_sprite.scale = original_scale
 
 func take_damage(amount: int):
+	# Ярость при низком здоровье
 	if current_health < max_health * 0.3:
 		var reduced_amount = int(amount * 0.7)
-		print("🛡️ Ярость защищает берсерка! Урон снижен: ", reduced_amount)
+		print("🛡️ Ярость защищает! Урон: ", amount, " → ", reduced_amount)
 		super.take_damage(reduced_amount)
 	else:
 		super.take_damage(amount)

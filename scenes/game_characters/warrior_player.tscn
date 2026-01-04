@@ -441,7 +441,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_34kjh")
 }],
-"loop": true,
+"loop": false,
 "name": &"shield_defence",
 "speed": 7.0
 }, {
@@ -476,7 +476,7 @@ metadata/_edit_group_ = true
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_wdn4x")
-animation = &"death"
+animation = &"shield_defence"
 autoplay = "idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

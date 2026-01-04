@@ -6,7 +6,7 @@ var selected_character = null
 # Данные персонажей для меню выбора
 var character_data = {}
 
-# ПУТИ К ИГРОВЫМ ПЕРСОНАЖАМ - ИСПРАВЛЕНЫ КЛЮЧИ
+# ПУТИ К ИГРОВЫМ ПЕРСОНАЖАМ
 var character_player_scenes = {
 	"warrior": "res://scenes/game_characters/warrior_player.tscn",
 	"berserk": "res://scenes/game_characters/berserk_player.tscn",
@@ -34,7 +34,7 @@ var game_settings = {
 	"fullscreen": true
 }
 
-# Резервные данные персонажей на случай ошибки загрузки
+# Резервные данные персонажей
 var fallback_character_data = {
 	"warrior": {
 		"name": "Воин",
@@ -80,49 +80,20 @@ var fallback_character_data = {
 
 func _ready():
 	print("🌍 Global.gd loaded!")
-	
-	# Загружаем данные персонажей
 	load_character_data()
-	
-	# Загружаем настройки
 	load_settings()
-	
-	# Проверяем существование сцены уровня
-	check_level_scene()
-
-func check_level_scene():
-	var level_path = "res://scenes/levels/level1.tscn"
-	if ResourceLoader.exists(level_path):
-		print("✅ Level scene exists: ", level_path)
-	else:
-		print("❌ Level scene NOT found: ", level_path)
-		# Создаем простой уровень для тестирования
-		create_test_level()
-
-func create_test_level():
-	print("🛠️ Creating test level...")
-	# Эта функция может создать простой уровень если основной не найден
-	# Пока просто выводим сообщение
-	print("⚠️ Please create level at: res://scenes/levels/level1.tscn")
-
-# ... остальной код без изменений ...
 
 func load_character_data():
-	# Загружаем данные персонажей из character_data.gd
 	var data_script = load("res://scripts/character_data.gd")
 	if data_script:
-		# Используем статический метод для получения данных
 		character_data = data_script.get_characters()
 		print("✅ Character data loaded! Count: ", character_data.size())
-		
-		# Проверяем что все персонажи есть в данных
 		validate_character_data()
 	else:
-		print("❌ ERROR: Failed to load character_data.gd script, using fallback data")
+		print("❌ ERROR: Failed to load character_data.gd, using fallback")
 		character_data = fallback_character_data
 
 func validate_character_data():
-	# Проверяем наличие всех необходимых персонажей
 	var required_characters = ["warrior", "berserk", "rogue", "paladin"]
 	var missing_characters = []
 	
@@ -132,7 +103,6 @@ func validate_character_data():
 	
 	if missing_characters.size() > 0:
 		print("⚠️ Missing character data: ", missing_characters)
-		# Добавляем недостающие данные из резервных
 		for char_key in missing_characters:
 			if fallback_character_data.has(char_key):
 				character_data[char_key] = fallback_character_data[char_key]
@@ -141,21 +111,30 @@ func validate_character_data():
 func load_settings():
 	print("⚙️ Default settings loaded")
 
-# Функция для получения пути к сцене персонажа
+# ЕДИНСТВЕННАЯ правильная функция для получения пути
 func get_character_scene_path(character_key: String) -> String:
-	if character_player_scenes.has(character_key):
-		return character_player_scenes[character_key]
+	print("🔍 Получаем путь для персонажа: ", character_key)
+	
+	if not character_player_scenes.has(character_key):
+		print("❌ Ключ не найден в character_player_scenes: ", character_key)
+		print("📋 Доступные ключи: ", character_player_scenes.keys())
+		return ""
+	
+	var path = character_player_scenes[character_key]
+	print("📁 Путь к сцене: ", path)
+	
+	# Проверяем существование файла
+	if ResourceLoader.exists(path):
+		print("✅ Файл существует!")
+		return path
 	else:
-		print("❌ Character scene path not found for: ", character_key)
+		print("❌ ФАЙЛ НЕ НАЙДЕН: ", path)
 		return ""
 
 # Функция для проверки существования сцены персонажа
 func character_scene_exists(character_key: String) -> bool:
 	var path = get_character_scene_path(character_key)
-	if path == "":
-		return false
-	
-	return ResourceLoader.exists(path)
+	return path != ""
 
 # Функция для загрузки сцены персонажа
 func load_character_scene(character_key: String):
@@ -163,11 +142,7 @@ func load_character_scene(character_key: String):
 	if path == "":
 		return null
 	
-	if ResourceLoader.exists(path):
-		return load(path)
-	else:
-		print("❌ Character scene file not found: ", path)
-		return null
+	return load(path)
 
 # Функция для регистрации UI
 func register_game_ui(ui_node: CanvasLayer):
@@ -179,31 +154,24 @@ func unregister_game_ui():
 	game_ui = null
 	print("🗑️ Game UI удален из Global")
 
-# Функция для регистрации игрока - ПОЛНОСТЬЮ ПЕРЕПИСАНА
+# Функция для регистрации игрока
 func register_player(player_node):
-	# Проверяем что player_node не null
 	if player_node == null:
-		print("❌ Attempt to register null player node!")
+		print("❌ Попытка зарегистрировать null игрока!")
 		return
 		
 	current_player = player_node
 	
-	# САМЫЙ БЕЗОПАСНЫЙ СПОСОБ - используем прямую проверку типа
-	var player_name = "Unknown Player"
-	
-	# Проверяем что это действительно Node
 	if player_node is Node:
-		player_name = player_node.name
-		print("✅ Player registered in Global: ", player_name)
+		print("✅ Игрок зарегистрирован: ", player_node.name)
 	else:
-		print("❌ Player node is not a valid Node!")
+		print("❌ Player node не является Node!")
 
 # Функция для получения данных выбранного персонажа
 func get_selected_character_data():
 	if selected_character == null:
 		return null
 	
-	# Проверяем что character_data инициализирован
 	if character_data == null:
 		print("❌ character_data is null!")
 		return null
@@ -220,7 +188,6 @@ func get_selected_character_name():
 	if data == null:
 		return "Unknown"
 	
-	# Проверяем что data - словарь и имеет ключ "name"
 	if data is Dictionary and data.has("name"):
 		return data["name"]
 	
@@ -246,7 +213,7 @@ func quit_game():
 	print("🛑 Quitting game...")
 	get_tree().quit()
 
-# Функция для отладки - печать текущего состояния
+# Функция для отладки
 func debug_print_state():
 	print("=== GLOBAL STATE DEBUG ===")
 	print("Selected character: ", selected_character)

@@ -29,19 +29,14 @@ func slide():
 	
 	is_sliding = true
 	slide_cooldown = 2.0
-	current_speed = base_speed * 1.5  # Увеличиваем скорость при подкате
-	print("🔽 Разбойник выполняет подкат!")
+	current_speed = base_speed * 1.5
+	print("🔽 Разбойник: подкат!")
 	
-	# Проигрываем анимацию подката
 	play_animation("sliding")
 	
-	# Ждем окончания анимации
 	if animated_sprite:
 		await animated_sprite.animation_finished
 	
-	# Возвращаем нормальную скорость
 	current_speed = base_speed
 	is_sliding = false
-	
-	# Возвращаемся к предыдущей анимации
 	handle_animations()

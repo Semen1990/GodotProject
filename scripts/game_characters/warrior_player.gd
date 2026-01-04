@@ -18,7 +18,6 @@ func _ready():
 	super()
 
 func _physics_process(delta):
-	# Обновляем кулдаун блока
 	if block_cooldown > 0:
 		block_cooldown -= delta
 	
@@ -30,11 +29,14 @@ func block():
 	
 	is_blocking = true
 	armor += 10
-	print("🛡️ Воин - Поднимает щит! Броня увеличена до ", armor)
+	velocity.x = 0
+	print("🛡️ Воин поднимает щит! Броня: ", armor)
 
 func stop_blocking():
-	if is_blocking:
-		is_blocking = false
-		block_cooldown = 0.3
-		armor -= 10
-		print("🛡️ Воин - Опускает щит! Броня уменьшена до ", armor)
+	if not is_blocking:
+		return
+	
+	is_blocking = false
+	block_cooldown = 0.5
+	armor -= 10
+	print("🛡️ Воин опускает щит! Броня: ", armor)
