@@ -302,7 +302,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_pcsxe")
 }],
-"loop": true,
+"loop": false,
 "name": &"attack",
 "speed": 5.0
 }, {
@@ -443,7 +443,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_rsjsj")
 }],
-"loop": true,
+"loop": false,
 "name": &"landing",
 "speed": 5.0
 }, {
@@ -524,7 +524,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_q2yho")
 }],
-"loop": true,
+"loop": false,
 "name": &"taking damage",
 "speed": 5.0
 }, {
@@ -556,7 +556,7 @@ metadata/_edit_group_ = true
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_yeg2f")
-animation = &"sliding"
+animation = &"wall sliding contact"
 autoplay = "idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

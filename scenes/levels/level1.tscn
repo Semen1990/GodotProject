@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://jfgqord38fwh"]
+[gd_scene load_steps=8 format=3 uid="uid://jfgqord38fwh"]
 
 [ext_resource type="Texture2D" uid="uid://bllirlnx660jk" path="res://assets/background/Lucid_Origin_pixel_art_game_background_sidescrolling_view_cast_2 (14).jpg" id="1_4tcl0"]
 [ext_resource type="Script" uid="uid://qh00mxbtl2vr" path="res://scripts/levels/level1.gd" id="1_dd0lh"]
 [ext_resource type="Texture2D" uid="uid://uli5g1dehqg3" path="res://assets/tools/oak_woods_tileset.png" id="2_dd0lh"]
 [ext_resource type="PackedScene" uid="uid://ca65ny24d3vpv" path="res://scenes/items/artifact_pickup.tscn" id="4_bfxgj"]
+[ext_resource type="PackedScene" uid="uid://ceck3rjiaby11" path="res://scenes/Ui/simple_pause_menu.tscn" id="5_dywbp"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dd0lh"]
 texture = ExtResource("2_dd0lh")
@@ -588,3 +589,5 @@ layer_0/tile_data = PackedInt32Array(3604489, 524288, 0, 3670025, 524288, 1, 360
 
 [node name="ArtifactPickup" parent="." instance=ExtResource("4_bfxgj")]
 position = Vector2(794, 836)
+
+[node name="SimplePauseMenu" parent="." instance=ExtResource("5_dywbp")]

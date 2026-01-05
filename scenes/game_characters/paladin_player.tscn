@@ -291,7 +291,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_egkkn")
 }],
-"loop": true,
+"loop": false,
 "name": &"crouch",
 "speed": 5.0
 }, {
@@ -418,7 +418,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_xlq03")
 }],
-"loop": true,
+"loop": false,
 "name": &"landing",
 "speed": 5.0
 }, {
@@ -447,7 +447,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_cl66k")
 }],
-"loop": false,
+"loop": true,
 "name": &"run",
 "speed": 5.0
 }, {
@@ -509,7 +509,7 @@ metadata/_edit_group_ = true
 texture_filter = 1
 scale = Vector2(4, 4)
 sprite_frames = SubResource("SpriteFrames_ksllg")
-animation = &"spellcast"
+animation = &"taking damage"
 autoplay = "idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
