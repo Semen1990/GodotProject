@@ -2,7 +2,8 @@
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_yn5gq"]
 
-[node name="BaseGameCharacter" type="CharacterBody2D"]
+[node name="BaseGameCharacter" type="CharacterBody2D" groups=["player"]]
+collision_mask = 14
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 

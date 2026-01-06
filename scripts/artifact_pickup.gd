@@ -1,116 +1,139 @@
 # artifact_pickup.gd
 extends Area2D
 
-@export var artifact_id: String = "hermes_wings"  # ID артефакта из базы данных
-@export var float_amplitude: float = 10.0  # Амплитуда парения
-@export var float_speed: float = 2.0  # Скорость парения
-@export var rotate_speed: float = 1.0  # Скорость вращения
+@export var artifact_id: String = "hermes_wings"
+@export var float_amplitude: float = 8.0
+@export var float_speed: float = 2.0
 
 var initial_position: Vector2
-var time: float = 0.0
 
-@onready var sprite = $Sprite2D
-@onready var particles = $GPUParticles2D  # Опционально
-@onready var label = $Label  # Название артефакта
+# Ноды
+var icon_sprite: Sprite2D
+var name_label: Label
 
 func _ready():
 	print("✨ Артефакт создан: ", artifact_id)
 	initial_position = position
 	
-	# Настраиваем отображение
-	setup_artifact_display()
+	# Удаляем старые дочерние элементы
+	for child in get_children():
+		if child is Label or child is Sprite2D:
+			child.queue_free()
+	
+	await get_tree().process_frame
+	
+	# Создаём визуал
+	_create_icon()
+	_create_name_label()
+	_ensure_collision()
 	
 	# Подключаем сигналы
-	body_entered.connect(_on_body_entered)
+	if not body_entered.is_connected(_on_body_entered):
+		body_entered.connect(_on_body_entered)
 	
-	# Запускаем анимацию
-	start_float_animation()
+	# Анимация парения
+	_start_float_animation()
 
-func setup_artifact_display():
-	"""Настраивает визуал артефакта"""
+func _create_icon():
+	"""Создаёт иконку артефакта"""
+	icon_sprite = Sprite2D.new()
+	icon_sprite.name = "ArtifactIcon"
+	
+	# Создаём текстуру - ромб
+	var image = Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	var rarity_color = _get_rarity_color()
+	
+	for x in range(32):
+		for y in range(32):
+			var center_x = 16
+			var center_y = 16
+			var dist = abs(x - center_x) + abs(y - center_y)
+			
+			if dist <= 12:
+				image.set_pixel(x, y, rarity_color)
+			elif dist <= 14:
+				image.set_pixel(x, y, rarity_color.darkened(0.3))
+			else:
+				image.set_pixel(x, y, Color(0, 0, 0, 0))
+	
+	var texture = ImageTexture.create_from_image(image)
+	icon_sprite.texture = texture
+	icon_sprite.scale = Vector2(1.5, 1.5)
+	
+	add_child(icon_sprite)
+	
+	# Эффект пульсации
+	var tween = create_tween()
+	tween.set_loops()
+	tween.tween_property(icon_sprite, "scale", Vector2(1.7, 1.7), 0.5)
+	tween.tween_property(icon_sprite, "scale", Vector2(1.5, 1.5), 0.5)
+
+func _create_name_label():
+	"""Создаёт название артефакта"""
 	if not Global.artifacts_database.has(artifact_id):
-		print("❌ Артефакт не найден: ", artifact_id)
 		return
 	
 	var artifact_data = Global.artifacts_database[artifact_id]
 	
-	# Устанавливаем название
-	if label:
-		label.text = artifact_data["name"]
-		label.modulate = get_rarity_color(artifact_data["rarity"])
+	name_label = Label.new()
+	name_label.name = "NameLabel"
+	name_label.text = artifact_data["name"]
+	name_label.add_theme_font_size_override("font_size", 12)
+	name_label.add_theme_color_override("font_color", _get_rarity_color())
+	name_label.position = Vector2(-50, -45)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.custom_minimum_size = Vector2(100, 20)
 	
-	# Цвет спрайта по редкости
-	if sprite:
-		sprite.modulate = get_rarity_color(artifact_data["rarity"])
+	add_child(name_label)
 
-func get_rarity_color(rarity: String) -> Color:
+func _get_rarity_color() -> Color:
 	"""Возвращает цвет по редкости"""
+	if not Global.artifacts_database.has(artifact_id):
+		return Color.WHITE
+	
+	var rarity = Global.artifacts_database[artifact_id].get("rarity", "common")
+	
 	match rarity:
 		"common":
-			return Color.GRAY
+			return Color(0.7, 0.7, 0.7, 1.0)
 		"rare":
-			return Color.DODGER_BLUE
+			return Color(0.3, 0.6, 1.0, 1.0)
 		"epic":
-			return Color.PURPLE
+			return Color(0.8, 0.3, 0.9, 1.0)
 		"legendary":
-			return Color.GOLD
+			return Color(1.0, 0.85, 0.0, 1.0)
 		_:
 			return Color.WHITE
 
-func start_float_animation():
-	"""Запускает анимацию парения"""
+func _ensure_collision():
+	"""Создаёт коллизию если её нет"""
+	var has_collision = false
+	for child in get_children():
+		if child is CollisionShape2D:
+			has_collision = true
+			break
+	
+	if not has_collision:
+		var collision = CollisionShape2D.new()
+		var shape = CircleShape2D.new()
+		shape.radius = 25
+		collision.shape = shape
+		add_child(collision)
+
+func _start_float_animation():
+	"""Анимация парения"""
 	var tween = create_tween()
 	tween.set_loops()
-	tween.tween_property(self, "position:y", initial_position.y - float_amplitude, float_speed / 2)
-	tween.tween_property(self, "position:y", initial_position.y + float_amplitude, float_speed / 2)
-
-func _process(delta):
-	# Вращение
-	if sprite:
-		sprite.rotation += rotate_speed * delta
-	
-	time += delta
+	tween.tween_property(self, "position:y", initial_position.y - float_amplitude, float_speed / 2).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(self, "position:y", initial_position.y + float_amplitude, float_speed / 2).set_ease(Tween.EASE_IN_OUT)
 
 func _on_body_entered(body):
-	"""Когда игрок подбирает артефакт"""
-	print("🎯 Тело вошло: ", body.name)
-	
-	# Проверяем что это игрок
-	if body.has_method("apply_artifacts"):
-		collect_artifact(body)
-
-func collect_artifact(player):
-	"""Собираем артефакт"""
-	print("✨ Игрок подобрал артефакт: ", artifact_id)
-	
-	# Добавляем артефакт в Global
-	if Global.collect_artifact(artifact_id):
-		# Показываем уведомление
-		show_collection_notification()
-		
-		# Удаляем артефакт со сцены
-		queue_free()
-	else:
-		print("⚠️ Артефакт уже был собран")
-
-func show_collection_notification():
-	"""Показывает уведомление о получении"""
-	if not Global.artifacts_database.has(artifact_id):
+	"""Когда игрок касается артефакта"""
+	if not body.is_in_group("player") and not body.has_method("apply_artifacts"):
 		return
 	
-	var artifact_data = Global.artifacts_database[artifact_id]
+	print("✨ Игрок подобрал артефакт: ", artifact_id)
 	
-	# Создаём всплывающий текст
-	var notification = Label.new()
-	notification.text = "Получен: " + artifact_data["name"] + "\n" + artifact_data["effect_text"]
-	notification.modulate = get_rarity_color(artifact_data["rarity"])
-	notification.add_theme_font_size_override("font_size", 20)
-	notification.position = global_position - Vector2(100, 50)
-	
-	get_tree().current_scene.add_child(notification)
-	
-	# Анимация исчезновения
-	var tween = create_tween()
-	tween.tween_property(notification, "position:y", notification.position.y - 100, 2.0)
-	tween.parallel().tween_property(notification, "modulate:a", 0.0, 2.0)
-	tween.tween_callback(notification.queue_free)
+	if Global.collect_artifact(artifact_id):
+		# Удаляем артефакт БЕЗ эффектов (чтобы не оставался квадратик)
+		queue_free()

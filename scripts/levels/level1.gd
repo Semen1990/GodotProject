@@ -46,6 +46,9 @@ func spawn_selected_character():
 			# Регистрируем игрока в Global
 			Global.register_player(current_player)
 			
+			# ИСПРАВЛЕНО: Подключаем UI ПОСЛЕ регистрации
+			setup_player_ui()
+			
 			# Настраиваем камеру
 			setup_player_camera()
 		else:
@@ -54,6 +57,78 @@ func spawn_selected_character():
 	else:
 		print("❌ Character scene not found")
 		create_fallback_player()
+
+func setup_player_ui():
+	"""ИСПРАВЛЕНО: Подключает UI к персонажу"""
+	if not current_player or not game_ui:
+		print("⚠️ Нет игрока или UI для подключения")
+		return
+	
+	print("\n=== 🔗 ПОДКЛЮЧЕНИЕ UI К ПЕРСОНАЖУ ===")
+	
+	# Получаем характеристики персонажа
+	var stats = {
+		"health": current_player.current_health,
+		"max_health": current_player.max_health,
+		"mana": current_player.current_mana,
+		"max_mana": current_player.max_mana,
+		"armor": current_player.armor
+	}
+	
+	print("📊 Статы персонажа:")
+	print("  HP: ", stats["health"], "/", stats["max_health"])
+	print("  MP: ", stats["mana"], "/", stats["max_mana"])
+	print("  ARM: ", stats["armor"])
+	
+	# Настраиваем UI
+	game_ui.setup_character_ui(stats)
+	
+	# ВАЖНО: Подключаем сигналы
+	if current_player.has_signal("health_changed"):
+		current_player.health_changed.connect(_on_player_health_changed)
+		print("✅ Сигнал health_changed подключён")
+	
+	if current_player.has_signal("mana_changed"):
+		current_player.mana_changed.connect(_on_player_mana_changed)
+		print("✅ Сигнал mana_changed подключён")
+	
+	# Подключаем обновление брони (через таймер, так как нет сигнала)
+	var armor_timer = Timer.new()
+	armor_timer.wait_time = 0.1  # Проверяем каждые 0.1 сек
+	armor_timer.timeout.connect(_check_armor_changed)
+	add_child(armor_timer)
+	armor_timer.start()
+	
+	print("=== ✅ UI ПОДКЛЮЧЕН ===\n")
+
+var last_armor_value: int = 0
+
+func _check_armor_changed():
+	"""Проверяет изменение брони и обновляет UI"""
+	if not current_player:
+		return
+	
+	if current_player.armor != last_armor_value:
+		last_armor_value = current_player.armor
+		_on_player_armor_changed(current_player.armor)
+
+func _on_player_health_changed(new_health):
+	"""Обработчик изменения здоровья"""
+	print("💖 UI: HP изменено на ", new_health)
+	if game_ui:
+		game_ui.update_health(new_health)
+
+func _on_player_mana_changed(new_mana):
+	"""Обработчик изменения маны"""
+	print("💙 UI: MP изменена на ", new_mana)
+	if game_ui:
+		game_ui.update_mana(new_mana)
+
+func _on_player_armor_changed(new_armor):
+	"""Обработчик изменения брони"""
+	print("🛡️ UI: ARM изменена на ", new_armor)
+	if game_ui:
+		game_ui.update_armor(new_armor)
 
 func setup_player_camera():
 	if not current_player:

@@ -1,14 +1,17 @@
 extends "res://scripts/game_characters/base_game_character.gd"
 
 # Система комбо
-var combo_stage: int = 0  # 0 = нет комбо, 1 = первая атака, 2 = вторая, 3 = третья
-var combo_timer: float = 0.0
-const COMBO_WINDOW: float = 1  # Окно для продолжения комбо
-const COMBO_RESET_TIME: float = 1.5  # Время до сброса комбо
+var combo_stage: int = 0  # 0 = нет комбо, 1-3 = стадия комбо
+var combo_window_active: bool = false  # Открыто ли окно для следующей атаки
+var next_attack_queued: bool = false  # Нажата ли кнопка во время атаки
+var combo_reset_timer: float = 0.0
+
+# НАСТРОЙКИ КОМБО (можно менять)
+const COMBO_WINDOW_DURATION: float = 1.2  # Окно после атаки для продолжения (секунды)
+const COMBO_FULL_RESET_TIME: float = 2.0  # Время полного сброса комбо
 
 # Урон
 const BASE_DAMAGE: int = 10
-var last_target = null
 
 func _ready():
 	character_name = "Берсерк"
@@ -26,48 +29,64 @@ func _ready():
 	super()
 
 func _physics_process(delta):
-	# Обновляем таймер комбо
-	if combo_timer > 0:
-		combo_timer -= delta
-		
-		# Сбрасываем комбо если время вышло
-		if combo_timer <= 0:
+	# Таймер сброса комбо
+	if combo_reset_timer > 0:
+		combo_reset_timer -= delta
+		if combo_reset_timer <= 0:
 			_reset_combo()
 	
 	super(delta)
 
 func attack():
+	print("\n=== 🗡️ ПОПЫТКА АТАКИ ===")
+	print("Комбо стадия: ", combo_stage)
+	print("Атакует сейчас: ", is_attacking)
+	print("Окно активно: ", combo_window_active)
+	
+	# Базовые проверки
 	if is_dead or is_blocking or is_casting or is_sliding:
-		print("⚠️ Берсерк занят!")
+		print("❌ Берсерк занят другим действием!")
 		return
 	
-	# ИСПРАВЛЕНО: проверяем можно ли продолжить комбо
-	if is_attacking and combo_timer <= 0:
-		print("⚠️ Слишком поздно для комбо!")
+	# ЕСЛИ УЖЕ АТАКУЕТ - ставим атаку в очередь
+	if is_attacking:
+		next_attack_queued = true
+		print("⏳ Атака поставлена в очередь")
 		return
 	
-	# Определяем какую атаку делать
-	var next_combo = combo_stage + 1
+	# ЕСЛИ ОКНО КОМБО ЗАКРЫТО - сбрасываем
+	if combo_stage > 0 and not combo_window_active:
+		print("⏰ Окно комбо закрыто, сброс...")
+		_reset_combo()
 	
-	if next_combo > 3:
-		print("⚠️ Комбо уже завершено!")
-		return
+	# Выполняем атаку
+	_execute_attack()
+
+func _execute_attack():
+	"""Выполняет атаку"""
+	combo_stage += 1
 	
-	print("⚔️ Берсерк: атака ", next_combo)
+	# Ограничиваем комбо тремя атаками
+	if combo_stage > 3:
+		combo_stage = 1
+		print("🔄 Комбо завершено, начинаем заново")
 	
-	combo_stage = next_combo
 	is_attacking = true
+	combo_window_active = false  # Закрываем окно на время атаки
+	next_attack_queued = false
+	
+	print("\n⚔️ === АТАКА ", combo_stage, " ===")
 	
 	# Выбираем анимацию
 	var anim_name = "attack"
-	if combo_stage == 2:
+	if combo_stage == 2 and animated_sprite.sprite_frames.has_animation("attack2"):
 		anim_name = "attack2"
-	elif combo_stage == 3:
+	elif combo_stage == 3 and animated_sprite.sprite_frames.has_animation("attack3"):
 		anim_name = "attack3"
 	
-	# ИСПРАВЛЕНО: рассчитываем урон
+	# Рассчитываем урон
 	var damage = _calculate_damage()
-	print("💥 Урон атаки ", combo_stage, ": ", damage)
+	print("💥 Урон: ", damage)
 	
 	play_animation(anim_name)
 	
@@ -79,16 +98,24 @@ func attack():
 	
 	is_attacking = false
 	
-	# ИСПРАВЛЕНО: устанавливаем окно для следующей атаки
+	# После атаки - открываем окно для следующей
 	if combo_stage < 3:
-		combo_timer = COMBO_WINDOW
-		print("⏰ Окно для атаки ", combo_stage + 1, ": ", COMBO_WINDOW, " сек")
+		combo_window_active = true
+		combo_reset_timer = COMBO_WINDOW_DURATION
+		print("✅ Окно для атаки ", combo_stage + 1, " открыто на ", COMBO_WINDOW_DURATION, " сек")
 	else:
-		# Третья атака - сбрасываем комбо
-		combo_timer = COMBO_RESET_TIME
-		print("✅ Комбо завершено! Сброс через ", COMBO_RESET_TIME, " сек")
+		# После третьей атаки - финальный таймер сброса
+		combo_window_active = false
+		combo_reset_timer = COMBO_FULL_RESET_TIME
+		print("💥 КОМБО ЗАВЕРШЕНО! Финишер нанесён!")
 	
-	handle_animations()
+	# Если была нажата кнопка во время атаки - продолжаем комбо
+	if next_attack_queued and combo_stage < 3:
+		print("⚡ Выполняем атаку из очереди")
+		await get_tree().create_timer(0.1).timeout  # Небольшая задержка
+		_execute_attack()
+	else:
+		handle_animations()
 
 func _calculate_damage() -> int:
 	"""Рассчитывает урон в зависимости от стадии комбо"""
@@ -98,42 +125,35 @@ func _calculate_damage() -> int:
 		1:
 			# Первая атака: базовый урон
 			damage = BASE_DAMAGE
-			print("  Обычная атака")
+			print("  → Обычная атака")
 		
 		2:
 			# Вторая атака: 50% шанс x2
 			damage = BASE_DAMAGE
 			if randf() < 0.5:
 				damage = BASE_DAMAGE * 2
-				print("  ⚡ КРИТИЧЕСКИЙ УДАР x2!")
+				print("  → ⚡ КРИТИЧЕСКИЙ УДАР x2!")
 			else:
-				print("  Обычная атака")
+				print("  → Обычная атака")
 		
 		3:
 			# Третья атака: всегда критический + бонус
 			damage = (BASE_DAMAGE * 2) + 2
-			print("  💥 ФИНИШЕР! x2 + 2 урона!")
+			print("  → 💥 ФИНИШЕР! Критический урон x2 + 2!")
 	
 	return damage
 
 func _reset_combo():
 	"""Сбрасывает комбо"""
 	if combo_stage > 0:
-		print("🔄 Комбо сброшено (было на стадии ", combo_stage, ")")
+		print("🔄 === КОМБО СБРОШЕНО === (было на стадии ", combo_stage, ")")
 	combo_stage = 0
-	combo_timer = 0.0
-
-func deal_damage_to_target(target):
-	"""Наносит урон цели с учетом комбо"""
-	if not target or not target.has_method("take_damage"):
-		return
-	
-	var damage = _calculate_damage()
-	target.take_damage(damage)
-	print("🎯 Нанесено урона: ", damage)
+	combo_window_active = false
+	combo_reset_timer = 0.0
+	next_attack_queued = false
 
 func take_damage(amount: int):
-	# Ярость при низком здоровье (из оригинала)
+	# Ярость при низком здоровье
 	if current_health < max_health * 0.3:
 		var reduced_amount = int(amount * 0.7)
 		print("🛡️ Ярость защищает! Урон: ", amount, " → ", reduced_amount)
@@ -141,5 +161,17 @@ func take_damage(amount: int):
 	else:
 		super.take_damage(amount)
 	
-	# ОПЦИОНАЛЬНО: сбрасываем комбо при получении урона
-	# _reset_combo()
+	# Прерываем комбо при получении урона
+	if combo_stage > 0:
+		print("💔 Комбо прервано уроном!")
+		_reset_combo()
+
+# Для нанесения урона врагам (когда будут враги)
+func deal_damage_to_target(target):
+	"""Наносит урон цели с учетом комбо"""
+	if not target or not target.has_method("take_damage"):
+		return
+	
+	var damage = _calculate_damage()
+	target.take_damage(damage)
+	print("🎯 Цели нанесено урона: ", damage)

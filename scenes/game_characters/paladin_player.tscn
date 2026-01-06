@@ -500,8 +500,9 @@ animations = [{
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_yn5gq"]
 
-[node name="BaseGameCharacter" type="CharacterBody2D"]
+[node name="BaseGameCharacter" type="CharacterBody2D" groups=["player"]]
 position = Vector2(9, -52)
+collision_mask = 14
 script = ExtResource("2_k250y")
 metadata/_edit_group_ = true
 

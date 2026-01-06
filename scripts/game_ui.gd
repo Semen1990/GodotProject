@@ -1,142 +1,258 @@
 extends CanvasLayer
 
-# Ссылки на узлы
-@onready var health_bar = $MainContainer/MainVertical/StatsContainer/HealthSection/HealthContainer/HealthBar
-@onready var health_label = $MainContainer/MainVertical/StatsContainer/HealthSection/HealthLabel
-@onready var mana_bar = $MainContainer/MainVertical/StatsContainer/ManaSection/ManaContainer/ManaBar
-@onready var mana_label = $MainContainer/MainVertical/StatsContainer/ManaSection/ManaLabel
-@onready var armor_value = $MainContainer/MainVertical/StatsContainer/ArmorSection/ArmorContainer/ArmorValue
-@onready var armor_label = $MainContainer/MainVertical/StatsContainer/ArmorSection/ArmorLabel
+# ===========================================
+# GAME UI v3.0 - КОМПАКТНЫЙ ИНТЕРФЕЙС
+# ===========================================
 
-@onready var health_section = $MainContainer/MainVertical/StatsContainer/HealthSection
-@onready var mana_section = $MainContainer/MainVertical/StatsContainer/ManaSection
-@onready var armor_section = $MainContainer/MainVertical/StatsContainer/ArmorSection
-@onready var keys_container = $MainContainer/MainVertical/KeysContainer
+# Контейнеры
+var stats_container: VBoxContainer
+var keys_container: HBoxContainer
 
-# Массив для ключей
-var key_icons = []
+# Элементы статов
+var health_container: HBoxContainer
+var health_icon: Label
+var health_value: Label
 
-# Характеристики
+var armor_container: HBoxContainer
+var armor_icon: Label
+var armor_value: Label
+
+var mana_container: HBoxContainer
+var mana_icon: Label
+var mana_value: Label
+
+# Ключи
+var key_slots: Array = []
+
+# Текущие характеристики
 var current_stats = {
-	"health": 100,
-	"max_health": 100,
-	"mana": 50,
-	"max_mana": 50,
-	"armor": 0
+	"health": 12,
+	"max_health": 12,
+	"mana": 0,
+	"max_mana": 0,
+	"armor": 2
 }
 
+# Цвета ключей
+# Цвета ключей - яркие и различимые
+const KEY_COLORS = [
+	Color(1.0, 0.2, 0.2, 1.0),    # Красный
+	Color(0.2, 0.5, 1.0, 1.0),    # Синий
+	Color(0.2, 0.9, 0.2, 1.0),    # Зелёный
+	Color(1.0, 0.9, 0.0, 1.0),    # Жёлтый
+	Color(0.8, 0.2, 0.8, 1.0),    # Фиолетовый
+	Color(1.0, 0.5, 0.0, 1.0)     # Оранжевый
+]
+
+var viewport_size: Vector2 = Vector2.ZERO
+
 func _ready():
-	print("🎮 Game UI загружен")
+	print("\n=== 🎮 GAME UI v3.0 ЗАГРУЖЕН ===")
 	
-	# Проверяем что все узлы найдены
-	print("Проверка узлов:")
-	print("  HealthBar: ", health_bar != null)
-	print("  ManaBar: ", mana_bar != null)
-	print("  ArmorValue: ", armor_value != null)
+	# Очищаем все дочерние узлы
+	for child in get_children():
+		child.queue_free()
 	
-	# Настраиваем временные текстуры
-	setup_temporary_textures()
+	await get_tree().process_frame
 	
-	# Инициализируем UI с тестовыми значениями
+	# Получаем размер окна
+	viewport_size = get_viewport().get_visible_rect().size
+	
+	# Создаём UI программно
+	_create_ui()
+	
+	print("✅ UI готов к работе")
+
+func _process(_delta):
+	# Обновляем позицию ключей при изменении размера окна
+	var new_size = get_viewport().get_visible_rect().size
+	if new_size != viewport_size:
+		viewport_size = new_size
+		_update_keys_position()
+
+func _create_ui():
+	"""Создаёт весь UI программно"""
+	
+	# === ЛЕВАЯ ПАНЕЛЬ (Статы) ===
+	stats_container = VBoxContainer.new()
+	stats_container.name = "StatsContainer"
+	stats_container.position = Vector2(20, 20)
+	stats_container.add_theme_constant_override("separation", 5)
+	add_child(stats_container)
+	
+	# Здоровье
+	health_container = _create_stat_row("❤️", "12/12", Color.RED)
+	stats_container.add_child(health_container)
+	health_icon = health_container.get_child(0)
+	health_value = health_container.get_child(1)
+	
+	# Броня
+	armor_container = _create_stat_row("🛡️", "2", Color.LIGHT_GRAY)
+	stats_container.add_child(armor_container)
+	armor_icon = armor_container.get_child(0)
+	armor_value = armor_container.get_child(1)
+	
+	# Мана
+	mana_container = _create_stat_row("💧", "0/0", Color.DODGER_BLUE)
+	stats_container.add_child(mana_container)
+	mana_icon = mana_container.get_child(0)
+	mana_value = mana_container.get_child(1)
+	mana_container.visible = false
+	
+	# === ПРАВАЯ ПАНЕЛЬ (Ключи) ===
+	keys_container = HBoxContainer.new()
+	keys_container.name = "KeysContainer"
+	keys_container.add_theme_constant_override("separation", 15)
+	add_child(keys_container)
+	
+	# Создаём 6 слотов ключей
+	for i in range(6):
+		var key_slot = _create_key_slot(i)
+		keys_container.add_child(key_slot)
+		key_slots.append(key_slot)
+	
+	# Позиционируем ключи
+	_update_keys_position()
+
+func _create_stat_row(icon_text: String, value_text: String, color: Color) -> HBoxContainer:
+	"""Создаёт строку статов: иконка + значение"""
+	var row = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	
+	# Иконка
+	var icon = Label.new()
+	icon.text = icon_text
+	icon.add_theme_font_size_override("font_size", 24)
+	row.add_child(icon)
+	
+	# Значение
+	var value = Label.new()
+	value.text = value_text
+	value.add_theme_font_size_override("font_size", 20)
+	value.add_theme_color_override("font_color", color)
+	row.add_child(value)
+	
+	return row
+
+func _create_key_slot(index: int) -> VBoxContainer:
+	"""Создаёт слот для ключа"""
+	var slot = VBoxContainer.new()
+	slot.custom_minimum_size = Vector2(35, 50)
+	
+	# Иконка ключа - РАЗНЫЕ ЦВЕТА
+	var icon = Label.new()
+	icon.name = "Icon"
+	icon.text = "🔑"
+	icon.add_theme_font_size_override("font_size", 18)
+	icon.add_theme_color_override("font_color", KEY_COLORS[index])  # Цвет по индексу
+	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	slot.add_child(icon)
+	
+	# Количество
+	var count = Label.new()
+	count.name = "Count"
+	count.text = "0"
+	count.add_theme_font_size_override("font_size", 14)
+	count.add_theme_color_override("font_color", KEY_COLORS[index])  # Тот же цвет
+	count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	slot.add_child(count)
+	
+	return slot
+
+func _update_keys_position():
+	"""Обновляет позицию ключей"""
+	if keys_container:
+		# Сдвигаем левее - было 300, стало 350
+		keys_container.position = Vector2(viewport_size.x - 350, 20)
+
+# ===========================================
+# НАСТРОЙКА ДЛЯ ПЕРСОНАЖА
+# ===========================================
+
+func setup_character_ui(character_stats: Dictionary):
+	"""Настраивает UI под характеристики персонажа"""
+	print("\n=== 🔧 НАСТРОЙКА UI ДЛЯ ПЕРСОНАЖА ===")
+	
+	current_stats = character_stats.duplicate()
+	
+	_update_sections_visibility()
 	update_ui_display()
 	
-	# Инициализируем ключи
-	call_deferred("initialize_keys")
+	print("✅ UI настроен")
+	print("  HP: ", current_stats["health"], "/", current_stats["max_health"])
+	print("  MP: ", current_stats["mana"], "/", current_stats["max_mana"], " (видимо: ", mana_container.visible if mana_container else false, ")")
+	print("  ARM: ", current_stats["armor"], " (видимо: ", armor_container.visible if armor_container else false, ")")
 
-func setup_temporary_textures():
-	print("🎨 Настройка временных текстур")
+func _update_sections_visibility():
+	"""Обновляет видимость секций"""
 	
-	# HealthBar - красный
-	if health_bar:
-		var health_style = StyleBoxFlat.new()
-		health_style.bg_color = Color.RED
-		health_bar.add_theme_stylebox_override("fill", health_style)
-		
-		var health_bg_style = StyleBoxFlat.new()
-		health_bg_style.bg_color = Color.DARK_RED
-		health_bar.add_theme_stylebox_override("background", health_bg_style)
+	if mana_container:
+		mana_container.visible = current_stats["max_mana"] > 0
+		if mana_container.visible:
+			print("💙 Мана видима")
+		else:
+			print("🚫 Мана скрыта (max_mana = 0)")
 	
-	# ManaBar - синий
-	if mana_bar:
-		var mana_style = StyleBoxFlat.new()
-		mana_style.bg_color = Color.BLUE
-		mana_bar.add_theme_stylebox_override("fill", mana_style)
-		
-		var mana_bg_style = StyleBoxFlat.new()
-		mana_bg_style.bg_color = Color.DARK_BLUE
-		mana_bar.add_theme_stylebox_override("background", mana_bg_style)
+	if armor_container:
+		armor_container.visible = current_stats.get("armor", 0) > 0
+		if armor_container.visible:
+			print("🛡️ Броня видима")
+		else:
+			print("🚫 Броня скрыта")
 
-func initialize_keys():
-	# Создаем 6 ключей
-	for i in range(6):
-		var key_container = VBoxContainer.new()
-		key_container.custom_minimum_size = Vector2(40, 50)
-		
-		var key_icon = TextureRect.new()
-		key_icon.custom_minimum_size = Vector2(32, 32)
-		key_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-		
-		var key_label = Label.new()
-		key_label.text = "0"
-		key_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		
-		key_container.add_child(key_icon)
-		key_container.add_child(key_label)
-		keys_container.add_child(key_container)
-		
-		key_icons.append({
-			"icon": key_icon,
-			"label": key_label
-		})
-	
-	print("🔑 Инициализировано ключей: ", key_icons.size())
+# ===========================================
+# ОБНОВЛЕНИЕ ОТОБРАЖЕНИЯ
+# ===========================================
 
 func update_ui_display():
-	# Обновляем полосы
-	if health_bar:
-		health_bar.max_value = current_stats["max_health"]
-		health_bar.value = current_stats["health"]
+	"""Обновляет все визуальные элементы"""
 	
-	if mana_bar:
-		mana_bar.max_value = current_stats["max_mana"]
-		mana_bar.value = current_stats["mana"]
+	if health_value:
+		health_value.text = "%d/%d" % [current_stats["health"], current_stats["max_health"]]
 	
-	# Обновляем текстовые значения
-	if health_label:
-		health_label.text = "ЗДОРОВЬЕ\n%d/%d" % [current_stats["health"], current_stats["max_health"]]
-	if mana_label:
-		mana_label.text = "МАНА\n%d/%d" % [current_stats["mana"], current_stats["max_mana"]]
-	if armor_value:
+	if mana_value and mana_container and mana_container.visible:
+		mana_value.text = "%d/%d" % [current_stats["mana"], current_stats["max_mana"]]
+	
+	if armor_value and armor_container and armor_container.visible:
 		armor_value.text = str(current_stats["armor"])
-	if armor_label:
-		armor_label.text = "БРОНЯ\n%d" % current_stats["armor"]
 
-# Функции для обновления значений
 func update_health(new_health: int):
+	"""Обновляет здоровье"""
 	current_stats["health"] = clamp(new_health, 0, current_stats["max_health"])
 	update_ui_display()
-	print("❤️ Здоровье обновлено: ", current_stats["health"])
+	print("❤️ HP обновлено: ", current_stats["health"], "/", current_stats["max_health"])
 
 func update_mana(new_mana: int):
+	"""Обновляет ману"""
 	current_stats["mana"] = clamp(new_mana, 0, current_stats["max_mana"])
 	update_ui_display()
-	print("🔵 Мана обновлена: ", current_stats["mana"])
+
+func update_max_mana(new_max_mana: int):
+	"""Изменяет максимальную ману"""
+	current_stats["max_mana"] = max(0, new_max_mana)
+	current_stats["mana"] = min(current_stats["mana"], current_stats["max_mana"])
+	
+	_update_sections_visibility()
+	update_ui_display()
 
 func update_armor(new_armor: int):
+	"""Обновляет броню"""
 	current_stats["armor"] = max(0, new_armor)
+	_update_sections_visibility()
 	update_ui_display()
-	print("🛡️ Броня обновлена: ", current_stats["armor"])
 
-# Функция для установки характеристик персонажа
-func setup_character_ui(character_stats: Dictionary):
-	current_stats = character_stats.duplicate()
-	update_ui_display()
-	print("🔄 UI настроен для персонажа")
-
-# Функции для работы с ключами
 func update_keys(key_counts: Array):
+	"""Обновляет количество ключей"""
 	for i in range(min(6, key_counts.size())):
-		var key_data = key_icons[i]
-		key_data["label"].text = str(key_counts[i])
-	
-	print("🔑 Ключи обновлены: ", key_counts)
+		if i < key_slots.size():
+			var count_label = key_slots[i].get_node_or_null("Count")
+			if count_label:
+				count_label.text = str(key_counts[i])
+
+# ===========================================
+# СПОСОБНОСТИ
+# ===========================================
+
+func update_ability_cooldown(_ability_id: String, _percent: float):
+	"""Обновляет визуал кулдауна способности"""
+	pass
