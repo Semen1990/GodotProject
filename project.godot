@@ -18,7 +18,6 @@ config/icon="res://icon.svg"
 [autoload]
 
 Global="*res://scripts/Global.gd"
-GameUi="*res://scenes/Ui/game_ui.tscn"
 
 [display]
 
@@ -91,7 +90,7 @@ slide={
 
 [layer_names]
 
-2d_physics/layer_1="player"
-2d_physics/layer_2="world"
+2d_physics/layer_1="world"
+2d_physics/layer_2="player"
 2d_physics/layer_3="enemy"
 2d_physics/layer_4="items"

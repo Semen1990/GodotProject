@@ -97,65 +97,66 @@ func stop_blocking():
 # АТАКА - УРОН В КОНЦЕ АНИМАЦИИ
 # ===========================================
 
+var _attack_damage_dealt: bool = false
+
 func attack():
-	"""Атака воина - урон наносится В КОНЦЕ анимации"""
-	# Проверки
-	if is_dead or is_blocking or is_casting or is_sliding or is_crouching:
-		return
-	
-	if is_attacking:
+	"""Атака воина - урон на 4-м кадре"""
+	if is_dead or is_blocking or is_casting or is_sliding or is_crouching or is_attacking:
 		return
 	
 	print("\n⚔️ ВОИН АТАКУЕТ!")
-	
 	is_attacking = true
+	_attack_damage_dealt = false
+	
 	play_animation("attack")
 	
-	# СНАЧАЛА ждём окончания анимации
+	# Подключаем сигнал смены кадра если ещё не подключен
+	if animated_sprite and not animated_sprite.frame_changed.is_connected(_on_attack_frame):
+		animated_sprite.frame_changed.connect(_on_attack_frame)
+	
+	# Ждём завершения анимации
 	if animated_sprite:
 		await animated_sprite.animation_finished
 	else:
 		await get_tree().create_timer(0.5).timeout
 	
-	# ПОТОМ наносим урон (в конце анимации)
-	_deal_damage_to_enemies()
+	# Отключаем сигнал
+	if animated_sprite and animated_sprite.frame_changed.is_connected(_on_attack_frame):
+		animated_sprite.frame_changed.disconnect(_on_attack_frame)
 	
 	is_attacking = false
 	handle_animations()
 
+func _on_attack_frame():
+	"""Вызывается при смене кадра - урон на 4-м кадре (индекс 3)"""
+	if not is_attacking or _attack_damage_dealt:
+		return
+	
+	if animated_sprite.frame == 3:  # 4-й кадр (счёт с 0)
+		_deal_damage_to_enemies()
+		_attack_damage_dealt = true
+		print("🎯 Урон на кадре 4!")
+
 func _deal_damage_to_enemies():
-	"""Наносит урон всем врагам в радиусе атаки"""
+	"""Наносит урон врагам"""
 	if not animated_sprite:
 		return
 	
-	# Направление атаки
-	var attack_direction = -1 if animated_sprite.flip_h else 1
-	var attack_center = global_position + Vector2(35 * attack_direction, 0)
+	var dir = -1 if animated_sprite.flip_h else 1
+	var center = global_position + Vector2(40 * dir, 0)
 	
-	print("🎯 Проверяем попадание...")
-	
-	# Ищем врагов через физику
-	var space_state = get_world_2d().direct_space_state
+	var space = get_world_2d().direct_space_state
 	var query = PhysicsShapeQueryParameters2D.new()
 	var shape = CircleShape2D.new()
-	shape.radius = ATTACK_RANGE
+	shape.radius = 55
 	query.shape = shape
-	query.transform = Transform2D(0, attack_center)
-	query.collision_mask = 0xFFFFFFFF  # Все слои
+	query.transform = Transform2D(0, center)
 	
-	var results = space_state.intersect_shape(query)
-	
-	var hit_count = 0
-	for result in results:
+	for result in space.intersect_shape(query):
 		var body = result["collider"]
-		# Проверяем что это враг (не игрок)
 		if body != self and body.has_method("take_damage"):
 			body.take_damage(BASE_DAMAGE, "physical")
-			hit_count += 1
-			print("🎯 Попадание по: ", body.name, " | Урон: ", BASE_DAMAGE)
-	
-	if hit_count == 0:
-		print("❌ Промах - нет врагов в радиусе")
+			print("🎯 Попадание! Урон:", BASE_DAMAGE)
 
 # ===========================================
 # ПОЛУЧЕНИЕ УРОНА

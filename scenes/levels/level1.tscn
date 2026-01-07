@@ -5,7 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://uli5g1dehqg3" path="res://assets/tools/oak_woods_tileset.png" id="2_dd0lh"]
 [ext_resource type="PackedScene" uid="uid://ca65ny24d3vpv" path="res://scenes/items/artifact_pickup.tscn" id="4_bfxgj"]
 [ext_resource type="PackedScene" uid="uid://ceck3rjiaby11" path="res://scenes/Ui/simple_pause_menu.tscn" id="5_dywbp"]
-[ext_resource type="PackedScene" uid="uid://6lwt8fuq8uah" path="res://scenes/Ui/game_ui.tscn" id="7_2r1tl"]
+[ext_resource type="Script" uid="uid://yqteppxep2oc" path="res://scripts/game_ui.gd" id="7_2r1tl"]
 [ext_resource type="PackedScene" uid="uid://bdg7rk1sn2jln" path="res://scenes/enemies/Lizard.tscn" id="7_8a7m2"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dd0lh"]
@@ -556,7 +556,8 @@ texture = ExtResource("2_dd0lh")
 30:21/0 = 0
 
 [sub_resource type="TileSet" id="TileSet_bfxgj"]
-physics_layer_0/collision_layer = 2
+physics_layer_0/collision_layer = 1
+physics_layer_0/collision_mask = 0
 sources/0 = SubResource("TileSetAtlasSource_dd0lh")
 
 [node name="Level1" type="Node2D"]
@@ -592,7 +593,8 @@ position = Vector2(794, 836)
 
 [node name="SimplePauseMenu" parent="." instance=ExtResource("5_dywbp")]
 
-[node name="GameUI" parent="." instance=ExtResource("7_2r1tl")]
-
 [node name="Lizard" parent="." instance=ExtResource("7_8a7m2")]
 position = Vector2(1696, 833)
+
+[node name="GameUI" type="CanvasLayer" parent="."]
+script = ExtResource("7_2r1tl")

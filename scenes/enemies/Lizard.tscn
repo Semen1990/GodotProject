@@ -118,12 +118,11 @@ animations = [{
 "speed": 7.0
 }]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_tf3a8"]
-radius = 28.0
-height = 110.0
+[sub_resource type="CircleShape2D" id="CircleShape2D_1bmd2"]
+radius = 38.013157
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_8ybkn"]
-radius = 144.01389
+radius = 200.0
 
 [node name="Lizard" type="CharacterBody2D"]
 position = Vector2(0, 1)
@@ -135,16 +134,17 @@ script = ExtResource("1_1bmd2")
 position = Vector2(8, -4.9999847)
 scale = Vector2(1.6953125, 1.6679688)
 sprite_frames = SubResource("SpriteFrames_tjto1")
-animation = &"attack"
+animation = &"walk"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(-16, -2)
-shape = SubResource("CapsuleShape2D_tf3a8")
+position = Vector2(-21, 8)
+shape = SubResource("CircleShape2D_1bmd2")
 
 [node name="DetectionArea" type="Area2D" parent="."]
-position = Vector2(-20, -2)
+position = Vector2(-17, 4)
 collision_layer = 0
+collision_mask = 3
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
-position = Vector2(13, 5)
+position = Vector2(-6, 9)
 shape = SubResource("CircleShape2D_8ybkn")

@@ -25,7 +25,7 @@ var is_blocking: bool = false
 var is_sliding: bool = false
 var is_casting: bool = false
 var is_crouching: bool = false  # НОВОЕ: Приседание
-
+var is_hurt: bool = false  # Получение урона
 # Атака
 var attack_combo: int = 0
 var last_attack_time: float = 0.0
@@ -204,22 +204,21 @@ func handle_movement(delta):
 
 func start_crouch():
 	"""Начать приседание"""
-	is_crouching = true
-	print("🔽 ", character_name, " присел")
+	if not is_on_floor() or is_crouching:
+		return
 	
-	# Уменьшаем коллизию
-	if collision_shape and collision_shape.shape:
-		if collision_shape.shape is CapsuleShape2D:
-			collision_shape.shape.height = crouching_collision_height
-			collision_shape.position.y = original_collision_position.y + (standing_collision_height - crouching_collision_height) / 4
-		elif collision_shape.shape is RectangleShape2D:
-			collision_shape.shape.size.y = crouching_collision_height
-			collision_shape.position.y = original_collision_position.y + (standing_collision_height - crouching_collision_height) / 4
+	is_crouching = true
+	print("🦆 Приседание!")
 
 func stop_crouch():
 	"""Закончить приседание"""
+	if not is_crouching:
+		return
+	
 	is_crouching = false
-	print("🔼 ", character_name, " встал")
+	print("🦆 Встал!")
+	
+
 	
 	# Восстанавливаем коллизию
 	if collision_shape and collision_shape.shape:
@@ -256,39 +255,50 @@ func _show_double_jump_effect():
 # ===========================================
 
 func handle_animations():
+	"""Управляет анимациями"""
+	if not animated_sprite:
+		return
+	
+	# Приоритет анимаций (от высшего к низшему)
+	
+	# Смерть
 	if is_dead:
 		play_animation("death")
 		return
 	
-	if is_blocking:
-		play_animation("shield_defence")
-		return
-	
+	# Атака
 	if is_attacking:
+		return  # Не прерываем анимацию атаки
+	
+	# Получение урона
+	if is_hurt:
+		play_animation("hurt")
 		return
 	
-	if is_casting:
-		play_animation("spellcast")
+	# Блок
+	if is_blocking:
+		play_animation("block")
 		return
 	
-	if is_sliding:
-		play_animation("sliding")
+	# Приседание - ТОЛЬКО если на земле и не двигаемся
+	if is_crouching and is_on_floor():
+		if animated_sprite.animation != "crouch":
+			play_animation("crouch")
 		return
 	
-	if is_crouching:
-		play_animation("crouch")
-		return
-	
-	if is_on_floor():
-		if abs(velocity.x) > 1.0:
-			play_animation("run")
-		else:
-			play_animation("idle")
-	else:
+	# В воздухе
+	if not is_on_floor():
 		if velocity.y < 0:
 			play_animation("jump")
 		else:
 			play_animation("fall")
+		return
+	
+	# Движение
+	if abs(velocity.x) > 10:
+		play_animation("run")
+	else:
+		play_animation("idle")
 
 func play_animation(anim_name: String):
 	if animated_sprite and animated_sprite.sprite_frames != null:
