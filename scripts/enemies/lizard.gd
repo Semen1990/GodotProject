@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
 # ===========================================
-# LIZARD - ВРАГ (ФИНАЛЬНАЯ РАБОЧАЯ ВЕРСИЯ)
+# LIZARD - ВРАГ (ФИНАЛЬНАЯ ВЕРСИЯ v2.0)
 # ===========================================
 
 signal died()
@@ -12,7 +12,7 @@ signal health_changed(new_health)
 @export var damage: int = 2
 @export var move_speed: float = 80.0
 @export var chase_speed: float = 120.0
-@export var attack_range: float = 120.0  # УВЕЛИЧЕНО для длинного копья!
+@export var attack_range: float = 120.0
 @export var detection_range: float = 150.0
 @export var patrol_distance: float = 100.0
 
@@ -29,6 +29,9 @@ var idle_timer: float = 0.0
 var attack_cooldown: float = 0.0
 const ATTACK_COOLDOWN_TIME: float = 1.0
 const IDLE_TIME: float = 1.5
+
+# Минимальная дистанция до игрока (чтобы не зажимать)
+const MIN_DISTANCE_TO_PLAYER: float = 40.0
 
 var gravity: int = ProjectSettings.get_setting("physics/2d/default_gravity")
 
@@ -47,6 +50,7 @@ func _ready():
 	
 	if animated_sprite:
 		animated_sprite.animation_finished.connect(_on_animation_finished)
+		animated_sprite.frame_changed.connect(_on_frame_changed)
 	
 	_change_state(State.IDLE)
 
@@ -110,8 +114,18 @@ func _change_state(new_state: State):
 			_play_anim("hurt")
 			velocity.x = 0
 		State.DEAD:
+			# Отключаем коллизию сразу при смерти
+			_disable_collision()
 			_play_anim("death")
 			velocity = Vector2.ZERO
+
+func _disable_collision():
+	"""Отключает коллизию врага чтобы игрок мог пройти сквозь"""
+	if collision_shape:
+		collision_shape.set_deferred("disabled", true)
+	if detection_area:
+		detection_area.monitoring = false
+		detection_area.monitorable = false
 
 func _process_idle(delta):
 	velocity.x = 0
@@ -171,9 +185,15 @@ func _process_chase():
 		_change_state(State.ATTACK)
 		return
 	
-	# Ожидание кулдауна
+	# Ожидание кулдауна - стоим на месте
 	if dist <= attack_range and not can_attack:
 		velocity.x = 0
+		return
+	
+	# ИСПРАВЛЕНИЕ: Не подходим слишком близко к игроку (чтобы не зажимать)
+	if dist <= MIN_DISTANCE_TO_PLAYER:
+		# Отходим немного назад
+		velocity.x = -sign(dir_x) * move_speed * 0.5
 		return
 	
 	# Преследование
@@ -213,10 +233,20 @@ func _play_anim(anim_name: String):
 			if animated_sprite.animation != anim_name:
 				animated_sprite.play(anim_name)
 
+func _on_frame_changed():
+	"""Урон на 4-м кадре (индекс 3) из 5 кадров анимации атаки"""
+	if current_state != State.ATTACK or damage_dealt_this_attack:
+		return
+	
+	# Кадр 4 (индекс 3) - момент удара копьём
+	if animated_sprite.frame == 3:
+		_deal_damage()
+		damage_dealt_this_attack = true
+
 func _on_animation_finished():
 	match current_state:
 		State.ATTACK:
-			# Наносим урон в конце анимации
+			# Если урон не был нанесён (пропустили кадр) - наносим сейчас
 			if not damage_dealt_this_attack:
 				_deal_damage()
 				damage_dealt_this_attack = true
@@ -238,6 +268,7 @@ func _on_animation_finished():
 				_change_state(State.PATROL)
 		
 		State.DEAD:
+			# Плавное исчезновение после анимации смерти
 			var tw = create_tween()
 			tw.tween_property(animated_sprite, "modulate:a", 0.0, 1.0)
 			tw.tween_callback(queue_free)
@@ -270,18 +301,25 @@ func take_damage(amount: int, _type: String = "physical"):
 	health_changed.emit(current_health)
 	print("🦎 HP:", current_health, "/", max_health)
 	
+	# Красная вспышка ВСЕГДА (даже при смерти)
+	_show_damage_flash()
+	
 	if current_health <= 0:
 		_die()
 	else:
 		_change_state(State.HURT)
-		if animated_sprite:
-			animated_sprite.modulate = Color(2, 0.5, 0.5)
-			var tw = create_tween()
-			tw.tween_property(animated_sprite, "modulate", Color.WHITE, 0.2)
+
+func _show_damage_flash():
+	"""Красная вспышка при получении урона"""
+	if not animated_sprite:
+		return
+	
+	animated_sprite.modulate = Color(2, 0.5, 0.5)
+	
+	var tw = create_tween()
+	tw.tween_property(animated_sprite, "modulate", Color.WHITE, 0.2)
 
 func _die():
 	print("💀 Lizard погиб!")
 	_change_state(State.DEAD)
-	if detection_area:
-		detection_area.monitoring = false
 	died.emit()
