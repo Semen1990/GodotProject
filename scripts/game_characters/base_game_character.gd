@@ -24,8 +24,9 @@ var is_moving: bool = false
 var is_blocking: bool = false
 var is_sliding: bool = false
 var is_casting: bool = false
-var is_crouching: bool = false  # НОВОЕ: Приседание
-var is_hurt: bool = false  # Получение урона
+var is_crouching: bool = false
+var is_hurt: bool = false
+
 # Атака
 var attack_combo: int = 0
 var last_attack_time: float = 0.0
@@ -166,6 +167,7 @@ func handle_movement(delta):
 	
 	# Движение
 	if not is_blocking and not is_crouching:
+		# Обычное движение
 		if direction != 0:
 			velocity.x = move_toward(velocity.x, direction * current_speed, acceleration * delta)
 			if animated_sprite:
@@ -173,14 +175,10 @@ func handle_movement(delta):
 		else:
 			velocity.x = move_toward(velocity.x, 0, friction * delta)
 	elif is_crouching:
-		# Замедленное движение при приседании
-		if direction != 0:
-			velocity.x = move_toward(velocity.x, direction * current_speed * 0.3, acceleration * delta)
-			if animated_sprite:
-				animated_sprite.flip_h = direction < 0
-		else:
-			velocity.x = move_toward(velocity.x, 0, friction * delta)
+		# ИСПРАВЛЕНО: При приседании НЕТ движения - только остановка
+		velocity.x = move_toward(velocity.x, 0, friction * delta)
 	else:
+		# Блокировка
 		velocity.x = move_toward(velocity.x, 0, friction * delta * 2)
 	
 	# ПРЫЖКИ - нельзя прыгать при приседании
@@ -217,8 +215,6 @@ func stop_crouch():
 	
 	is_crouching = false
 	print("🦆 Встал!")
-	
-
 	
 	# Восстанавливаем коллизию
 	if collision_shape and collision_shape.shape:
@@ -259,31 +255,28 @@ func handle_animations():
 	if not animated_sprite:
 		return
 	
-	# Приоритет анимаций (от высшего к низшему)
-	
 	# Смерть
 	if is_dead:
 		play_animation("death")
 		return
 	
-	# Атака
+	# Атака - не прерываем
 	if is_attacking:
-		return  # Не прерываем анимацию атаки
+		return
 	
 	# Получение урона
 	if is_hurt:
 		play_animation("hurt")
 		return
 	
-	# Блок
+	# Блок - используем shield_defence
 	if is_blocking:
-		play_animation("block")
+		play_animation("shield_defence")
 		return
 	
-	# Приседание - ТОЛЬКО если на земле и не двигаемся
+	# Приседание
 	if is_crouching and is_on_floor():
-		if animated_sprite.animation != "crouch":
-			play_animation("crouch")
+		play_animation("crouch")
 		return
 	
 	# В воздухе
@@ -301,22 +294,20 @@ func handle_animations():
 		play_animation("idle")
 
 func play_animation(anim_name: String):
-	if animated_sprite and animated_sprite.sprite_frames != null:
-		var actual_anim_name = anim_name
-		
-		# Проверяем альтернативные названия анимаций
-		if anim_name == "shield_defence" and animated_sprite.sprite_frames.has_animation("shield defence"):
-			actual_anim_name = "shield defence"
-		elif anim_name == "shield defence" and animated_sprite.sprite_frames.has_animation("shield_defence"):
-			actual_anim_name = "shield_defence"
-		
-		if animated_sprite.sprite_frames.has_animation(actual_anim_name):
-			if animated_sprite.animation != actual_anim_name:
-				animated_sprite.play(actual_anim_name)
-		else:
-			# Не спамим ошибками для стандартных анимаций
-			if anim_name not in ["fall", "jump", "crouch"]:
-				pass  # Тихо игнорируем отсутствующие анимации
+	if not animated_sprite or not animated_sprite.sprite_frames:
+		return
+	
+	var actual_anim_name = anim_name
+	
+	# Проверяем альтернативные названия анимаций
+	if anim_name == "shield_defence" and animated_sprite.sprite_frames.has_animation("shield defence"):
+		actual_anim_name = "shield defence"
+	elif anim_name == "shield defence" and animated_sprite.sprite_frames.has_animation("shield_defence"):
+		actual_anim_name = "shield_defence"
+	
+	if animated_sprite.sprite_frames.has_animation(actual_anim_name):
+		if animated_sprite.animation != actual_anim_name:
+			animated_sprite.play(actual_anim_name)
 
 func get_available_animations() -> Array:
 	if animated_sprite and animated_sprite.sprite_frames:

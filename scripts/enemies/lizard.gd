@@ -11,10 +11,9 @@ signal health_changed(new_health)
 @export var current_health: int = 6
 @export var damage: int = 2
 @export var move_speed: float = 80.0
-@export var chase_speed: float = 100.0
-@export var attack_distance: float = 65.0
-@export var damage_range: float = 80.0
-@export var detection_range: float = 200.0
+@export var chase_speed: float = 120.0
+@export var attack_range: float = 120.0  # УВЕЛИЧЕНО для длинного копья!
+@export var detection_range: float = 150.0
 @export var patrol_distance: float = 100.0
 
 enum State { IDLE, PATROL, CHASE, ATTACK, HURT, DEAD }
@@ -25,21 +24,29 @@ var patrol_direction: int = 1
 var target: Node2D = null
 var can_attack: bool = true
 var damage_dealt_this_attack: bool = false
+
 var idle_timer: float = 0.0
 var attack_cooldown: float = 0.0
+const ATTACK_COOLDOWN_TIME: float = 1.0
+const IDLE_TIME: float = 1.5
 
 var gravity: int = ProjectSettings.get_setting("physics/2d/default_gravity")
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
+@onready var detection_area: Area2D = $DetectionArea
 
 func _ready():
 	print("🦎 Lizard создан! HP:", max_health, " DMG:", damage)
 	start_position = global_position
 	
+	if detection_area:
+		detection_area.body_entered.connect(_on_detection_entered)
+		detection_area.body_exited.connect(_on_detection_exited)
+		print("✅ DetectionArea подключена")
+	
 	if animated_sprite:
 		animated_sprite.animation_finished.connect(_on_animation_finished)
-		animated_sprite.frame_changed.connect(_on_frame_changed)
 	
 	_change_state(State.IDLE)
 
@@ -54,10 +61,7 @@ func _physics_process(delta):
 		if attack_cooldown <= 0:
 			can_attack = true
 	
-	# Поиск игрока каждый кадр
-	_search_for_player()
-	
-	# Обработка состояний
+	# Состояния
 	match current_state:
 		State.IDLE:
 			_process_idle(delta)
@@ -66,54 +70,22 @@ func _physics_process(delta):
 		State.CHASE:
 			_process_chase()
 		State.ATTACK:
-			velocity.x = move_toward(velocity.x, 0, 500 * delta)
+			velocity.x = 0
 		State.HURT:
-			velocity.x = move_toward(velocity.x, 0, 500 * delta)
+			velocity.x = 0
 		State.DEAD:
 			velocity = Vector2.ZERO
 			return
 	
 	move_and_slide()
 
-func _search_for_player():
-	"""Ищет игрока в радиусе"""
-	if current_state == State.DEAD or current_state == State.HURT or current_state == State.ATTACK:
-		return
-	
-	# Проверяем текущую цель
-	if target and is_instance_valid(target):
-		# Проверяем жив ли игрок (is_dead - это ПЕРЕМЕННАЯ, не метод!)
-		if target.get("is_dead") == true:
-			target = null
-			_change_state(State.PATROL)
-			return
-		
-		# Проверяем дистанцию
-		var dist = global_position.distance_to(target.global_position)
-		if dist > detection_range * 1.5:
-			print("🦎 Потерял игрока - слишком далеко")
-			target = null
-			_change_state(State.PATROL)
-		return
-	
-	# Ищем игрока в группе "player" (с маленькой буквы!)
-	var players = get_tree().get_nodes_in_group("player")
-	for player in players:
-		# Проверяем жив ли
-		if player.get("is_dead") == true:
-			continue
-		
-		var dist = global_position.distance_to(player.global_position)
-		if dist <= detection_range:
-			print("🦎 Заметил игрока! Дистанция:", int(dist))
-			target = player
-			_change_state(State.CHASE)
-			return
+# ===========================================
+# СОСТОЯНИЯ
+# ===========================================
 
 func _change_state(new_state: State):
 	if current_state == State.DEAD:
 		return
-	
 	if current_state == new_state:
 		return
 	
@@ -124,7 +96,7 @@ func _change_state(new_state: State):
 		State.IDLE:
 			_play_anim("idle")
 			velocity.x = 0
-			idle_timer = randf_range(1.5, 2.5)
+			idle_timer = IDLE_TIME
 		State.PATROL:
 			_play_anim("walk")
 		State.CHASE:
@@ -136,33 +108,44 @@ func _change_state(new_state: State):
 			_play_anim("attack")
 		State.HURT:
 			_play_anim("hurt")
+			velocity.x = 0
 		State.DEAD:
 			_play_anim("death")
 			velocity = Vector2.ZERO
 
 func _process_idle(delta):
+	velocity.x = 0
 	idle_timer -= delta
 	if idle_timer <= 0:
 		_change_state(State.PATROL)
 
 func _process_patrol():
-	# Проверка стены
+	# Проверяем стену
 	if is_on_wall():
 		patrol_direction *= -1
+		idle_timer = 0.5
 		_change_state(State.IDLE)
 		return
 	
-	# Движение
+	# Проверяем дистанцию от старта
+	var dist_from_start = global_position.x - start_position.x
+	
+	if patrol_direction > 0 and dist_from_start >= patrol_distance:
+		patrol_direction = -1
+		idle_timer = 0.5
+		_change_state(State.IDLE)
+		return
+	elif patrol_direction < 0 and dist_from_start <= -patrol_distance:
+		patrol_direction = 1
+		idle_timer = 0.5
+		_change_state(State.IDLE)
+		return
+	
+	# Двигаемся
 	velocity.x = patrol_direction * move_speed
 	
-	# Поворот спрайта
 	if animated_sprite:
 		animated_sprite.flip_h = (patrol_direction < 0)
-	
-	# Проверка дистанции патруля
-	if abs(global_position.x - start_position.x) > patrol_distance:
-		patrol_direction *= -1
-		_change_state(State.IDLE)
 
 func _process_chase():
 	# Проверка цели
@@ -183,16 +166,17 @@ func _process_chase():
 		animated_sprite.flip_h = (dir_x < 0)
 	
 	# Атака если близко
-	if dist <= attack_distance and can_attack:
+	if dist <= attack_range and can_attack:
+		print("🦎 АТАКУЮ! дист=", int(dist))
 		_change_state(State.ATTACK)
 		return
 	
 	# Ожидание кулдауна
-	if dist <= attack_distance:
+	if dist <= attack_range and not can_attack:
 		velocity.x = 0
 		return
 	
-	# Движение к цели
+	# Преследование
 	velocity.x = sign(dir_x) * chase_speed
 
 func _face_target():
@@ -200,49 +184,83 @@ func _face_target():
 		var dir = target.global_position.x - global_position.x
 		animated_sprite.flip_h = (dir < 0)
 
-func _play_anim(name: String):
-	if animated_sprite and animated_sprite.sprite_frames:
-		if animated_sprite.sprite_frames.has_animation(name):
-			if animated_sprite.animation != name:
-				animated_sprite.play(name)
+# ===========================================
+# ОБНАРУЖЕНИЕ
+# ===========================================
 
-func _on_frame_changed():
-	# Урон на 4-м кадре (индекс 3) - для 5-кадровой анимации
-	if current_state != State.ATTACK or damage_dealt_this_attack:
-		return
-	
-	if animated_sprite.frame == 3:
-		_deal_damage()
-		damage_dealt_this_attack = true
+func _on_detection_entered(body):
+	if body.is_in_group("player"):
+		if body.get("is_dead") == true:
+			return
+		print("🦎 Заметил игрока!")
+		target = body
+		_change_state(State.CHASE)
+
+func _on_detection_exited(body):
+	if body == target:
+		print("🦎 Потерял игрока")
+		target = null
+		if current_state == State.CHASE:
+			_change_state(State.PATROL)
+
+# ===========================================
+# АНИМАЦИИ
+# ===========================================
+
+func _play_anim(anim_name: String):
+	if animated_sprite and animated_sprite.sprite_frames:
+		if animated_sprite.sprite_frames.has_animation(anim_name):
+			if animated_sprite.animation != anim_name:
+				animated_sprite.play(anim_name)
 
 func _on_animation_finished():
 	match current_state:
 		State.ATTACK:
+			# Наносим урон в конце анимации
 			if not damage_dealt_this_attack:
 				_deal_damage()
+				damage_dealt_this_attack = true
+			
 			can_attack = false
-			attack_cooldown = 0.8
-			_change_state(State.CHASE if _is_target_valid() else State.PATROL)
+			attack_cooldown = ATTACK_COOLDOWN_TIME
+			
+			# Возвращаемся к преследованию или патрулю
+			if target and is_instance_valid(target) and target.get("is_dead") != true:
+				_change_state(State.CHASE)
+			else:
+				target = null
+				_change_state(State.PATROL)
+		
 		State.HURT:
-			_change_state(State.CHASE if _is_target_valid() else State.PATROL)
+			if target and is_instance_valid(target):
+				_change_state(State.CHASE)
+			else:
+				_change_state(State.PATROL)
+		
 		State.DEAD:
 			var tw = create_tween()
 			tw.tween_property(animated_sprite, "modulate:a", 0.0, 1.0)
 			tw.tween_callback(queue_free)
 
-func _is_target_valid() -> bool:
-	return target and is_instance_valid(target) and target.get("is_dead") != true
+# ===========================================
+# УРОН
+# ===========================================
 
 func _deal_damage():
-	if not _is_target_valid():
+	if not target or not is_instance_valid(target):
+		return
+	
+	if target.get("is_dead") == true:
 		return
 	
 	var dist = global_position.distance_to(target.global_position)
-	print("🦎 Атака! Дист:", int(dist), "/", int(damage_range))
+	print("🦎 Атака! Дист:", int(dist), "/", int(attack_range + 30))
 	
-	if dist <= damage_range and target.has_method("take_damage"):
-		print("🦎 >>> УРОН:", damage, " <<<")
-		target.take_damage(damage, "physical")
+	# Даём запас по дистанции для длинного копья
+	if dist <= attack_range + 30:
+		if target.has_method("take_damage"):
+			print("🦎 >>> УРОН:", damage, " <<<")
+			target.take_damage(damage, "physical")
 
 func take_damage(amount: int, _type: String = "physical"):
 	if current_state == State.DEAD:
@@ -264,4 +282,6 @@ func take_damage(amount: int, _type: String = "physical"):
 func _die():
 	print("💀 Lizard погиб!")
 	_change_state(State.DEAD)
+	if detection_area:
+		detection_area.monitoring = false
 	died.emit()

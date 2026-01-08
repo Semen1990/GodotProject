@@ -1,7 +1,7 @@
 extends "res://scripts/game_characters/base_game_character.gd"
 
 # ===========================================
-# ВОИН - ТАНК/ЗАЩИТНИК (v2.0 ИСПРАВЛЕННЫЙ)
+# ВОИН - ТАНК/ЗАЩИТНИК (v3.0 ИСПРАВЛЕННЫЙ)
 # ===========================================
 
 # Блок
@@ -12,7 +12,7 @@ var base_armor: int = 2
 const BLOCK_COOLDOWN_TIME: float = 3.0
 const BLOCK_ARMOR_BONUS: int = 2
 const BASE_DAMAGE: int = 2
-const ATTACK_RANGE: float = 55.0  # Дальность атаки воина
+const ATTACK_RANGE: float = 55.0
 
 func _ready():
 	print("\n=== 🛡️ ИНИЦИАЛИЗАЦИЯ ВОИНА ===")
@@ -80,6 +80,9 @@ func block():
 	armor = base_armor + BLOCK_ARMOR_BONUS
 	velocity.x = 0
 	
+	# ИСПРАВЛЕНО: Правильное название анимации
+	play_animation("shield_defence")
+	
 	print("  Броня: ", base_armor, " → ", armor)
 
 func stop_blocking():
@@ -94,7 +97,7 @@ func stop_blocking():
 	block_cooldown = BLOCK_COOLDOWN_TIME
 
 # ===========================================
-# АТАКА - УРОН В КОНЦЕ АНИМАЦИИ
+# АТАКА - УРОН НА 4-М КАДРЕ
 # ===========================================
 
 var _attack_damage_dealt: bool = false
@@ -110,7 +113,7 @@ func attack():
 	
 	play_animation("attack")
 	
-	# Подключаем сигнал смены кадра если ещё не подключен
+	# Подключаем сигнал смены кадра
 	if animated_sprite and not animated_sprite.frame_changed.is_connected(_on_attack_frame):
 		animated_sprite.frame_changed.connect(_on_attack_frame)
 	
@@ -128,11 +131,11 @@ func attack():
 	handle_animations()
 
 func _on_attack_frame():
-	"""Вызывается при смене кадра - урон на 4-м кадре (индекс 3)"""
+	"""Урон на 4-м кадре (индекс 3)"""
 	if not is_attacking or _attack_damage_dealt:
 		return
 	
-	if animated_sprite.frame == 3:  # 4-й кадр (счёт с 0)
+	if animated_sprite.frame == 3:
 		_deal_damage_to_enemies()
 		_attack_damage_dealt = true
 		print("🎯 Урон на кадре 4!")
@@ -174,7 +177,7 @@ func take_damage(amount: int, damage_type: String = "physical"):
 	# Рассчитываем урон
 	var final_damage: int
 	if damage_type == "magical":
-		final_damage = amount - int(armor / 2)
+		final_damage = amount - int(armor * 0.5)
 	else:
 		final_damage = amount - armor
 	
