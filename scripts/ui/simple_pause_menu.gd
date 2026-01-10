@@ -1,13 +1,15 @@
 extends CanvasLayer
 
+# ===========================================
+# PAUSE MENU - ИСПРАВЛЕННАЯ ВЕРСИЯ
+# ===========================================
+
 func _ready():
 	print("=== 🎮 МЕНЮ ПАУЗЫ ИНИЦИАЛИЗАЦИЯ ===")
-	
-	# Проверяем существование всех узлов
 	print("Корневой узел: ", name)
 	print("Видимость: ", visible)
 	
-	# Проверяем панель
+	# Проверяем существование всех узлов
 	var panel = $Panel
 	if panel:
 		print("✅ Панель найдена")
@@ -15,7 +17,6 @@ func _ready():
 		print("❌ Панель не найдена!")
 		return
 	
-	# Проверяем контейнеры
 	var center_container = $Panel/CenterContainer
 	var vbox = $Panel/CenterContainer/VBoxContainer
 	
@@ -37,25 +38,16 @@ func _ready():
 		continue_btn.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
 		if not continue_btn.pressed.is_connected(_on_continue_pressed):
 			continue_btn.pressed.connect(_on_continue_pressed)
-			print("✅ Сигнал 'Продолжить' подключен")
-		else:
-			print("ℹ️ Сигнал 'Продолжить' уже подключен")
-	else:
-		print("❌ Кнопка 'Продолжить' не найдена для подключения!")
+		print("✅ Сигнал 'Продолжить' подключен")
 	
 	if menu_btn:
 		menu_btn.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
 		if not menu_btn.pressed.is_connected(_on_menu_pressed):
 			menu_btn.pressed.connect(_on_menu_pressed)
-			print("✅ Сигнал 'В главное меню' подключен")
-		else:
-			print("ℹ️ Сигнал 'В главное меню' уже подключен")
-	else:
-		print("❌ Кнопка 'В главное меню' не найдена для подключения!")
+		print("✅ Сигнал 'В главное меню' подключен")
 	
 	# Скрываем меню при загрузке
 	hide()
-	
 	print("=== ✅ МЕНЮ ПАУЗЫ ГОТОВО ===")
 
 func _input(event):
@@ -87,6 +79,12 @@ func _on_continue_pressed():
 
 func _on_menu_pressed():
 	print("✅ НАЖАТА 'В ГЛАВНОЕ МЕНЮ'")
+	
+	# ВАЖНО: Сначала снимаем паузу
 	get_tree().paused = false
-	# Используем call_deferred для безопасной смены сцены
+	
+	# ВАЖНО: Полный сброс данных через Global
+	Global.reset_all_for_new_game()
+	
+	# Безопасная смена сцены
 	get_tree().call_deferred("change_scene_to_file", "res://scenes/ui/main_menu.tscn")

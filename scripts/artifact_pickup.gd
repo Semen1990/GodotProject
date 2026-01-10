@@ -1,24 +1,40 @@
 # artifact_pickup.gd
 extends Area2D
 
+# ===========================================
+# ARTIFACT PICKUP - ИСПРАВЛЕННАЯ ВЕРСИЯ v3
+# ===========================================
+
 @export var artifact_id: String = "hermes_wings"
 @export var float_amplitude: float = 8.0
 @export var float_speed: float = 2.0
 
 var initial_position: Vector2
+var is_collected: bool = false
 
 # Ноды
 var icon_sprite: Sprite2D
 var name_label: Label
 
+# Кэш для базы данных артефактов
+var artifacts_db_cache = null
+var collected_artifacts_cache = []
+
 func _ready():
 	print("✨ Артефакт создан: ", artifact_id)
 	initial_position = position
 	
+	# Кэшируем данные из Global
+	_cache_global_data()
+	
+	# Проверяем - если артефакт уже собран, НЕ создаём визуал
+	if _is_artifact_already_collected():
+		print("⚠️ Артефакт ", artifact_id, " уже собран, скрываем...")
+		_hide_and_disable()
+		return
+	
 	# Удаляем старые дочерние элементы
-	for child in get_children():
-		if child is Label or child is Sprite2D:
-			child.queue_free()
+	_cleanup_old_children()
 	
 	await get_tree().process_frame
 	
@@ -28,11 +44,54 @@ func _ready():
 	_ensure_collision()
 	
 	# Подключаем сигналы
-	if not body_entered.is_connected(_on_body_entered):
-		body_entered.connect(_on_body_entered)
+	_connect_signals()
 	
 	# Анимация парения
 	_start_float_animation()
+
+func _cache_global_data():
+	"""Кэширует данные из Global для быстрого доступа"""
+	if is_instance_valid(Global):
+		artifacts_db_cache = Global.get("artifacts_database")
+		collected_artifacts_cache = Global.get("collected_artifacts")
+		
+		# Убеждаемся что это массив
+		if collected_artifacts_cache == null or not (collected_artifacts_cache is Array):
+			collected_artifacts_cache = []
+
+func _is_artifact_already_collected() -> bool:
+	"""Проверяет, был ли уже собран этот артефакт"""
+	if collected_artifacts_cache == null:
+		return false
+	
+	return artifact_id in collected_artifacts_cache
+
+func _cleanup_old_children():
+	"""Очищает старые дочерние элементы"""
+	for child in get_children():
+		if child is Label or child is Sprite2D or child is CollisionShape2D:
+			child.free()
+
+func _connect_signals():
+	"""Подключает сигналы"""
+	if body_entered.is_connected(_on_body_entered):
+		body_entered.disconnect(_on_body_entered)
+	body_entered.connect(_on_body_entered)
+
+func _hide_and_disable():
+	"""Скрывает и отключает артефакт если он уже собран"""
+	is_collected = true
+	visible = false
+	
+	# Отключаем коллизию
+	for child in get_children():
+		if child is CollisionShape2D:
+			child.set_deferred("disabled", true)
+			break
+	
+	# Отключаем мониторинг Area2D
+	monitoring = false
+	monitorable = false
 
 func _create_icon():
 	"""Создаёт иконку артефакта"""
@@ -70,28 +129,32 @@ func _create_icon():
 
 func _create_name_label():
 	"""Создаёт название артефакта"""
-	if not Global.artifacts_database.has(artifact_id):
-		return
-	
-	var artifact_data = Global.artifacts_database[artifact_id]
+	var artifact_name = _get_artifact_name()
+	var rarity_color = _get_rarity_color()
 	
 	name_label = Label.new()
 	name_label.name = "NameLabel"
-	name_label.text = artifact_data["name"]
+	name_label.text = artifact_name
 	name_label.add_theme_font_size_override("font_size", 12)
-	name_label.add_theme_color_override("font_color", _get_rarity_color())
+	name_label.add_theme_color_override("font_color", rarity_color)
 	name_label.position = Vector2(-50, -45)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.custom_minimum_size = Vector2(100, 20)
 	
 	add_child(name_label)
 
+func _get_artifact_name() -> String:
+	"""Возвращает название артефакта"""
+	if artifacts_db_cache != null and artifacts_db_cache.has(artifact_id):
+		return artifacts_db_cache[artifact_id].get("name", artifact_id)
+	return artifact_id
+
 func _get_rarity_color() -> Color:
 	"""Возвращает цвет по редкости"""
-	if not Global.artifacts_database.has(artifact_id):
-		return Color.WHITE
+	var rarity = "common"
 	
-	var rarity = Global.artifacts_database[artifact_id].get("rarity", "common")
+	if artifacts_db_cache != null and artifacts_db_cache.has(artifact_id):
+		rarity = artifacts_db_cache[artifact_id].get("rarity", "common")
 	
 	match rarity:
 		"common":
@@ -124,16 +187,51 @@ func _start_float_animation():
 	"""Анимация парения"""
 	var tween = create_tween()
 	tween.set_loops()
-	tween.tween_property(self, "position:y", initial_position.y - float_amplitude, float_speed / 2).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_property(self, "position:y", initial_position.y + float_amplitude, float_speed / 2).set_ease(Tween.EASE_IN_OUT)
+	
+	# Правильный синтаксис для Godot 4.x
+	tween.tween_property(self, "position", Vector2(position.x, initial_position.y - float_amplitude), float_speed / 2).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(self, "position", Vector2(position.x, initial_position.y + float_amplitude), float_speed / 2).set_ease(Tween.EASE_IN_OUT)
 
 func _on_body_entered(body):
 	"""Когда игрок касается артефакта"""
+	if is_collected:
+		return
+	
 	if not body.is_in_group("player") and not body.has_method("apply_artifacts"):
 		return
 	
 	print("✨ Игрок подобрал артефакт: ", artifact_id)
 	
-	if Global.collect_artifact(artifact_id):
-		# Удаляем артефакт БЕЗ эффектов (чтобы не оставался квадратик)
-		queue_free()
+	# Проверяем ещё раз перед сбором
+	if _is_artifact_already_collected():
+		print("⚠️ Артефакт уже собран, скрываем")
+		_hide_and_disable()
+		return
+	
+	# Пытаемся собрать
+	if is_instance_valid(Global) and Global.has_method("collect_artifact"):
+		if Global.collect_artifact(artifact_id):
+			print("✅ Артефакт ", artifact_id, " успешно собран!")
+			is_collected = true
+			
+			# Обновляем кэш
+			_cache_global_data()
+			
+			# Эффект исчезновения
+			_play_pickup_effect()
+			
+			# Применяем к игроку если есть метод
+			if body.has_method("apply_artifacts"):
+				body.apply_artifacts()
+		else:
+			print("❌ Не удалось собрать артефакт: ", artifact_id)
+	else:
+		print("❌ Global невалиден или нет метода collect_artifact")
+
+func _play_pickup_effect():
+	"""Эффект при подборе"""
+	if icon_sprite:
+		var tween = create_tween()
+		tween.tween_property(icon_sprite, "scale", Vector2(2.0, 2.0), 0.2)
+		tween.tween_property(icon_sprite, "modulate:a", 0.0, 0.2)
+		tween.tween_callback(func(): if is_instance_valid(self): queue_free())

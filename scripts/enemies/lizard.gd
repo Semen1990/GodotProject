@@ -9,7 +9,7 @@ signal health_changed(new_health)
 
 @export var max_health: int = 6
 @export var current_health: int = 6
-@export var damage: int = 2
+@export var damage: int = 5
 @export var move_speed: float = 80.0
 @export var chase_speed: float = 120.0
 @export var attack_range: float = 120.0
