@@ -1,15 +1,18 @@
 extends CharacterBody2D
 
 # ===========================================
-# LIZARD - ВРАГ (ФИНАЛЬНАЯ ВЕРСИЯ v2.0)
+# LIZARD - ВРАГ (ПОЛНАЯ ФИНАЛЬНАЯ ВЕРСИЯ)
 # ===========================================
 
 signal died()
 signal health_changed(new_health)
 
+# Тип врага для статистики
+@export_enum("simple", "elite", "boss") var enemy_type: String = "simple"
+
 @export var max_health: int = 6
 @export var current_health: int = 6
-@export var damage: int = 5
+@export var damage: int = 2
 @export var move_speed: float = 80.0
 @export var chase_speed: float = 120.0
 @export var attack_range: float = 120.0
@@ -190,9 +193,8 @@ func _process_chase():
 		velocity.x = 0
 		return
 	
-	# ИСПРАВЛЕНИЕ: Не подходим слишком близко к игроку (чтобы не зажимать)
+	# Не подходим слишком близко к игроку (чтобы не зажимать)
 	if dist <= MIN_DISTANCE_TO_PLAYER:
-		# Отходим немного назад
 		velocity.x = -sign(dir_x) * move_speed * 0.5
 		return
 	
@@ -291,7 +293,8 @@ func _deal_damage():
 	if dist <= attack_range + 30:
 		if target.has_method("take_damage"):
 			print("🦎 >>> УРОН:", damage, " <<<")
-			target.take_damage(damage, "physical")
+			# Передаём источник урона для статистики
+			target.take_damage(damage, "physical", "Ящерица с копьём")
 
 func take_damage(amount: int, _type: String = "physical"):
 	if current_state == State.DEAD:
@@ -300,6 +303,10 @@ func take_damage(amount: int, _type: String = "physical"):
 	current_health = max(0, current_health - amount)
 	health_changed.emit(current_health)
 	print("🦎 HP:", current_health, "/", max_health)
+	
+	# Обновляем статистику урона
+	if Global and Global.has_method("add_damage_dealt"):
+		Global.add_damage_dealt(amount)
 	
 	# Красная вспышка ВСЕГДА (даже при смерти)
 	_show_damage_flash()
@@ -321,5 +328,10 @@ func _show_damage_flash():
 
 func _die():
 	print("💀 Lizard погиб!")
+	
+	# Обновляем статистику убийств
+	if Global and Global.has_method("add_enemy_killed"):
+		Global.add_enemy_killed(enemy_type)
+	
 	_change_state(State.DEAD)
 	died.emit()

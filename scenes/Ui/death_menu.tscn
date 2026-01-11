@@ -1,0 +1,128 @@
+[gd_scene format=3 uid="uid://bu33u1kbmym50"]
+
+[node name="DeathMenu" type="CanvasLayer"]
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="MainContainer" type="CenterContainer" parent="Background"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -64.0
+offset_right = 20.0
+offset_bottom = 64.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MainContent" type="VBoxContainer" parent="Background/MainContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="DeathTitle" type="Label" parent="Background/MainContainer/MainContent"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "ВЫ ПОГИБЛИ"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StatsPanel" type="PanelContainer" parent="Background/MainContainer/MainContent"]
+layout_mode = 2
+
+[node name="StatsContainer" type="VBoxContainer" parent="Background/MainContainer/MainContent/StatsPanel"]
+layout_mode = 2
+
+[node name="DeathReason" type="Label" parent="Background/MainContainer/MainContent/StatsPanel/StatsContainer"]
+layout_mode = 2
+
+[node name="KeysStats" type="HBoxContainer" parent="Background/MainContainer/MainContent/StatsPanel/StatsContainer"]
+layout_mode = 2
+
+[node name="ItemsStats" type="HBoxContainer" parent="Background/MainContainer/MainContent/StatsPanel/StatsContainer"]
+layout_mode = 2
+
+[node name="EnemiesStats" type="HBoxContainer" parent="Background/MainContainer/MainContent/StatsPanel/StatsContainer"]
+layout_mode = 2
+
+[node name="AdditionalStats" type="Label" parent="Background/MainContainer/MainContent/StatsPanel/StatsContainer"]
+layout_mode = 2
+
+[node name="RevivalPanel" type="PanelContainer" parent="Background/MainContainer/MainContent"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Background/MainContainer/MainContent/RevivalPanel"]
+layout_mode = 2
+
+[node name="ArtifactIcon" type="TextureRect" parent="Background/MainContainer/MainContent/RevivalPanel/HBoxContainer"]
+layout_mode = 2
+
+[node name="ArtifactName" type="Label" parent="Background/MainContainer/MainContent/RevivalPanel/HBoxContainer"]
+layout_mode = 2
+
+[node name="ButtonsContainer" type="HBoxContainer" parent="Background/MainContainer/MainContent"]
+layout_mode = 2
+theme_override_constants/separation = 30
+
+[node name="MainMenuButton" type="Button" parent="Background/MainContainer/MainContent/ButtonsContainer"]
+layout_mode = 2
+text = "Главное меню"
+
+[node name="RestartButton" type="Button" parent="Background/MainContainer/MainContent/ButtonsContainer"]
+layout_mode = 2
+text = "Начать сначала"
+
+[node name="ReviveButton" type="Button" parent="Background/MainContainer/MainContent/ButtonsContainer"]
+layout_mode = 2
+text = "Возродиться"
+
+[node name="ConfirmationDialog" type="PanelContainer" parent="Background"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -33.0
+offset_right = 380.0
+offset_bottom = 167.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Background/ConfirmationDialog"]
+layout_mode = 2
+
+[node name="ConfirmationText" type="Label" parent="Background/ConfirmationDialog/VBoxContainer"]
+layout_mode = 2
+text = "Вы действительно хотите выйти?"
+horizontal_alignment = 1
+
+[node name="CountdownBar" type="ProgressBar" parent="Background/ConfirmationDialog/VBoxContainer"]
+layout_mode = 2
+max_value = 6.0
+value = 6.0
+
+[node name="ConfirmationButtons" type="HBoxContainer" parent="Background/ConfirmationDialog/VBoxContainer"]
+layout_mode = 2
+
+[node name="ConfirmYesButton" type="Button" parent="Background/ConfirmationDialog/VBoxContainer/ConfirmationButtons"]
+layout_mode = 2
+text = "ДА"
+
+[node name="ConfirmNoButton" type="Button" parent="Background/ConfirmationDialog/VBoxContainer/ConfirmationButtons"]
+layout_mode = 2
+text = "НЕТ"
+
+[node name="CountdownTimer" type="Timer" parent="."]
+wait_time = 0.1

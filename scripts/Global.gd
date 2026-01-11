@@ -416,3 +416,113 @@ func reset_all_for_new_game():
 	reset_artifacts()
 	
 	print("✅ Все данные сброшены для новой игры")
+# ===========================================
+# ДОБАВЬТЕ ЭТО В Global.gd
+# ===========================================
+
+# Статистика текущего забега
+var run_statistics: Dictionary = {
+	"death_reason": "",
+	"keys_collected": 0,
+	"items_collected": 0,
+	"coins_collected": 0,
+	"enemies_simple": 0,
+	"enemies_elite": 0,
+	"enemies_boss": 0,
+	"damage_dealt": 0,
+	"damage_taken": 0,
+	"rooms_visited": 0,
+	"time_played": 0.0,
+	"start_time": 0.0
+}
+
+# Артефакт возрождения (если есть)
+var revival_artifact_id: String = ""
+
+# Данные для возрождения
+var last_room_path: String = ""
+var last_safe_position: Vector2 = Vector2.ZERO
+
+func reset_run_statistics():
+	"""Сбрасывает статистику забега"""
+	run_statistics = {
+		"death_reason": "",
+		"keys_collected": 0,
+		"items_collected": 0,
+		"coins_collected": 0,
+		"enemies_simple": 0,
+		"enemies_elite": 0,
+		"enemies_boss": 0,
+		"damage_dealt": 0,
+		"damage_taken": 0,
+		"rooms_visited": 0,
+		"time_played": 0.0,
+		"start_time": Time.get_unix_time_from_system()
+	}
+	revival_artifact_id = ""
+	print("📊 Статистика забега сброшена")
+
+func add_key_collected():
+	run_statistics["keys_collected"] += 1
+
+func add_item_collected():
+	run_statistics["items_collected"] += 1
+
+func add_coins(amount: int):
+	run_statistics["coins_collected"] += amount
+
+func add_enemy_killed(enemy_type: String):
+	match enemy_type:
+		"simple":
+			run_statistics["enemies_simple"] += 1
+		"elite":
+			run_statistics["enemies_elite"] += 1
+		"boss":
+			run_statistics["enemies_boss"] += 1
+
+func add_damage_dealt(amount: int):
+	run_statistics["damage_dealt"] += amount
+
+func add_damage_taken(amount: int):
+	run_statistics["damage_taken"] += amount
+
+func add_room_visited():
+	run_statistics["rooms_visited"] += 1
+
+func set_death_reason(reason: String):
+	run_statistics["death_reason"] = reason
+
+func update_play_time():
+	"""Обновляет время игры"""
+	if run_statistics["start_time"] > 0:
+		run_statistics["time_played"] = Time.get_unix_time_from_system() - run_statistics["start_time"]
+
+func get_run_statistics() -> Dictionary:
+	"""Возвращает статистику с обновлённым временем"""
+	update_play_time()
+	return run_statistics.duplicate()
+
+func set_revival_artifact(artifact_id: String):
+	"""Устанавливает артефакт возрождения"""
+	revival_artifact_id = artifact_id
+	print("🔮 Артефакт возрождения установлен: ", artifact_id)
+
+func get_revival_artifact() -> String:
+	return revival_artifact_id
+
+func use_revival_artifact():
+	"""Использует артефакт возрождения"""
+	var used_id = revival_artifact_id
+	revival_artifact_id = ""
+	
+	# Удаляем из инвентаря
+	if collected_artifacts.has(used_id):
+		collected_artifacts.erase(used_id)
+	
+	print("🔮 Артефакт возрождения использован: ", used_id)
+	return used_id
+
+func save_safe_position(room_path: String, position: Vector2):
+	"""Сохраняет безопасную позицию для возрождения"""
+	last_room_path = room_path
+	last_safe_position = position

@@ -1,7 +1,7 @@
 extends "res://scripts/game_characters/base_game_character.gd"
 
 # ===========================================
-# ВОИН - ТАНК/ЗАЩИТНИК (v3.0 ИСПРАВЛЕННЫЙ)
+# ВОИН - ТАНК/ЗАЩИТНИК (ПОЛНАЯ ВЕРСИЯ)
 # ===========================================
 
 # Блок
@@ -80,7 +80,7 @@ func block():
 	armor = base_armor + BLOCK_ARMOR_BONUS
 	velocity.x = 0
 	
-	# ИСПРАВЛЕНО: Правильное название анимации
+	# Правильное название анимации
 	play_animation("shield_defence")
 	
 	print("  Броня: ", base_armor, " → ", armor)
@@ -160,15 +160,22 @@ func _deal_damage_to_enemies():
 		if body != self and body.has_method("take_damage"):
 			body.take_damage(BASE_DAMAGE, "physical")
 			print("🎯 Попадание! Урон:", BASE_DAMAGE)
+			
+			# Обновляем статистику
+			if Global and Global.has_method("add_damage_dealt"):
+				Global.add_damage_dealt(BASE_DAMAGE)
 
 # ===========================================
-# ПОЛУЧЕНИЕ УРОНА
+# ПОЛУЧЕНИЕ УРОНА (сигнатура совпадает с родителем)
 # ===========================================
 
-func take_damage(amount: int, damage_type: String = "physical"):
+func take_damage(amount: int, damage_type: String = "physical", source: String = "Неизвестно"):
 	"""Получение урона с учётом брони"""
 	if is_dead:
 		return
+	
+	# Запоминаем источник урона
+	last_damage_source = source
 	
 	print("\n💥 ВОИН ПОЛУЧАЕТ УРОН!")
 	print("  Входящий: ", amount, " (", damage_type, ")")
@@ -191,6 +198,10 @@ func take_damage(amount: int, damage_type: String = "physical"):
 	current_health = max(0, current_health)
 	
 	print("  HP после: ", current_health)
+	
+	# Обновляем статистику
+	if Global and Global.has_method("add_damage_taken"):
+		Global.add_damage_taken(final_damage)
 	
 	# Обновляем UI
 	health_changed.emit(current_health)
@@ -219,7 +230,7 @@ func _show_damage_effect():
 
 func _update_block_cooldown_ui():
 	"""Обновляет UI кулдауна"""
-	if Global.game_ui and Global.game_ui.has_method("update_ability_cooldown"):
+	if Global and Global.game_ui and Global.game_ui.has_method("update_ability_cooldown"):
 		var percent = 1.0 - (block_cooldown / BLOCK_COOLDOWN_TIME)
 		Global.game_ui.update_ability_cooldown("block", percent)
 
