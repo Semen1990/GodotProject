@@ -1,7 +1,7 @@
 extends CanvasLayer
 
 # ===========================================
-# GAME UI v5.0 - СОЗДАЁТСЯ ПРОГРАММНО
+# GAME UI v5.1 - С ИКОНКОЙ СПОСОБНОСТИ ИЗ ФАЙЛА
 # ===========================================
 
 # Контейнеры
@@ -24,7 +24,8 @@ var mana_bar: ProgressBar
 var mana_container: VBoxContainer
 
 # Способность
-var ability_button: Button
+var ability_container: VBoxContainer
+var ability_button: TextureRect  # Изменено на TextureRect для иконки
 var ability_cooldown: ColorRect
 var ability_label: Label
 
@@ -40,7 +41,7 @@ var current_stats = {
 var key_labels: Array = []
 
 func _ready():
-	print("\n=== 🎮 GAME UI v5.0 ===")
+	print("\n=== 🎮 GAME UI v5.1 ===")
 	_create_all_ui()
 	print("✅ UI создан")
 
@@ -145,34 +146,96 @@ func _create_mana_ui():
 	mana_container.add_child(mana_bar)
 
 func _create_ability_ui():
-	"""Создаёт UI способности"""
-	var ability_vbox = VBoxContainer.new()
-	ability_vbox.position = Vector2(20, 160)
-	add_child(ability_vbox)
+	"""Создаёт UI способности с иконкой из файла"""
+	ability_container = VBoxContainer.new()
+	ability_container.position = Vector2(20, 160)
+	add_child(ability_container)
 	
-	# Кнопка способности
-	ability_button = Button.new()
+	# Контейнер для иконки (чтобы добавить рамку)
+	var icon_panel = PanelContainer.new()
+	icon_panel.custom_minimum_size = Vector2(54, 54)
+	
+	# Стиль рамки
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.15, 0.15, 0.2, 0.9)
+	panel_style.border_color = Color(0.6, 0.6, 0.7)
+	panel_style.set_border_width_all(2)
+	panel_style.set_corner_radius_all(4)
+	icon_panel.add_theme_stylebox_override("panel", panel_style)
+	ability_container.add_child(icon_panel)
+	
+	# Иконка способности из файла
+	ability_button = TextureRect.new()
 	ability_button.custom_minimum_size = Vector2(50, 50)
-	ability_button.text = "🛡️"
-	ability_button.add_theme_font_size_override("font_size", 24)
-	ability_vbox.add_child(ability_button)
+	ability_button.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	ability_button.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	
+	# Загружаем иконку из файла
+	var icon_path = "res://assets/Spell/shield_defence.png"
+	if ResourceLoader.exists(icon_path):
+		var icon_texture = load(icon_path)
+		ability_button.texture = icon_texture
+		print("✅ Иконка способности загружена: ", icon_path)
+	else:
+		# Запасной вариант - создаём простую иконку
+		print("⚠️ Иконка не найдена: ", icon_path, " - используем запасную")
+		_create_fallback_ability_icon()
+	
+	icon_panel.add_child(ability_button)
 	
 	# Оверлей кулдауна
 	ability_cooldown = ColorRect.new()
 	ability_cooldown.color = Color(0, 0, 0, 0.7)
 	ability_cooldown.custom_minimum_size = Vector2(50, 50)
 	ability_cooldown.size = Vector2(50, 0)
-	ability_cooldown.position = Vector2(0, 50)
+	ability_cooldown.position = Vector2(2, 52)  # Учитываем рамку
 	ability_cooldown.visible = false
 	ability_cooldown.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	ability_button.add_child(ability_cooldown)
+	icon_panel.add_child(ability_cooldown)
 	
 	# Хоткей
 	ability_label = Label.new()
-	ability_label.text = "[E]"
-	ability_label.add_theme_font_size_override("font_size", 14)
+	ability_label.text = "[RMB]"
+	ability_label.add_theme_font_size_override("font_size", 12)
+	ability_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
 	ability_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ability_vbox.add_child(ability_label)
+	ability_container.add_child(ability_label)
+
+func _create_fallback_ability_icon():
+	"""Создаёт запасную иконку если файл не найден"""
+	var image = Image.create(50, 50, false, Image.FORMAT_RGBA8)
+	
+	# Рисуем простой щит
+	for x in range(50):
+		for y in range(50):
+			var color = Color(0.3, 0.4, 0.6, 0.0)
+			
+			# Форма щита
+			var center_x = 25
+			var in_shield = false
+			
+			if y < 35:
+				# Верхняя часть - прямоугольник
+				if x >= 8 and x <= 42:
+					in_shield = true
+			else:
+				# Нижняя часть - треугольник
+				var width = 42 - 8
+				var progress = float(y - 35) / 15.0
+				var half_width = (width / 2) * (1.0 - progress)
+				if x >= center_x - half_width and x <= center_x + half_width:
+					in_shield = true
+			
+			if in_shield:
+				color = Color(0.4, 0.5, 0.7, 1.0)
+				# Блик
+				if x < 20 and y < 25:
+					color = color.lightened(0.2)
+	
+			image.set_pixel(x, y, color)
+	
+	var texture = ImageTexture.create_from_image(image)
+	ability_button.texture = texture
 
 func _create_keys_ui():
 	"""Создаёт UI ключей"""
@@ -262,6 +325,22 @@ func setup_character_ui(stats: Dictionary):
 	print("✅ MP:", current_stats["mana"], "/", current_stats["max_mana"])
 
 # ===========================================
+# СМЕНА ИКОНКИ СПОСОБНОСТИ
+# ===========================================
+
+func set_ability_icon(icon_path: String):
+	"""Меняет иконку способности"""
+	if ability_button and ResourceLoader.exists(icon_path):
+		var texture = load(icon_path)
+		ability_button.texture = texture
+		print("🎯 Иконка способности изменена: ", icon_path)
+
+func set_ability_hotkey(hotkey_text: String):
+	"""Меняет текст хоткея под иконкой"""
+	if ability_label:
+		ability_label.text = hotkey_text
+
+# ===========================================
 # ОБНОВЛЕНИЕ
 # ===========================================
 
@@ -307,5 +386,4 @@ func update_ability_cooldown(_id: String, percent: float):
 		# Заполняем снизу вверх
 		var height = 50.0 * (1.0 - percent)
 		ability_cooldown.size = Vector2(50, height)
-		ability_cooldown.position = Vector2(0, 50 - height)
-		
+		ability_cooldown.position = Vector2(2, 52 - height)
