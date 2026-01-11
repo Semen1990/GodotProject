@@ -1,13 +1,15 @@
 extends Node
 
 # ===========================================
-# GLOBAL.GD - ИСПРАВЛЕННАЯ ВЕРСИЯ v2.0
+# GLOBAL.GD - ВЕРСИЯ 3.0 С ПОЛНОЙ СИСТЕМОЙ АРТЕФАКТОВ
 # ===========================================
 
 # Выбранный персонаж
 var selected_character = null
+
 # Данные персонажей для меню выбора
 var character_data = {}
+
 # ПУТИ К ИГРОВЫМ ПЕРСОНАЖАМ
 var character_player_scenes = {
 	"warrior": "res://scenes/game_characters/warrior_player.tscn",
@@ -15,22 +17,27 @@ var character_player_scenes = {
 	"paladin": "res://scenes/game_characters/paladin_player.tscn", 
 	"rogue": "res://scenes/game_characters/rogue_player.tscn"
 }
+
 # Игровые данные
 var player_data = {
 	"character_type": "",
 	"level": 1,
 	"experience": 0
 }
+
 # Ссылка на игровой UI
 var game_ui: CanvasLayer = null
+
 # Текущий игрок в уровне
 var current_player = null
+
 # Настройки игры
 var game_settings = {
 	"music_volume": 80,
 	"sfx_volume": 90,
 	"fullscreen": true
 }
+
 # Резервные данные персонажей
 var fallback_character_data = {
 	"warrior": {
@@ -105,7 +112,7 @@ var last_safe_position: Vector2 = Vector2.ZERO
 # Собранные артефакты игрока
 var collected_artifacts: Array = []
 
-# База данных всех артефактов
+# БАЗА ДАННЫХ ВСЕХ АРТЕФАКТОВ (ОБНОВЛЕННАЯ)
 var artifacts_database = {
 	"hermes_wings": {
 		"name": "Крылья Гермеса",
@@ -115,6 +122,14 @@ var artifacts_database = {
 		"rarity": "legendary",
 		"effect_text": "Позволяет совершить второй прыжок в воздухе"
 	},
+	"phoenix_feather": {
+		"name": "Перо Феникса",
+		"description": "Легендарное перо птицы феникс, дарующее вторую жизнь",
+		"icon": "res://assets/artifacts/phoenix_feather.png",
+		"ability": "revival",
+		"rarity": "legendary",
+		"effect_text": "Позволяет возродиться один раз после смерти"
+	},
 	"griffin_feather": {
 		"name": "Перо Грифона",
 		"description": "Магическое перо мифического существа",
@@ -122,22 +137,6 @@ var artifacts_database = {
 		"ability": "double_jump",
 		"rarity": "epic",
 		"effect_text": "Дарует возможность двойного прыжка"
-	},
-	"wind_ring": {
-		"name": "Кольцо Ветра",
-		"description": "Древнее кольцо с силой воздушной стихии",
-		"icon": "res://assets/artifacts/wind_ring.png",
-		"ability": "double_jump",
-		"rarity": "rare",
-		"effect_text": "Усиливает прыжки"
-	},
-	"eagle_amulet": {
-		"name": "Амулет Орла",
-		"description": "Амулет с духом великого орла",
-		"icon": "res://assets/artifacts/eagle_amulet.png",
-		"ability": "double_jump",
-		"rarity": "epic",
-		"effect_text": "Дух орла помогает взлететь выше"
 	},
 	"dash_boots": {
 		"name": "Сапоги Рывка",
@@ -154,14 +153,6 @@ var artifacts_database = {
 		"ability": "max_health",
 		"rarity": "common",
 		"effect_text": "Увеличивает максимальное здоровье на 20"
-	},
-	"phoenix_feather": {
-		"name": "Перо Феникса",
-		"description": "Легендарное перо птицы феникс, дарующее вторую жизнь",
-		"icon": "res://assets/artifacts/phoenix_feather.png",
-		"ability": "revival",
-		"rarity": "legendary",
-		"effect_text": "Позволяет возродиться один раз после смерти"
 	}
 }
 
@@ -422,7 +413,7 @@ func save_safe_position(room_path: String, position: Vector2):
 	last_safe_position = position
 
 # ===========================================
-# СИСТЕМА АРТЕФАКТОВ
+# СИСТЕМА АРТЕФАКТОВ - ОБНОВЛЕННАЯ
 # ===========================================
 
 func has_artifact(artifact_id: String) -> bool:
@@ -483,7 +474,12 @@ func apply_artifact_effect(artifact_id: String):
 		
 		"dash":
 			if "base_speed" in current_player and "current_speed" in current_player:
-				current_player.base_speed = int(current_player.base_speed * 1.3)
+				# Сохраняем оригинальную скорость для сброса
+				if not "original_base_speed" in current_player:
+					current_player.original_base_speed = current_player.base_speed
+				
+				# Увеличиваем скорость на 30%
+				current_player.base_speed = int(current_player.original_base_speed * 1.3)
 				current_player.current_speed = current_player.base_speed
 				print("⚡ Скорость увеличена до: ", current_player.current_speed)
 			else:
@@ -493,15 +489,20 @@ func apply_artifact_effect(artifact_id: String):
 			if "max_health" in current_player and "current_health" in current_player:
 				current_player.max_health += 20
 				current_player.current_health += 20
+				
+				# Обновляем UI через сигнал или прямо
 				if "health_changed" in current_player:
 					current_player.health_changed.emit(current_player.current_health)
+				elif game_ui and game_ui.has_method("update_health"):
+					game_ui.update_health(current_player.current_health)
+					
 				print("❤️ Здоровье увеличено до: ", current_player.max_health)
 			else:
 				print("⚠️ Переменные здоровья не найдены у персонажа")
 		
 		"revival":
 			# Артефакт возрождения не даёт немедленного эффекта
-			print("🔮 Получен артефакт возрождения!")
+			print("🔮 Получен артефакт возрождения! Вы сможете возродиться после смерти.")
 		
 		_:
 			print("⚠️ Неизвестная способность: ", artifact.get("ability", "unknown"))
@@ -540,6 +541,20 @@ func get_artifact_count_by_rarity() -> Dictionary:
 			rarity_count[rarity] += 1
 	
 	return rarity_count
+
+func get_artifact_icon(artifact_id: String):
+	"""Возвращает текстуру иконки артефакта"""
+	if artifacts_database.has(artifact_id):
+		var icon_path = artifacts_database[artifact_id].get("icon", "")
+		if icon_path != "":
+			return load(icon_path)
+	return null
+
+func get_artifact_name(artifact_id: String) -> String:
+	"""Возвращает название артефакта"""
+	if artifacts_database.has(artifact_id):
+		return artifacts_database[artifact_id].get("name", artifact_id.capitalize().replace("_", " "))
+	return artifact_id.capitalize().replace("_", " ")
 
 # ===========================================
 # СБРОС ДАННЫХ
@@ -602,3 +617,21 @@ func full_reset():
 	}
 	
 	print("✅ Все данные игры полностью сброшены")
+
+# ===========================================
+# ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+# ===========================================
+
+func is_double_jump_enabled() -> bool:
+	return has_ability("double_jump")
+
+func get_available_artifacts_count() -> int:
+	return collected_artifacts.size()
+
+func print_artifacts_list():
+	print("📋 Список собранных артефактов:")
+	for artifact_id in collected_artifacts:
+		var data = get_artifact_data(artifact_id)
+		if data:
+			print("  - ", data.get("name", artifact_id), " (", data.get("rarity", "common"), ")")
+	print("Всего артефактов: ", collected_artifacts.size())

@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://c0y2cqfgpq40l" path="res://scripts/artifact_pickup.gd" id="1_37fbc"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_gobwt"]
-radius = 30.0
+radius = 25.0
 
 [node name="ArtifactPickup" type="Area2D"]
 collision_layer = 8
@@ -14,6 +14,7 @@ script = ExtResource("1_37fbc")
 shape = SubResource("CircleShape2D_gobwt")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(1.5, 1.5)
 
 [node name="Label" type="Label" parent="."]
 offset_left = -21.0
