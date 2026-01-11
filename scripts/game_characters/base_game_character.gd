@@ -468,6 +468,12 @@ func _on_revive_requested(data: Dictionary):
 	if Global and Global.has_method("use_revival_artifact"):
 		Global.use_revival_artifact()
 	
+	# ВАЖНО: При возрождении НЕ сбрасываем статистику
+	# Только снимаем паузу и восстанавливаем игрока
+	
+	# Снимаем паузу (меню смерти само снимет)
+	get_tree().paused = false
+	
 	# Возрождаем игрока
 	revive()
 

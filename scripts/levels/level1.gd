@@ -9,6 +9,10 @@ func _ready():
 	print("🎮 Level 1 loaded!")
 	print("Global.selected_character: ", Global.selected_character)
 	
+	# ВАЖНО: Запускаем отсчёт статистики забега
+	if Global and Global.has_method("start_run_statistics"):
+		Global.start_run_statistics()
+	
 	# Ждем полной загрузки
 	await get_tree().process_frame
 	
