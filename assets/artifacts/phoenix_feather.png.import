@@ -2,12 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bkbgxuac4eoyn"
-valid=false
+uid="uid://b8dy2h0wbhev2"
+path="res://.godot/imported/phoenix_feather.png-71faf25a3d5ad07d4a75d8be338f92f8.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
 source_file="res://assets/artifacts/phoenix_feather.png"
+dest_files=["res://.godot/imported/phoenix_feather.png-71faf25a3d5ad07d4a75d8be338f92f8.ctex"]
 
 [params]
 
