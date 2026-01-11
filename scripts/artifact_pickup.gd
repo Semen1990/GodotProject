@@ -165,10 +165,10 @@ func _on_body_entered(body):
 	
 	print("🎁 Игрок подбирает артефакт: ", artifact_id)
 	
-	# Проверяем ещё раз через Global
+	# Проверяем, собран ли уже этот артефакт
 	if Global and Global.has_method("has_artifact"):
 		if Global.has_artifact(artifact_id):
-			print("⚠️ Артефакт уже собран (проверка через Global)")
+			print("⚠️ Артефакт уже собран (навсегда)")
 			queue_free()
 			return
 	
@@ -176,10 +176,10 @@ func _on_body_entered(body):
 	if Global and Global.has_method("collect_artifact"):
 		var success = Global.collect_artifact(artifact_id)
 		if success:
-			print("✅ Артефакт успешно собран через Global!")
+			print("✅ Артефакт навсегда добавлен игроку!")
 			_collect_artifact_effect()
 		else:
-			print("❌ Ошибка при сборе артефакта через Global")
+			print("❌ Ошибка при сборе артефакта")
 	else:
 		print("❌ Global или метод collect_artifact не найден")
 		# Запасной вариант - просто собираем

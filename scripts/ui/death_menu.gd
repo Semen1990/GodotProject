@@ -2,52 +2,30 @@ extends CanvasLayer
 
 class_name DeathMenu
 
-# ===========================================
-# МЕНЮ СМЕРТИ - ПОЛНОСТЬЮ ИСПРАВЛЕННАЯ ВЕРСИЯ v4.0
-# ===========================================
-# Исправлено:
-# 1. Текст "повержено" для всех врагов ✓
-# 2. Отображение времени игры ✓
-# 3. Секция артефактов с редкостями ✓
-# 4. Ошибка InputMap "pause" ✓
-# 5. Кнопка "Возродиться" при наличии артефакта ✓
-# 6. Статистика не показывается при наличии артефакта ✓
-# 7. Правильный сброс статистики между забегами ✓
-# ===========================================
-
-# Сигналы
 signal main_menu_requested
 signal restart_requested
 signal revive_requested(data: Dictionary)
 
-# Режимы меню
 enum MenuMode { NORMAL, REVIVAL }
 var current_mode: MenuMode = MenuMode.NORMAL
 
-# Данные
 var has_revival_artifact: bool = false
 var current_revival_artifact_id: String = ""
 var death_statistics: Dictionary = {}
 var player_last_room: String = ""
 var player_last_position: Vector2 = Vector2.ZERO
-
-# Состояние подтверждения
 var is_confirmation_active: bool = false
 var pending_action: String = ""
 var countdown_time: float = 6.0
 var current_countdown: float = 6.0
-
-# Константы
 const STATS_DISPLAY_TIME: float = 6.0
 
-# Редкости артефактов
 const RARITY_COLORS = {
-	"common": Color(0.7, 0.7, 0.7),      # Серый - обычный
-	"rare": Color(0.2, 0.5, 1.0),        # Синий - редкий
-	"epic": Color(0.8, 0.2, 0.8),        # Фиолетовый - эпический
-	"legendary": Color(1.0, 0.8, 0.0)    # Золотой - легендарный
+	"common": Color(0.7, 0.7, 0.7),
+	"rare": Color(0.2, 0.5, 1.0),
+	"epic": Color(0.8, 0.2, 0.8),
+	"legendary": Color(1.0, 0.8, 0.0)
 }
-
 const RARITY_NAMES = {
 	"common": "Обычный",
 	"rare": "Редкий",
@@ -55,14 +33,6 @@ const RARITY_NAMES = {
 	"legendary": "Легендарный"
 }
 
-const RARITY_ICONS = {
-	"common": "○",
-	"rare": "◇",
-	"epic": "◆",
-	"legendary": "★"
-}
-
-# Ноды (будут созданы программно)
 var background: ColorRect
 var main_container: CenterContainer
 var main_content: VBoxContainer
@@ -84,80 +54,47 @@ var confirm_no_button: Button
 var countdown_timer: Timer
 
 func _ready():
-	print("=== 💀 МЕНЮ СМЕРТИ ИНИЦИАЛИЗАЦИЯ ===")
-	
-	# Создаём UI программно
+	add_to_group("death_menu")
 	_create_ui()
-	
-	# Скрываем по умолчанию
 	hide()
-	
-	# Не ставим на паузу это меню
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	
-	print("=== ✅ МЕНЮ СМЕРТИ ГОТОВО ===")
 
 func _create_ui():
-	"""Создаёт весь UI программно"""
-	
-	# === ФОНОВЫЙ ЗАТЕМНИТЕЛЬ ===
 	background = ColorRect.new()
-	background.name = "Background"
 	background.color = Color(0, 0, 0, 0.85)
 	background.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
 	
-	# === ГЛАВНЫЙ КОНТЕЙНЕР ===
 	main_container = CenterContainer.new()
-	main_container.name = "MainContainer"
 	main_container.set_anchors_preset(Control.PRESET_FULL_RECT)
 	background.add_child(main_container)
 	
-	# === ОСНОВНОЙ КОНТЕНТ ===
 	main_content = VBoxContainer.new()
-	main_content.name = "MainContent"
 	main_content.custom_minimum_size = Vector2(500, 400)
 	main_content.add_theme_constant_override("separation", 15)
 	main_container.add_child(main_content)
 	
-	# === ЗАГОЛОВОК ===
 	death_title = Label.new()
-	death_title.name = "DeathTitle"
 	death_title.text = "ВЫ ПОГИБЛИ"
 	death_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	death_title.add_theme_font_size_override("font_size", 48)
 	death_title.add_theme_color_override("font_color", Color(0.9, 0.1, 0.1))
 	main_content.add_child(death_title)
 	
-	# === ПАНЕЛЬ СТАТИСТИКИ ===
 	_create_stats_panel()
-	
-	# === ПАНЕЛЬ АРТЕФАКТОВ ===
 	_create_artifacts_panel()
-	
-	# === ПАНЕЛЬ ВОЗРОЖДЕНИЯ ===
 	_create_revival_panel()
-	
-	# === КНОПКИ ===
 	_create_buttons()
-	
-	# === ДИАЛОГ ПОДТВЕРЖДЕНИЯ ===
 	_create_confirmation_dialog()
 	
-	# === ТАЙМЕР ===
 	countdown_timer = Timer.new()
-	countdown_timer.name = "CountdownTimer"
 	countdown_timer.one_shot = false
 	countdown_timer.timeout.connect(_on_countdown_tick)
 	add_child(countdown_timer)
 
 func _create_stats_panel():
-	"""Создаёт панель статистики"""
 	stats_panel = PanelContainer.new()
-	stats_panel.name = "StatsPanel"
 	stats_panel.custom_minimum_size = Vector2(450, 200)
-	
-	# Стиль панели
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.1, 0.1, 0.15, 0.95)
 	style.border_color = Color(0.5, 0.1, 0.1)
@@ -165,23 +102,15 @@ func _create_stats_panel():
 	style.set_corner_radius_all(8)
 	style.set_content_margin_all(15)
 	stats_panel.add_theme_stylebox_override("panel", style)
-	
 	main_content.add_child(stats_panel)
-	
-	# Контейнер статистики
 	stats_container = VBoxContainer.new()
-	stats_container.name = "StatsContainer"
 	stats_container.add_theme_constant_override("separation", 8)
 	stats_panel.add_child(stats_container)
 
 func _create_artifacts_panel():
-	"""Создаёт панель артефактов"""
 	artifacts_panel = PanelContainer.new()
-	artifacts_panel.name = "ArtifactsPanel"
 	artifacts_panel.custom_minimum_size = Vector2(450, 50)
-	artifacts_panel.visible = false  # Скрыта по умолчанию
-	
-	# Стиль панели
+	artifacts_panel.visible = false
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.1, 0.1, 0.18, 0.95)
 	style.border_color = Color(0.5, 0.3, 0.7)
@@ -189,23 +118,15 @@ func _create_artifacts_panel():
 	style.set_corner_radius_all(8)
 	style.set_content_margin_all(12)
 	artifacts_panel.add_theme_stylebox_override("panel", style)
-	
 	main_content.add_child(artifacts_panel)
-	
-	# Контейнер артефактов
 	artifacts_container = VBoxContainer.new()
-	artifacts_container.name = "ArtifactsContainer"
 	artifacts_container.add_theme_constant_override("separation", 5)
 	artifacts_panel.add_child(artifacts_container)
 
 func _create_revival_panel():
-	"""Создаёт панель возрождения"""
 	revival_panel = PanelContainer.new()
-	revival_panel.name = "RevivalPanel"
 	revival_panel.custom_minimum_size = Vector2(400, 100)
 	revival_panel.visible = false
-	
-	# Стиль
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.1, 0.15, 0.1, 0.95)
 	style.border_color = Color(0.2, 0.8, 0.2)
@@ -213,49 +134,38 @@ func _create_revival_panel():
 	style.set_corner_radius_all(8)
 	style.set_content_margin_all(15)
 	revival_panel.add_theme_stylebox_override("panel", style)
-	
 	main_content.add_child(revival_panel)
 	
-	# Содержимое
 	var hbox = HBoxContainer.new()
 	hbox.name = "HBoxContainer"
 	hbox.add_theme_constant_override("separation", 15)
 	revival_panel.add_child(hbox)
-	
 	var icon = Label.new()
-	icon.name = "ArtifactIcon"
 	icon.text = "🔮"
 	icon.add_theme_font_size_override("font_size", 40)
 	hbox.add_child(icon)
-	
 	var vbox = VBoxContainer.new()
 	vbox.name = "VBoxContainer"
 	hbox.add_child(vbox)
-	
 	var title = Label.new()
-	title.text = "У ВАС ЕСТЬ ВТОРОЙ ШАНС!"
+	title.text = "У ВАС ЕСТЬ ШАНС!"
 	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", Color(0.3, 1.0, 0.3))
 	vbox.add_child(title)
-	
 	var artifact_name = Label.new()
 	artifact_name.name = "ArtifactName"
-	artifact_name.text = "Артефакт возрождения"
+	artifact_name.text = "Перо Феникса"
 	artifact_name.add_theme_font_size_override("font_size", 18)
 	artifact_name.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2))
 	vbox.add_child(artifact_name)
 
 func _create_buttons():
-	"""Создаёт кнопки"""
 	buttons_container = HBoxContainer.new()
-	buttons_container.name = "ButtonsContainer"
 	buttons_container.alignment = BoxContainer.ALIGNMENT_CENTER
 	buttons_container.add_theme_constant_override("separation", 20)
 	main_content.add_child(buttons_container)
 	
-	# Кнопка возрождения (скрыта по умолчанию)
 	revive_button = Button.new()
-	revive_button.name = "ReviveButton"
 	revive_button.text = "🔮 ВОЗРОДИТЬСЯ"
 	revive_button.custom_minimum_size = Vector2(180, 50)
 	revive_button.visible = false
@@ -263,18 +173,14 @@ func _create_buttons():
 	_style_button(revive_button, Color(0.2, 0.7, 0.2))
 	buttons_container.add_child(revive_button)
 	
-	# Кнопка главного меню
 	main_menu_button = Button.new()
-	main_menu_button.name = "MainMenuButton"
 	main_menu_button.text = "🏠 В МЕНЮ"
 	main_menu_button.custom_minimum_size = Vector2(150, 50)
 	main_menu_button.pressed.connect(_on_main_menu_pressed)
 	_style_button(main_menu_button, Color(0.5, 0.5, 0.5))
 	buttons_container.add_child(main_menu_button)
 	
-	# Кнопка рестарта
 	restart_button = Button.new()
-	restart_button.name = "RestartButton"
 	restart_button.text = "🔄 ЗАНОВО"
 	restart_button.custom_minimum_size = Vector2(150, 50)
 	restart_button.pressed.connect(_on_restart_pressed)
@@ -282,39 +188,29 @@ func _create_buttons():
 	buttons_container.add_child(restart_button)
 
 func _style_button(button: Button, base_color: Color):
-	"""Стилизует кнопку"""
 	var normal = StyleBoxFlat.new()
 	normal.bg_color = base_color
 	normal.set_corner_radius_all(5)
 	normal.set_content_margin_all(10)
 	button.add_theme_stylebox_override("normal", normal)
-	
 	var hover = StyleBoxFlat.new()
 	hover.bg_color = base_color.lightened(0.2)
 	hover.set_corner_radius_all(5)
 	hover.set_content_margin_all(10)
 	button.add_theme_stylebox_override("hover", hover)
-	
-	var pressed = StyleBoxFlat.new()
-	pressed.bg_color = base_color.darkened(0.2)
-	pressed.set_corner_radius_all(5)
-	pressed.set_content_margin_all(10)
-	button.add_theme_stylebox_override("pressed", pressed)
-	
+	var pressed_style = StyleBoxFlat.new()
+	pressed_style.bg_color = base_color.darkened(0.2)
+	pressed_style.set_corner_radius_all(5)
+	pressed_style.set_content_margin_all(10)
+	button.add_theme_stylebox_override("pressed", pressed_style)
 	button.add_theme_font_size_override("font_size", 18)
 
 func _create_confirmation_dialog():
-	"""Создаёт диалог подтверждения"""
 	confirmation_dialog = PanelContainer.new()
-	confirmation_dialog.name = "ConfirmationDialog"
 	confirmation_dialog.custom_minimum_size = Vector2(400, 180)
 	confirmation_dialog.visible = false
-	
-	# Центрируем
 	confirmation_dialog.set_anchors_preset(Control.PRESET_CENTER)
 	confirmation_dialog.position = Vector2(-200, -90)
-	
-	# Стиль
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.15, 0.15, 0.2, 0.98)
 	style.border_color = Color(0.9, 0.7, 0.1)
@@ -322,44 +218,33 @@ func _create_confirmation_dialog():
 	style.set_corner_radius_all(10)
 	style.set_content_margin_all(20)
 	confirmation_dialog.add_theme_stylebox_override("panel", style)
-	
 	background.add_child(confirmation_dialog)
 	
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 15)
 	confirmation_dialog.add_child(vbox)
-	
-	# Текст предупреждения
 	confirmation_text = Label.new()
-	confirmation_text.name = "ConfirmationText"
 	confirmation_text.text = "Вы потеряете артефакт возрождения!\nВы уверены?"
 	confirmation_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	confirmation_text.add_theme_font_size_override("font_size", 18)
 	confirmation_text.add_theme_color_override("font_color", Color(1, 0.9, 0.5))
 	vbox.add_child(confirmation_text)
-	
-	# Прогресс-бар обратного отсчёта
 	countdown_bar = ProgressBar.new()
-	countdown_bar.name = "CountdownBar"
 	countdown_bar.custom_minimum_size = Vector2(350, 20)
 	countdown_bar.max_value = countdown_time
 	countdown_bar.value = countdown_time
 	countdown_bar.show_percentage = false
 	vbox.add_child(countdown_bar)
-	
-	# Кнопки подтверждения
 	var buttons = HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	buttons.add_theme_constant_override("separation", 30)
 	vbox.add_child(buttons)
-	
 	confirm_yes_button = Button.new()
 	confirm_yes_button.text = "ДА, ВЫЙТИ"
 	confirm_yes_button.custom_minimum_size = Vector2(120, 40)
 	confirm_yes_button.pressed.connect(_on_confirm_yes)
 	_style_button(confirm_yes_button, Color(0.7, 0.2, 0.2))
 	buttons.add_child(confirm_yes_button)
-	
 	confirm_no_button = Button.new()
 	confirm_no_button.text = "НЕТ"
 	confirm_no_button.custom_minimum_size = Vector2(120, 40)
@@ -367,181 +252,81 @@ func _create_confirmation_dialog():
 	_style_button(confirm_no_button, Color(0.2, 0.5, 0.2))
 	buttons.add_child(confirm_no_button)
 
-# ===========================================
-# ПОКАЗ МЕНЮ
-# ===========================================
-
 func show_death_menu(statistics: Dictionary = {}, revival_artifact_id: String = ""):
-	"""Показывает меню смерти"""
-	print("\n💀 ПОКАЗ МЕНЮ СМЕРТИ")
-	
 	death_statistics = statistics
 	current_revival_artifact_id = revival_artifact_id
 	has_revival_artifact = revival_artifact_id != ""
-	
-	# Определяем режим
 	if has_revival_artifact:
-		current_mode = MenuMode.REVIVAL
 		_setup_revival_mode()
 	else:
-		current_mode = MenuMode.NORMAL
 		_setup_normal_mode()
-	
-	# Показываем меню
 	show()
-	
-	# Ставим игру на паузу
 	get_tree().paused = true
-	
-	# Фокус на кнопку
 	if has_revival_artifact:
 		revive_button.grab_focus()
 	else:
 		restart_button.grab_focus()
 
 func _setup_normal_mode():
-	"""Настройка обычного режима (без артефакта возрождения)"""
 	death_title.text = "ВЫ ПОГИБЛИ"
 	death_title.add_theme_color_override("font_color", Color(0.9, 0.1, 0.1))
-	
-	# Показываем статистику и артефакты
 	stats_panel.visible = true
-	artifacts_panel.visible = true
 	_update_statistics()
 	_update_artifacts_display()
-	
-	# Скрываем панель возрождения
 	revival_panel.visible = false
-	
-	# Кнопки
 	revive_button.visible = false
 	main_menu_button.visible = true
 	restart_button.visible = true
-	main_menu_button.disabled = false
-	restart_button.disabled = false
-	
-	# Текст кнопок
-	main_menu_button.text = "🏠 В МЕНЮ"
-	restart_button.text = "🔄 ЗАНОВО"
 
 func _setup_revival_mode():
-	"""Настройка режима с артефактом возрождения"""
 	death_title.text = "ЕСТЬ ВТОРОЙ ШАНС!"
-	death_title.add_theme_color_override("font_color", Color(0.3, 1.0, 0.3))
-	
-	# Скрываем статистику и артефакты (покажем только если игрок выберет выход)
+	death_title.add_theme_color_override("font_color", Color(0.3, 0.9, 0.3))
 	stats_panel.visible = false
 	artifacts_panel.visible = false
-	
-	# Показываем панель возрождения
 	revival_panel.visible = true
 	_update_revival_info()
-	
-	# Кнопки
 	revive_button.visible = true
-	revive_button.text = "🔮 ВОЗРОДИТЬСЯ"
-	revive_button.disabled = false
-	
 	main_menu_button.visible = true
 	restart_button.visible = true
-	
-	# Меняем текст кнопок для режима возрождения
-	main_menu_button.text = "🚪 ВЫЙТИ В МЕНЮ"
-	restart_button.text = "🔄 НАЧАТЬ ЗАНОВО"
-	
-	# ВАЖНО: При возрождении статистика НЕ должна сбрасываться
-	# Убираем сброс статистики из этих кнопок
 
 func _update_statistics():
-	"""Обновляет отображение статистики"""
-	# Очищаем старую статистику
 	for child in stats_container.get_children():
 		child.queue_free()
-	
-	# Причина смерти
-	var reason = death_statistics.get("death_reason", "Неизвестно")
-	_add_stat_row("💀 Причина смерти:", reason, Color(0.9, 0.3, 0.3))
-	
-	# Разделитель
+	_add_stat_row("💀 Причина смерти:", death_statistics.get("death_reason", "Неизвестно"), Color(0.9, 0.3, 0.3))
 	_add_separator()
-	
-	# Время игры - ИСПРАВЛЕНО
-	var time_played = death_statistics.get("time_played", 0.0)
-	# Убедимся что это число
-	if time_played is Dictionary:
-		time_played = time_played.get("value", 0.0)
-	elif time_played is float or time_played is int:
-		time_played = float(time_played)
-	else:
-		time_played = 0.0
-	
-	var time_str = _format_time(time_played)
-	_add_stat_row("⏱️ Время игры:", time_str, Color(0.6, 0.8, 0.6))
-	
-	var rooms_visited = death_statistics.get("rooms_visited", 0)
-	_add_stat_row("🚪 Комнат пройдено:", str(rooms_visited), Color(0.6, 0.6, 0.9))
-	
-	# Разделитель
+	_add_stat_row("⏱️ Время игры:", _format_time(death_statistics.get("time_played", 0.0)), Color(0.6, 0.8, 0.6))
+	_add_stat_row("🚪 Комнат пройдено:", str(death_statistics.get("rooms_visited", 0)), Color(0.6, 0.6, 0.9))
 	_add_separator()
-	
-	# Собранные предметы
-	var keys = death_statistics.get("keys_collected", 0)
-	_add_stat_row("🔑 Ключей собрано:", str(keys), Color(1.0, 0.9, 0.2))
-	
-	var items = death_statistics.get("items_collected", 0)
-	_add_stat_row("📦 Предметов найдено:", str(items), Color(0.5, 0.8, 1.0))
-	
-	var coins = death_statistics.get("coins_collected", 0)
-	_add_stat_row("💰 Монет собрано:", str(coins), Color(1.0, 0.85, 0.0))
-	
-	# Разделитель
+	_add_stat_row("🔑 Ключей собрано:", str(death_statistics.get("keys_collected", 0)), Color(1.0, 0.9, 0.2))
+	_add_stat_row("📦 Предметов найдено:", str(death_statistics.get("items_collected", 0)), Color(0.5, 0.8, 1.0))
+	_add_stat_row("💰 Монет собрано:", str(death_statistics.get("coins_collected", 0)), Color(1.0, 0.85, 0.0))
 	_add_separator()
-	
-	# Убитые враги - ИСПРАВЛЕНО: добавлено "повержено" для всех типов
-	var simple_enemies = death_statistics.get("enemies_simple", 0)
-	_add_stat_row("👹 Обычных врагов повержено:", str(simple_enemies), Color(0.7, 0.7, 0.7))
-	
-	var elite_enemies = death_statistics.get("enemies_elite", 0)
-	_add_stat_row("⚔️ Элитных врагов повержено:", str(elite_enemies), Color(1.0, 0.6, 0.2))
-	
-	var bosses = death_statistics.get("enemies_boss", 0)
-	_add_stat_row("👑 Боссов повержено:", str(bosses), Color(0.8, 0.2, 0.8))
-	
-	# Разделитель
+	_add_stat_row("👹 Обычных врагов повержено:", str(death_statistics.get("enemies_simple", 0)), Color(0.7, 0.7, 0.7))
+	_add_stat_row("⚔️ Элитных врагов повержено:", str(death_statistics.get("enemies_elite", 0)), Color(1.0, 0.6, 0.2))
+	_add_stat_row("👑 Боссов повержено:", str(death_statistics.get("enemies_boss", 0)), Color(0.8, 0.2, 0.8))
 	_add_separator()
-	
-	# Урон
-	var damage_dealt = death_statistics.get("damage_dealt", 0)
-	_add_stat_row("⚔️ Урона нанесено:", str(damage_dealt), Color(0.9, 0.5, 0.3))
-	
-	var damage_taken = death_statistics.get("damage_taken", 0)
-	_add_stat_row("💔 Урона получено:", str(damage_taken), Color(0.9, 0.3, 0.3))
+	_add_stat_row("⚔️ Урона нанесено:", str(death_statistics.get("damage_dealt", 0)), Color(0.9, 0.5, 0.3))
+	_add_stat_row("💔 Урона получено:", str(death_statistics.get("damage_taken", 0)), Color(0.9, 0.3, 0.3))
 
 func _format_time(seconds: float) -> String:
-	"""Форматирует время в MM:SS или HH:MM:SS"""
 	var total_seconds = int(seconds)
 	var hours = total_seconds / 3600
 	var minutes = (total_seconds % 3600) / 60
 	var secs = total_seconds % 60
-	
 	if hours > 0:
 		return "%d:%02d:%02d" % [hours, minutes, secs]
-	else:
-		return "%d:%02d" % [minutes, secs]
+	return "%d:%02d" % [minutes, secs]
 
 func _add_stat_row(label_text: String, value_text: String, color: Color):
-	"""Добавляет строку статистики"""
 	var hbox = HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 10)
 	stats_container.add_child(hbox)
-	
 	var label = Label.new()
 	label.text = label_text
 	label.add_theme_font_size_override("font_size", 16)
 	label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(label)
-	
 	var value = Label.new()
 	value.text = value_text
 	value.add_theme_font_size_override("font_size", 16)
@@ -550,308 +335,155 @@ func _add_stat_row(label_text: String, value_text: String, color: Color):
 	hbox.add_child(value)
 
 func _add_separator():
-	"""Добавляет разделительную линию"""
 	var sep = HSeparator.new()
 	sep.add_theme_constant_override("separation", 5)
 	stats_container.add_child(sep)
 
 func _update_artifacts_display():
-	"""Обновляет отображение собранных артефактов"""
-	# Очищаем
 	for child in artifacts_container.get_children():
 		child.queue_free()
-	
-	# Получаем артефакты
 	var artifacts = []
 	if Global and "collected_artifacts" in Global:
-		artifacts = Global.collected_artifacts.duplicate()
-	
-	# Если нет артефактов - скрываем панель
+		artifacts = Global.collected_artifacts
 	if artifacts.is_empty():
 		artifacts_panel.visible = false
 		return
-	
-	# Показываем панель
 	artifacts_panel.visible = true
-	
-	# Заголовок
 	var title = Label.new()
-	title.text = "🔮 СОБРАННЫЕ АРТЕФАКТЫ:"
-	title.add_theme_font_size_override("font_size", 20)
-	title.add_theme_color_override("font_color", Color(0.9, 0.7, 1.0))
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.text = "🔮 Собранные артефакты:"
+	title.add_theme_font_size_override("font_size", 18)
+	title.add_theme_color_override("font_color", Color(0.8, 0.6, 1.0))
 	artifacts_container.add_child(title)
-	
-	# Добавляем разделитель
-	_add_separator_to_artifacts()
-	
-	# Получаем количество по редкостям
-	var rarity_count = {}
-	if Global and Global.has_method("get_artifact_count_by_rarity"):
-		rarity_count = Global.get_artifact_count_by_rarity()
-	else:
-		# Запасной вариант
-		rarity_count = {
-			"common": 0,
-			"rare": 0,
-			"epic": 0,
-			"legendary": 0
-		}
-		
-		for artifact_id in artifacts:
-			var rarity = _get_artifact_rarity(artifact_id)
-			if rarity in rarity_count:
-				rarity_count[rarity] += 1
-	
-	# Отображаем по редкостям (от легендарных к обычным)
-	var has_artifacts = false
+	var rarity_count = {"common": 0, "rare": 0, "epic": 0, "legendary": 0}
+	for artifact_id in artifacts:
+		var rarity = _get_artifact_rarity(artifact_id)
+		rarity_count[rarity] += 1
 	for rarity in ["legendary", "epic", "rare", "common"]:
-		var count = rarity_count.get(rarity, 0)
+		var count = rarity_count[rarity]
 		if count > 0:
-			has_artifacts = true
 			var row = HBoxContainer.new()
-			row.add_theme_constant_override("separation", 15)
-			
-			# Иконка редкости
-			var icon = Label.new()
-			icon.text = RARITY_ICONS[rarity]
-			icon.add_theme_font_size_override("font_size", 18)
-			icon.add_theme_color_override("font_color", RARITY_COLORS[rarity])
-			row.add_child(icon)
-			
-			# Название редкости
+			row.add_theme_constant_override("separation", 10)
 			var rarity_label = Label.new()
-			rarity_label.text = RARITY_NAMES[rarity]
-			rarity_label.add_theme_font_size_override("font_size", 16)
+			rarity_label.text = "  %s:" % RARITY_NAMES[rarity]
+			rarity_label.add_theme_font_size_override("font_size", 14)
 			rarity_label.add_theme_color_override("font_color", RARITY_COLORS[rarity])
 			rarity_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			row.add_child(rarity_label)
-			
-			# Количество
 			var count_label = Label.new()
-			count_label.text = "×" + str(count)
-			count_label.add_theme_font_size_override("font_size", 16)
-			count_label.add_theme_color_override("font_color", Color(1, 1, 1))
-			count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			count_label.text = str(count)
+			count_label.add_theme_font_size_override("font_size", 14)
+			count_label.add_theme_color_override("font_color", RARITY_COLORS[rarity])
 			row.add_child(count_label)
-			
 			artifacts_container.add_child(row)
-	
-	if not has_artifacts:
-		var no_artifacts = Label.new()
-		no_artifacts.text = "Артефактов нет"
-		no_artifacts.add_theme_font_size_override("font_size", 14)
-		no_artifacts.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-		no_artifacts.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		artifacts_container.add_child(no_artifacts)
-
-func _add_separator_to_artifacts():
-	var sep = HSeparator.new()
-	sep.add_theme_constant_override("separation", 5)
-	artifacts_container.add_child(sep)
 
 func _get_artifact_rarity(artifact_id: String) -> String:
-	"""Возвращает редкость артефакта по ID"""
-	# Используем глобальную функцию если есть
 	if Global and Global.has_method("get_artifact_rarity"):
 		return Global.get_artifact_rarity(artifact_id)
-	
-	# Запасной вариант
 	match artifact_id:
-		"phoenix_feather", "hermes_wings":
+		"phoenix_feather", "mirror_shield":
 			return "legendary"
-		"griffin_feather", "eagle_amulet":
+		"vampire_ring", "berserker_gloves", "griffin_feather", "eagle_amulet":
 			return "epic"
-		"wind_ring", "dash_boots":
+		"hermes_wings", "mana_crystal", "wind_ring", "dash_boots":
 			return "rare"
-		"health_crystal":
-			return "common"
 		_:
 			return "common"
 
 func _update_revival_info():
-	"""Обновляет информацию об артефакте возрождения"""
 	var artifact_name_node = revival_panel.find_child("ArtifactName", true, false)
 	if artifact_name_node:
 		var artifact_name = "Артефакт возрождения"
-		
-		# Пробуем получить название из Global
 		if Global and Global.has_method("get_artifact_data"):
 			var data = Global.get_artifact_data(current_revival_artifact_id)
 			if data and data.has("name"):
 				artifact_name = data["name"]
 		else:
-			# Запасные названия
 			match current_revival_artifact_id:
 				"phoenix_feather":
 					artifact_name = "Перо Феникса"
-				"resurrection_stone":
-					artifact_name = "Камень воскрешения"
-		
 		artifact_name_node.text = artifact_name
 
-# ===========================================
-# ОБРАБОТЧИКИ КНОПОК
-# ===========================================
-
 func _on_revive_pressed():
-	"""Нажата кнопка возрождения"""
-	print("🔮 Игрок выбрал возрождение!")
-	
-	# Снимаем паузу
 	get_tree().paused = false
-	
-	# Скрываем меню
 	hide()
-	
-	# Отправляем сигнал
-	revive_requested.emit({
-		"artifact_id": current_revival_artifact_id,
-		"last_room": player_last_room,
-		"last_position": player_last_position
-	})
+	revive_requested.emit({"artifact_id": current_revival_artifact_id, "last_room": player_last_room, "last_position": player_last_position})
 
 func _on_main_menu_pressed():
-	"""Нажата кнопка главного меню"""
 	if has_revival_artifact:
 		_show_confirmation("main_menu")
 	else:
 		_go_to_main_menu()
 
 func _on_restart_pressed():
-	"""Нажата кнопка рестарта"""
 	if has_revival_artifact:
 		_show_confirmation("restart")
 	else:
 		_restart_game()
 
 func _show_confirmation(action: String):
-	"""Показывает диалог подтверждения"""
 	pending_action = action
 	is_confirmation_active = true
-	
-	# Обновляем текст
 	var artifact_name = "артефакт возрождения"
-	
 	if Global and Global.has_method("get_artifact_data"):
 		var data = Global.get_artifact_data(current_revival_artifact_id)
 		if data and data.has("name"):
 			artifact_name = data["name"]
-	else:
-		match current_revival_artifact_id:
-			"phoenix_feather":
-				artifact_name = "Перо Феникса"
-	
 	confirmation_text.text = "Вы потеряете " + artifact_name + "!\nВы уверены?"
-	
-	# Сбрасываем таймер
 	current_countdown = countdown_time
 	countdown_bar.value = countdown_time
-	
-	# Показываем диалог
 	confirmation_dialog.visible = true
 	confirm_no_button.grab_focus()
-	
-	# Запускаем таймер (автоотмена через 6 секунд)
 	countdown_timer.start(0.1)
 
 func _on_confirm_yes():
-	"""Подтверждение выхода"""
-	print("✅ Подтверждён выход")
 	countdown_timer.stop()
 	confirmation_dialog.visible = false
 	is_confirmation_active = false
-	
-	# Показываем статистику перед выходом (как в обычном режиме)
 	stats_panel.visible = true
-	artifacts_panel.visible = true
 	_update_statistics()
 	_update_artifacts_display()
 	revival_panel.visible = false
 	revive_button.visible = false
-	
 	death_title.text = "ВЫ ПОГИБЛИ"
 	death_title.add_theme_color_override("font_color", Color(0.9, 0.1, 0.1))
-	
-	# Ждём и выполняем действие
 	await get_tree().create_timer(STATS_DISPLAY_TIME).timeout
-	
 	if pending_action == "main_menu":
 		_go_to_main_menu()
 	elif pending_action == "restart":
 		_restart_game()
 
 func _on_confirm_no():
-	"""Отмена выхода"""
-	print("❌ Отмена выхода")
 	countdown_timer.stop()
 	confirmation_dialog.visible = false
 	is_confirmation_active = false
 	revive_button.grab_focus()
 
 func _on_countdown_tick():
-	"""Тик таймера обратного отсчёта"""
 	current_countdown -= 0.1
 	countdown_bar.value = current_countdown
-	
 	if current_countdown <= 0:
-		# Автоматическая отмена
 		_on_confirm_no()
 
 func _go_to_main_menu():
-	"""Переход в главное меню"""
-	print("🏠 Переход в главное меню")
 	get_tree().paused = false
 	hide()
-	
-	# ВАЖНО: Полный сброс при выходе в меню
-	if Global:
-		if Global.has_method("full_reset"):
-			Global.full_reset()
-		else:
-			if Global.has_method("reset_artifacts"):
-				Global.reset_artifacts()
-			if Global.has_method("reset_run_statistics"):
-				Global.reset_run_statistics()
-	
+	if Global and Global.has_method("full_reset"):
+		Global.full_reset()
 	main_menu_requested.emit()
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 
 func _restart_game():
-	"""Перезапуск игры"""
-	print("🔄 Перезапуск игры")
 	get_tree().paused = false
 	hide()
-	
-	# ВАЖНО: Сброс статистики при рестарте
-	if Global:
-		if Global.has_method("reset_artifacts"):
-			Global.reset_artifacts()
-		if Global.has_method("reset_run_statistics"):
-			Global.reset_run_statistics()
-	
+	if Global and Global.has_method("reset_artifacts"):
+		Global.reset_artifacts()
 	restart_requested.emit()
 	get_tree().change_scene_to_file("res://scenes/levels/level1.tscn")
-
-# ===========================================
-# ВВОД - ИСПРАВЛЕНО
-# ===========================================
 
 func _input(event):
 	if not visible:
 		return
-	
-	# ESC - отмена подтверждения или возврат
-	# ИСПРАВЛЕНО: Убрана проверка несуществующего action "pause"
 	if event.is_action_pressed("ui_cancel"):
 		if is_confirmation_active:
 			_on_confirm_no()
-			get_viewport().set_input_as_handled()
-		elif has_revival_artifact:
-			# Если есть артефакт возрождения, ESC выходит в меню
-			_on_main_menu_pressed()
-			get_viewport().set_input_as_handled()
-		else:
-			# В обычном режиме ESC выходит в меню
-			_on_main_menu_pressed()
-			get_viewport().set_input_as_handled()
+		get_viewport().set_input_as_handled()

@@ -2,7 +2,7 @@
 extends CharacterBody2D
 
 # ===========================================
-# БАЗОВЫЙ КЛАСС ПЕРСОНАЖА (С МЕНЮ СМЕРТИ)
+# БАЗОВЫЙ КЛАСС ПЕРСОНАЖА (ИСПРАВЛЕННАЯ ВЕРСИЯ)
 # ===========================================
 
 # Сигналы
@@ -10,6 +10,7 @@ signal health_changed(new_health)
 signal mana_changed(new_mana)
 signal armor_changed(new_armor)
 signal died()
+signal revived()
 
 # Базовые статы персонажа
 var character_name: String = "BaseCharacter"
@@ -30,6 +31,7 @@ var is_sliding: bool = false
 var is_casting: bool = false
 var is_crouching: bool = false
 var is_hurt: bool = false
+var is_invincible: bool = false  # Неуязвимость после возрождения
 
 # Атака
 var attack_combo: int = 0
@@ -122,6 +124,10 @@ func apply_artifacts():
 func _physics_process(delta):
 	if is_dead:
 		return
+	
+	# Если неуязвимость - мигание
+	if is_invincible and animated_sprite:
+		animated_sprite.modulate.a = 0.7 + sin(Time.get_ticks_msec() * 0.01) * 0.3
 	
 	# Применяем гравитацию
 	if not is_on_floor():
@@ -341,7 +347,7 @@ func attack():
 	handle_animations()
 
 func take_damage(amount: int, damage_type: String = "physical", source: String = "Неизвестно"):
-	if is_dead:
+	if is_dead or is_invincible:
 		return
 	
 	# Запоминаем источник урона
@@ -352,7 +358,7 @@ func take_damage(amount: int, damage_type: String = "physical", source: String =
 	current_health = max(0, current_health)
 	health_changed.emit(current_health)
 	
-	print("💥 ", character_name, " получает урон: ", reduced_amount, " (", damage_type, ")")
+	print("💥 ", character_name, " получает урон: ", reduced_amount, " (", damage_type, ") HP: ", current_health, "/", max_health)
 	
 	# Обновляем статистику
 	if Global and Global.has_method("add_damage_taken"):
@@ -376,7 +382,7 @@ func _show_damage_effect():
 	tween.tween_property(animated_sprite, "modulate", original_modulate, 0.2)
 
 # ===========================================
-# СМЕРТЬ И ВОЗРОЖДЕНИЕ
+# СИСТЕМА СМЕРТИ (ИСПРАВЛЕННАЯ)
 # ===========================================
 
 func die():
@@ -384,13 +390,21 @@ func die():
 		return
 	
 	is_dead = true
-	print("💀 ", character_name, " погиб")
+	print("💀 ", character_name, " погиб от: ", last_damage_source)
 	
 	# Останавливаем движение
 	velocity = Vector2.ZERO
 	
+	# Отключаем коллизии
+	set_collision_layer_value(1, false)
+	set_collision_mask_value(1, false)
+	
 	# Отправляем сигнал
 	died.emit()
+	
+	# Обновляем причину смерти в статистике
+	if Global and Global.has_method("set_death_reason"):
+		Global.set_death_reason(last_damage_source)
 	
 	# Проигрываем анимацию смерти
 	play_animation("death")
@@ -398,6 +412,8 @@ func die():
 	# Ждём завершения анимации
 	if animated_sprite:
 		await animated_sprite.animation_finished
+	else:
+		await get_tree().create_timer(1.0).timeout
 	
 	# Скрываем игрока
 	visible = false
@@ -406,16 +422,12 @@ func die():
 	if collision_shape:
 		collision_shape.set_deferred("disabled", true)
 	
-	# Показываем меню смерти
+	# ВСЕГДА показываем меню смерти (с артефактом или без)
 	_show_death_menu()
 
 func _show_death_menu():
 	"""Показывает меню смерти"""
 	print("📜 Показываем меню смерти...")
-	
-	# Обновляем причину смерти в статистике
-	if Global and Global.has_method("set_death_reason"):
-		Global.set_death_reason(last_damage_source)
 	
 	# Получаем статистику
 	var stats = {}
@@ -426,6 +438,9 @@ func _show_death_menu():
 	var revival_artifact = ""
 	if Global and Global.has_method("get_revival_artifact"):
 		revival_artifact = Global.get_revival_artifact()
+	
+	print("📊 Статистика: ", stats)
+	print("🔮 Артефакт возрождения: ", revival_artifact if revival_artifact != "" else "НЕТ")
 	
 	# Ищем меню смерти в сцене
 	var death_menu = get_tree().get_first_node_in_group("death_menu")
@@ -447,10 +462,12 @@ func _show_death_menu():
 				death_menu.set_script(script)
 				death_menu.add_to_group("death_menu")
 				get_tree().current_scene.add_child(death_menu)
+				# Ждём инициализации
+				await get_tree().process_frame
 				print("✅ Меню смерти создано программно")
 	
-	# Подключаем сигнал возрождения
 	if death_menu:
+		# Подключаем сигнал возрождения
 		if death_menu.has_signal("revive_requested"):
 			if not death_menu.revive_requested.is_connected(_on_revive_requested):
 				death_menu.revive_requested.connect(_on_revive_requested)
@@ -459,27 +476,29 @@ func _show_death_menu():
 		if death_menu.has_method("show_death_menu"):
 			death_menu.show_death_menu(stats, revival_artifact)
 			print("✅ Меню смерти показано")
+		else:
+			print("❌ Метод show_death_menu не найден!")
+	else:
+		print("❌ Не удалось создать меню смерти!")
 
 func _on_revive_requested(data: Dictionary):
-	"""Обработка возрождения"""
+	"""Обработка возрождения из меню смерти"""
 	print("🔮 Возрождение игрока!")
 	
 	# Используем артефакт
 	if Global and Global.has_method("use_revival_artifact"):
 		Global.use_revival_artifact()
 	
-	# ВАЖНО: При возрождении НЕ сбрасываем статистику
-	# Только снимаем паузу и восстанавливаем игрока
-	
-	# Снимаем паузу (меню смерти само снимет)
-	get_tree().paused = false
-	
 	# Возрождаем игрока
 	revive()
 
 func revive():
 	"""Возрождает игрока"""
+	print("✨ Возрождение персонажа...")
+	
 	is_dead = false
+	
+	# Показываем игрока
 	visible = true
 	
 	# Восстанавливаем здоровье (50% от максимума)
@@ -489,29 +508,41 @@ func revive():
 	# Включаем коллизию
 	if collision_shape:
 		collision_shape.disabled = false
+	set_collision_layer_value(1, true)
+	set_collision_mask_value(1, true)
 	
-	# Возвращаем на безопасную позицию
-	if Global and Global.get("last_safe_position") and Global.last_safe_position != Vector2.ZERO:
-		global_position = Global.last_safe_position
+	# Перемещаем на точку спавна
+	var player_spawn = get_tree().current_scene.get_node_or_null("PlayerSpawn")
+	if player_spawn:
+		global_position = player_spawn.global_position
+		print("📍 Перемещён на PlayerSpawn: ", player_spawn.global_position)
 	
-	# Эффект возрождения
-	_show_revive_effect()
+	# Восстанавливаем визуал
+	if animated_sprite:
+		animated_sprite.modulate = Color.WHITE
+		animated_sprite.modulate.a = 1.0
+		play_animation("idle")
 	
-	# Снимаем паузу
-	get_tree().paused = false
+	# Даём временную неуязвимость
+	give_temporary_invincibility(3.0)
 	
-	print("✨ ", character_name, " возрождён с ", current_health, " HP")
+	# Отправляем сигнал
+	revived.emit()
+	
+	print("✅ ", character_name, " возрождён с ", current_health, " HP")
 
-func _show_revive_effect():
-	"""Визуальный эффект возрождения"""
-	if not animated_sprite:
-		return
+func give_temporary_invincibility(duration: float):
+	"""Дает временную неуязвимость после возрождения"""
+	is_invincible = true
+	print("🛡️ Временная неуязвимость на ", duration, " секунд")
 	
-	# Золотое свечение
-	animated_sprite.modulate = Color(1.5, 1.2, 0.5, 1.0)
+	await get_tree().create_timer(duration).timeout
 	
-	var tween = create_tween()
-	tween.tween_property(animated_sprite, "modulate", Color.WHITE, 0.5)
+	is_invincible = false
+	if animated_sprite:
+		animated_sprite.modulate = Color.WHITE
+		animated_sprite.modulate.a = 1.0
+	print("🛡️ Неуязвимость закончилась")
 
 # ===========================================
 # БАЗОВЫЕ СПОСОБНОСТИ (переопределяются)

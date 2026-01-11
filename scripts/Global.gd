@@ -1,7 +1,7 @@
 extends Node
 
 # ===========================================
-# GLOBAL.GD - ВЕРСИЯ 3.0 С ПОЛНОЙ СИСТЕМОЙ АРТЕФАКТОВ
+# GLOBAL.GD - ПОЛНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ v3.2
 # ===========================================
 
 # Выбранный персонаж
@@ -83,52 +83,29 @@ var fallback_character_data = {
 }
 
 # ===========================================
-# СИСТЕМА СТАТИСТИКИ И АРТЕФАКТОВ
+# СИСТЕМА АРТЕФАКТОВ
 # ===========================================
-
-# Статистика текущего забега
-var run_statistics: Dictionary = {
-	"death_reason": "",
-	"keys_collected": 0,
-	"items_collected": 0,
-	"coins_collected": 0,
-	"enemies_simple": 0,
-	"enemies_elite": 0,
-	"enemies_boss": 0,
-	"damage_dealt": 0,
-	"damage_taken": 0,
-	"rooms_visited": 0,
-	"time_played": 0.0,
-	"start_time": 0.0
-}
-
-# Артефакт возрождения (если есть)
-var revival_artifact_id: String = ""
-
-# Данные для возрождения
-var last_room_path: String = ""
-var last_safe_position: Vector2 = Vector2.ZERO
 
 # Собранные артефакты игрока
 var collected_artifacts: Array = []
 
-# БАЗА ДАННЫХ ВСЕХ АРТЕФАКТОВ (ОБНОВЛЕННАЯ)
+# База данных всех артефактов
 var artifacts_database = {
 	"hermes_wings": {
 		"name": "Крылья Гермеса",
 		"description": "Легендарные крылатые сандалии",
 		"icon": "res://assets/artifacts/hermes_wings.png",
 		"ability": "double_jump",
-		"rarity": "legendary",
+		"rarity": "rare",
 		"effect_text": "Позволяет совершить второй прыжок в воздухе"
 	},
 	"phoenix_feather": {
 		"name": "Перо Феникса",
-		"description": "Легендарное перо птицы феникс, дарующее вторую жизнь",
+		"description": "Магическое перо возрождения",
 		"icon": "res://assets/artifacts/phoenix_feather.png",
 		"ability": "revival",
 		"rarity": "legendary",
-		"effect_text": "Позволяет возродиться один раз после смерти"
+		"effect_text": "Возрождает после смерти с 50% HP"
 	},
 	"griffin_feather": {
 		"name": "Перо Грифона",
@@ -137,6 +114,22 @@ var artifacts_database = {
 		"ability": "double_jump",
 		"rarity": "epic",
 		"effect_text": "Дарует возможность двойного прыжка"
+	},
+	"wind_ring": {
+		"name": "Кольцо Ветра",
+		"description": "Древнее кольцо с силой воздушной стихии",
+		"icon": "res://assets/artifacts/wind_ring.png",
+		"ability": "double_jump",
+		"rarity": "rare",
+		"effect_text": "Усиливает прыжки"
+	},
+	"eagle_amulet": {
+		"name": "Амулет Орла",
+		"description": "Амулет с духом великого орла",
+		"icon": "res://assets/artifacts/eagle_amulet.png",
+		"ability": "double_jump",
+		"rarity": "epic",
+		"effect_text": "Дух орла помогает взлететь выше"
 	},
 	"dash_boots": {
 		"name": "Сапоги Рывка",
@@ -153,11 +146,82 @@ var artifacts_database = {
 		"ability": "max_health",
 		"rarity": "common",
 		"effect_text": "Увеличивает максимальное здоровье на 20"
+	},
+	"mana_crystal": {
+		"name": "Кристалл Маны",
+		"description": "Кристалл магической энергии",
+		"icon": "res://assets/artifacts/mana_crystal.png",
+		"ability": "max_mana",
+		"rarity": "rare",
+		"effect_text": "Увеличивает максимальную ману на 20"
+	},
+	"vampire_ring": {
+		"name": "Кольцо Вампира",
+		"description": "Тёмное кольцо с кровавым камнем",
+		"icon": "res://assets/artifacts/vampire_ring.png",
+		"ability": "lifesteal",
+		"rarity": "epic",
+		"effect_text": "Восстанавливает HP при убийстве врагов"
+	},
+	"berserker_gloves": {
+		"name": "Перчатки Берсерка",
+		"description": "Окровавленные перчатки воина",
+		"icon": "res://assets/artifacts/berserker_gloves.png",
+		"ability": "damage_boost",
+		"rarity": "epic",
+		"effect_text": "+50% урона при HP ниже 30%"
+	},
+	"mirror_shield": {
+		"name": "Зеркальный Щит",
+		"description": "Щит отражающий атаки",
+		"icon": "res://assets/artifacts/mirror_shield.png",
+		"ability": "reflect",
+		"rarity": "legendary",
+		"effect_text": "20% шанс отразить урон"
+	},
+	"speed_boots": {
+		"name": "Сапоги Скорости",
+		"description": "Лёгкие сапоги для быстрого бега",
+		"icon": "res://assets/artifacts/speed_boots.png",
+		"ability": "speed",
+		"rarity": "common",
+		"effect_text": "Увеличивает скорость на 15%"
 	}
 }
 
 # Сигнал для уведомления об артефакте
 signal artifact_collected(artifact_id: String)
+
+# ===========================================
+# СИСТЕМА СТАТИСТИКИ ЗАБЕГА
+# ===========================================
+
+# Статистика текущего забега
+var run_statistics: Dictionary = {
+	"death_reason": "",
+	"keys_collected": 0,
+	"items_collected": 0,
+	"artifacts_collected": 0,
+	"coins_collected": 0,
+	"enemies_simple": 0,
+	"enemies_elite": 0,
+	"enemies_boss": 0,
+	"damage_dealt": 0,
+	"damage_taken": 0,
+	"rooms_visited": 1,
+	"time_played": 0.0,
+	"start_time": 0.0
+}
+
+# Артефакт возрождения (если есть)
+var revival_artifact_id: String = ""
+
+# Данные для возрождения
+var last_room_path: String = ""
+var last_safe_position: Vector2 = Vector2.ZERO
+
+# Флаг что забег начат (для отслеживания времени)
+var run_started: bool = false
 
 # ===========================================
 # ОСНОВНЫЕ ФУНКЦИИ
@@ -321,99 +385,7 @@ func debug_print_state():
 	print("==========================")
 
 # ===========================================
-# СТАТИСТИКА ЗАБЕГА
-# ===========================================
-
-func reset_run_statistics():
-	"""Сбрасывает статистику забега"""
-	run_statistics = {
-		"death_reason": "",
-		"keys_collected": 0,
-		"items_collected": 0,
-		"coins_collected": 0,
-		"enemies_simple": 0,
-		"enemies_elite": 0,
-		"enemies_boss": 0,
-		"damage_dealt": 0,
-		"damage_taken": 0,
-		"rooms_visited": 0,
-		"time_played": 0.0,
-		"start_time": Time.get_unix_time_from_system()
-	}
-	revival_artifact_id = ""
-	print("📊 Статистика забега сброшена")
-
-func start_run_statistics():
-	"""Начинает отсчёт статистики забега"""
-	reset_run_statistics()
-
-func add_key_collected():
-	run_statistics["keys_collected"] += 1
-
-func add_item_collected():
-	run_statistics["items_collected"] += 1
-
-func add_coins(amount: int):
-	run_statistics["coins_collected"] += amount
-
-func add_enemy_killed(enemy_type: String):
-	match enemy_type:
-		"simple":
-			run_statistics["enemies_simple"] += 1
-		"elite":
-			run_statistics["enemies_elite"] += 1
-		"boss":
-			run_statistics["enemies_boss"] += 1
-
-func add_damage_dealt(amount: int):
-	run_statistics["damage_dealt"] += amount
-
-func add_damage_taken(amount: int):
-	run_statistics["damage_taken"] += amount
-
-func add_room_visited():
-	run_statistics["rooms_visited"] += 1
-
-func set_death_reason(reason: String):
-	run_statistics["death_reason"] = reason
-
-func update_play_time():
-	"""Обновляет время игры"""
-	if run_statistics["start_time"] > 0:
-		run_statistics["time_played"] = Time.get_unix_time_from_system() - run_statistics["start_time"]
-
-func get_run_statistics() -> Dictionary:
-	"""Возвращает статистику с обновлённым временем"""
-	update_play_time()
-	return run_statistics.duplicate()
-
-func set_revival_artifact(artifact_id: String):
-	"""Устанавливает артефакт возрождения"""
-	revival_artifact_id = artifact_id
-	print("🔮 Артефакт возрождения установлен: ", artifact_id)
-
-func get_revival_artifact() -> String:
-	return revival_artifact_id
-
-func use_revival_artifact():
-	"""Использует артефакт возрождения"""
-	var used_id = revival_artifact_id
-	revival_artifact_id = ""
-	
-	# Удаляем из инвентаря
-	if collected_artifacts.has(used_id):
-		collected_artifacts.erase(used_id)
-	
-	print("🔮 Артефакт возрождения использован: ", used_id)
-	return used_id
-
-func save_safe_position(room_path: String, position: Vector2):
-	"""Сохраняет безопасную позицию для возрождения"""
-	last_room_path = room_path
-	last_safe_position = position
-
-# ===========================================
-# СИСТЕМА АРТЕФАКТОВ - ОБНОВЛЕННАЯ
+# ФУНКЦИИ АРТЕФАКТОВ
 # ===========================================
 
 func has_artifact(artifact_id: String) -> bool:
@@ -440,8 +412,11 @@ func collect_artifact(artifact_id: String) -> bool:
 	var artifact = artifacts_database[artifact_id]
 	print("✨ Получен артефакт: ", artifact["name"])
 	
-	# Если это артефакт возрождения - устанавливаем его
-	if artifact.get("ability") == "revival":
+	# Добавляем в статистику
+	add_artifact_collected()
+	
+	# Проверяем артефакт возрождения
+	if artifact.get("ability", "") == "revival":
 		set_revival_artifact(artifact_id)
 	
 	# Применяем эффект к текущему игроку
@@ -474,35 +449,38 @@ func apply_artifact_effect(artifact_id: String):
 		
 		"dash":
 			if "base_speed" in current_player and "current_speed" in current_player:
-				# Сохраняем оригинальную скорость для сброса
-				if not "original_base_speed" in current_player:
-					current_player.original_base_speed = current_player.base_speed
-				
-				# Увеличиваем скорость на 30%
-				current_player.base_speed = int(current_player.original_base_speed * 1.3)
+				current_player.base_speed = int(current_player.base_speed * 1.3)
 				current_player.current_speed = current_player.base_speed
 				print("⚡ Скорость увеличена до: ", current_player.current_speed)
 			else:
 				print("⚠️ Переменные скорости не найдены у персонажа")
 		
+		"speed":
+			if "base_speed" in current_player and "current_speed" in current_player:
+				current_player.base_speed = int(current_player.base_speed * 1.15)
+				current_player.current_speed = current_player.base_speed
+				print("⚡ Скорость увеличена до: ", current_player.current_speed)
+		
 		"max_health":
 			if "max_health" in current_player and "current_health" in current_player:
 				current_player.max_health += 20
 				current_player.current_health += 20
-				
-				# Обновляем UI через сигнал или прямо
-				if "health_changed" in current_player:
+				if current_player.has_signal("health_changed"):
 					current_player.health_changed.emit(current_player.current_health)
-				elif game_ui and game_ui.has_method("update_health"):
-					game_ui.update_health(current_player.current_health)
-					
 				print("❤️ Здоровье увеличено до: ", current_player.max_health)
 			else:
 				print("⚠️ Переменные здоровья не найдены у персонажа")
 		
+		"max_mana":
+			if "max_mana" in current_player and "current_mana" in current_player:
+				current_player.max_mana += 20
+				current_player.current_mana += 20
+				if current_player.has_signal("mana_changed"):
+					current_player.mana_changed.emit(current_player.current_mana)
+				print("💙 Мана увеличена до: ", current_player.max_mana)
+		
 		"revival":
-			# Артефакт возрождения не даёт немедленного эффекта
-			print("🔮 Получен артефакт возрождения! Вы сможете возродиться после смерти.")
+			print("🔮 Артефакт возрождения активирован")
 		
 		_:
 			print("⚠️ Неизвестная способность: ", artifact.get("ability", "unknown"))
@@ -515,49 +493,54 @@ func apply_all_artifacts_to_player():
 	for artifact_id in collected_artifacts:
 		apply_artifact_effect(artifact_id)
 
-func get_artifact_data(artifact_id: String):
+func get_artifact_data(artifact_id: String) -> Dictionary:
+	"""Возвращает данные артефакта из базы или словарь по умолчанию"""
 	if artifacts_database.has(artifact_id):
 		return artifacts_database[artifact_id]
-	return null
+	
+	# Запасные данные для артефактов не в базе
+	match artifact_id:
+		"phoenix_feather":
+			return {"name": "Перо Феникса", "rarity": "legendary", "ability": "revival"}
+		"hermes_wings":
+			return {"name": "Крылья Гермеса", "rarity": "rare", "ability": "double_jump"}
+		_:
+			return {"name": artifact_id, "rarity": "common", "ability": "unknown"}
 
 func get_artifact_rarity(artifact_id: String) -> String:
 	"""Возвращает редкость артефакта"""
 	if artifacts_database.has(artifact_id):
 		return artifacts_database[artifact_id].get("rarity", "common")
-	return "common"
+	
+	# Запасные редкости
+	match artifact_id:
+		"phoenix_feather", "mirror_shield":
+			return "legendary"
+		"vampire_ring", "berserker_gloves", "griffin_feather", "eagle_amulet":
+			return "epic"
+		"hermes_wings", "mana_crystal", "wind_ring", "dash_boots":
+			return "rare"
+		_:
+			return "common"
 
-func get_artifact_count_by_rarity() -> Dictionary:
-	"""Возвращает количество артефактов по редкостям"""
-	var rarity_count = {
-		"common": 0,
-		"rare": 0,
-		"epic": 0,
-		"legendary": 0
+func get_artifacts_by_rarity() -> Dictionary:
+	"""Возвращает артефакты сгруппированные по редкости"""
+	var result = {
+		"common": [],
+		"rare": [],
+		"epic": [],
+		"legendary": []
 	}
 	
 	for artifact_id in collected_artifacts:
 		var rarity = get_artifact_rarity(artifact_id)
-		if rarity in rarity_count:
-			rarity_count[rarity] += 1
+		if result.has(rarity):
+			result[rarity].append(artifact_id)
 	
-	return rarity_count
-
-func get_artifact_icon(artifact_id: String):
-	"""Возвращает текстуру иконки артефакта"""
-	if artifacts_database.has(artifact_id):
-		var icon_path = artifacts_database[artifact_id].get("icon", "")
-		if icon_path != "":
-			return load(icon_path)
-	return null
-
-func get_artifact_name(artifact_id: String) -> String:
-	"""Возвращает название артефакта"""
-	if artifacts_database.has(artifact_id):
-		return artifacts_database[artifact_id].get("name", artifact_id.capitalize().replace("_", " "))
-	return artifact_id.capitalize().replace("_", " ")
+	return result
 
 # ===========================================
-# СБРОС ДАННЫХ
+# СБРОС АРТЕФАКТОВ
 # ===========================================
 
 func reset_artifacts():
@@ -565,73 +548,153 @@ func reset_artifacts():
 	revival_artifact_id = ""
 	print("🔄 Артефакты сброшены")
 
-func reset_all_for_new_game():
-	"""ПОЛНЫЙ СБРОС для новой игры/возврата в меню"""
-	print("🔄 === ПОЛНЫЙ СБРОС ДЛЯ НОВОЙ ИГРЫ ===")
-	
-	# Отрегистрируем игрока
-	unregister_player()
-	
-	# Отрегистрируем UI
-	unregister_game_ui()
-	
-	# Сбрасываем данные персонажа
-	player_data = {
-		"character_type": "",
-		"level": 1,
-		"experience": 0
-	}
-	
-	# Сбрасываем статистику забега
+# ===========================================
+# УПРАВЛЕНИЕ ЗАБЕГОМ
+# ===========================================
+
+func start_run():
+	"""Начинает новый забег - ВЫЗЫВАТЬ ПРИ СТАРТЕ УРОВНЯ!"""
 	reset_run_statistics()
-	
-	# Сбрасываем артефакты
-	reset_artifacts()
-	
-	print("✅ Все данные сброшены для новой игры")
+	run_statistics["start_time"] = Time.get_unix_time_from_system()
+	run_started = true
+	print("🎮 Новый забег начат! Время: ", run_statistics["start_time"])
+
+func reset_run_statistics():
+	"""Сбрасывает статистику забега ПОЛНОСТЬЮ"""
+	run_statistics = {
+		"death_reason": "",
+		"keys_collected": 0,
+		"items_collected": 0,
+		"artifacts_collected": 0,
+		"coins_collected": 0,
+		"enemies_simple": 0,
+		"enemies_elite": 0,
+		"enemies_boss": 0,
+		"damage_dealt": 0,
+		"damage_taken": 0,
+		"rooms_visited": 1,
+		"time_played": 0.0,
+		"start_time": 0.0
+	}
+	run_started = false
+	print("📊 Статистика забега СБРОШЕНА")
 
 func full_reset():
-	"""Полный сброс ВСЕХ данных игры"""
-	print("🔄 === ПОЛНЫЙ СБРОС ИГРЫ ===")
-	
-	# Отрегистрируем игрока
-	unregister_player()
-	
-	# Отрегистрируем UI
-	unregister_game_ui()
-	
-	# Сбрасываем выбор персонажа
-	selected_character = null
-	
-	# Сбрасываем статистику забега
+	"""Полный сброс при выходе в главное меню"""
 	reset_run_statistics()
-	
-	# Сбрасываем артефакты
 	reset_artifacts()
-	
-	# Сбрасываем данные персонажа
-	player_data = {
-		"character_type": "",
-		"level": 1,
-		"experience": 0
-	}
-	
-	print("✅ Все данные игры полностью сброшены")
+	unregister_player()
+	unregister_game_ui()
+	print("🔄 Полный сброс игры выполнен")
+
+func reset_all_for_new_game():
+	"""Алиас для full_reset()"""
+	full_reset()
 
 # ===========================================
-# ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+# СБОР СТАТИСТИКИ
 # ===========================================
 
-func is_double_jump_enabled() -> bool:
-	return has_ability("double_jump")
+func add_key_collected():
+	"""Добавляет собранный ключ"""
+	run_statistics["keys_collected"] += 1
+	print("🔑 Ключей: ", run_statistics["keys_collected"])
 
-func get_available_artifacts_count() -> int:
-	return collected_artifacts.size()
+func add_item_collected():
+	"""Добавляет собранный предмет"""
+	run_statistics["items_collected"] += 1
+	print("📦 Предметов: ", run_statistics["items_collected"])
 
-func print_artifacts_list():
-	print("📋 Список собранных артефактов:")
-	for artifact_id in collected_artifacts:
-		var data = get_artifact_data(artifact_id)
-		if data:
-			print("  - ", data.get("name", artifact_id), " (", data.get("rarity", "common"), ")")
-	print("Всего артефактов: ", collected_artifacts.size())
+func add_artifact_collected():
+	"""Добавляет собранный артефакт в статистику"""
+	run_statistics["artifacts_collected"] += 1
+	print("🔮 Артефактов в статистике: ", run_statistics["artifacts_collected"])
+
+func add_coins(amount: int):
+	"""Добавляет монеты"""
+	run_statistics["coins_collected"] += amount
+	print("💰 Монет: ", run_statistics["coins_collected"])
+
+func add_enemy_killed(enemy_type: String):
+	"""Добавляет убитого врага по типу"""
+	match enemy_type:
+		"simple":
+			run_statistics["enemies_simple"] += 1
+			print("👾 Обычных врагов повержено: ", run_statistics["enemies_simple"])
+		"elite":
+			run_statistics["enemies_elite"] += 1
+			print("⚔️ Элитных врагов повержено: ", run_statistics["enemies_elite"])
+		"boss":
+			run_statistics["enemies_boss"] += 1
+			print("👑 Боссов повержено: ", run_statistics["enemies_boss"])
+
+func add_damage_dealt(amount: int):
+	"""Добавляет нанесённый урон"""
+	run_statistics["damage_dealt"] += amount
+
+func add_damage_taken(amount: int):
+	"""Добавляет полученный урон"""
+	run_statistics["damage_taken"] += amount
+
+func add_room_visited():
+	"""Добавляет посещённую комнату"""
+	run_statistics["rooms_visited"] += 1
+	print("🚪 Комнат пройдено: ", run_statistics["rooms_visited"])
+
+func set_death_reason(reason: String):
+	"""Устанавливает причину смерти"""
+	run_statistics["death_reason"] = reason
+	print("💀 Причина смерти: ", reason)
+
+# ===========================================
+# ВРЕМЯ ИГРЫ
+# ===========================================
+
+func update_play_time():
+	"""Обновляет время игры"""
+	if run_started and run_statistics["start_time"] > 0:
+		run_statistics["time_played"] = Time.get_unix_time_from_system() - run_statistics["start_time"]
+
+func get_run_statistics() -> Dictionary:
+	"""Возвращает статистику с обновлённым временем"""
+	update_play_time()
+	
+	# Синхронизируем количество артефактов
+	run_statistics["artifacts_collected"] = collected_artifacts.size()
+	
+	return run_statistics.duplicate()
+
+# ===========================================
+# СИСТЕМА ВОЗРОЖДЕНИЯ
+# ===========================================
+
+func set_revival_artifact(artifact_id: String):
+	"""Устанавливает артефакт возрождения"""
+	revival_artifact_id = artifact_id
+	print("🔮 Артефакт возрождения установлен: ", artifact_id)
+
+func get_revival_artifact() -> String:
+	"""Возвращает ID артефакта возрождения"""
+	return revival_artifact_id
+
+func has_revival_artifact() -> bool:
+	"""Проверяет есть ли артефакт возрождения"""
+	return revival_artifact_id != ""
+
+func use_revival_artifact() -> String:
+	"""Использует артефакт возрождения и возвращает его ID"""
+	var used_id = revival_artifact_id
+	revival_artifact_id = ""
+	
+	# Удаляем из инвентаря
+	if collected_artifacts.has(used_id):
+		collected_artifacts.erase(used_id)
+	
+	print("🔮 Артефакт возрождения использован: ", used_id)
+	return used_id
+
+func save_safe_position(room_path: String, pos: Vector2):
+	"""Сохраняет безопасную позицию для возрождения"""
+	last_room_path = room_path
+	last_safe_position = pos
+	print("💾 Сохранена позиция: ", pos)
