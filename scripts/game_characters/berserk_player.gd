@@ -1,25 +1,34 @@
 extends "res://scripts/game_characters/base_game_character.gd"
 
+# ===========================================
+# БЕРСЕРК - БОЕЦ С СИСТЕМОЙ КОМБО (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+# ===========================================
+
 # Система комбо
-var combo_stage: int = 0  # 0 = нет комбо, 1-3 = стадия комбо
+var combo_stage: int = 0           # 0 = нет комбо, 1-3 = стадия комбо
 var combo_window_active: bool = false  # Открыто ли окно для следующей атаки
-var next_attack_queued: bool = false  # Нажата ли кнопка во время атаки
+var next_attack_queued: bool = false   # Нажата ли кнопка во время атаки
 var combo_reset_timer: float = 0.0
 
-# НАСТРОЙКИ КОМБО (можно менять)
+# НАСТРОЙКИ КОМБО (можно менять для баланса)
 const COMBO_WINDOW_DURATION: float = 1.2  # Окно после атаки для продолжения (секунды)
 const COMBO_FULL_RESET_TIME: float = 2.0  # Время полного сброса комбо
 
-# Урон
-const BASE_DAMAGE: int = 10
+# УРОН
+const BASE_DAMAGE: int = 2
+const RAGE_DAMAGE_REDUCTION: float = 0.7  # 30% снижение урона при ярости
+const RAGE_HEALTH_THRESHOLD: float = 0.3   # Ярость активируется при < 30% HP
 
 func _ready():
+	# === ХАРАКТЕРИСТИКИ БЕРСЕРКА ===
 	character_name = "Берсерк"
-	max_health = 120
-	current_health = 120
-	max_mana = 20
-	current_mana = 20
-	armor = 5
+	max_health = 10
+	current_health = 10
+	max_mana = 0
+	current_mana = 0
+	armor = 0
+	
+	# === ФИЗИКА ===
 	jump_velocity = -400
 	base_speed = 220
 	current_speed = 220
@@ -37,7 +46,12 @@ func _physics_process(delta):
 	
 	super(delta)
 
+# ===========================================
+# СИСТЕМА КОМБО-АТАК
+# ===========================================
+
 func attack():
+	"""Начинает или продолжает комбо-атаку"""
 	print("\n=== 🗡️ ПОПЫТКА АТАКИ ===")
 	print("Комбо стадия: ", combo_stage)
 	print("Атакует сейчас: ", is_attacking)
@@ -77,7 +91,7 @@ func _execute_attack():
 	
 	print("\n⚔️ === АТАКА ", combo_stage, " ===")
 	
-	# Выбираем анимацию
+	# Выбираем анимацию в зависимости от стадии комбо
 	var anim_name = "attack"
 	if combo_stage == 2 and animated_sprite.sprite_frames.has_animation("attack2"):
 		anim_name = "attack2"
@@ -152,26 +166,43 @@ func _reset_combo():
 	combo_reset_timer = 0.0
 	next_attack_queued = false
 
-func take_damage(amount: int):
-	# Ярость при низком здоровье
-	if current_health < max_health * 0.3:
-		var reduced_amount = int(amount * 0.7)
-		print("🛡️ Ярость защищает! Урон: ", amount, " → ", reduced_amount)
-		super.take_damage(reduced_amount)
-	else:
-		super.take_damage(amount)
+# ===========================================
+# ПОЛУЧЕНИЕ УРОНА (ИСПРАВЛЕННАЯ СИГНАТУРА!)
+# ===========================================
+
+func take_damage(amount: int, damage_type: String = "physical", source: String = "Неизвестно"):
+	"""
+	Переопределяем получение урона - ярость при низком HP
+	ВАЖНО: Сигнатура должна совпадать с родителем!
+	"""
+	var final_amount = amount
+	
+	# Ярость при низком здоровье - снижает получаемый урон
+	if current_health < max_health * RAGE_HEALTH_THRESHOLD:
+		final_amount = int(amount * RAGE_DAMAGE_REDUCTION)
+		print("🛡️ ЯРОСТЬ защищает! Урон: ", amount, " → ", final_amount)
+	
+	# Вызываем родительскую функцию с ВСЕМИ параметрами
+	super.take_damage(final_amount, damage_type, source)
 	
 	# Прерываем комбо при получении урона
 	if combo_stage > 0:
-		print("💔 Комбо прервано уроном!")
+		print("💔 Комбо прервано уроном от: ", source)
 		_reset_combo()
 
-# Для нанесения урона врагам (когда будут враги)
+# ===========================================
+# НАНЕСЕНИЕ УРОНА ВРАГАМ
+# ===========================================
+
 func deal_damage_to_target(target):
 	"""Наносит урон цели с учетом комбо"""
 	if not target or not target.has_method("take_damage"):
 		return
 	
 	var damage = _calculate_damage()
-	target.take_damage(damage)
+	target.take_damage(damage, "physical", character_name)
 	print("🎯 Цели нанесено урона: ", damage)
+	
+	# Обновляем статистику
+	if Global and Global.has_method("add_damage_dealt"):
+		Global.add_damage_dealt(damage)

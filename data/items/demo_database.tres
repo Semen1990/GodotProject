@@ -1,0 +1,243 @@
+[gd_resource type="Resource" script_class="GameItemDatabase" load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://scripts/inventory/core/game_item_data.gd" id="1_vhsj5"]
+[ext_resource type="Script" path="res://scripts/inventory/core/game_item_database.gd" id="2_smofx"]
+
+[sub_resource type="Resource" id="Resource_o6syc"]
+script = ExtResource("1_vhsj5")
+id = 1
+internal_name = "health_potion"
+display_name = "Зелье здоровья"
+description = "Восстанавливает 50 единиц здоровья."
+category = 1
+consumable_type = 1
+stackable = true
+max_stack = 20
+buy_price = 50
+sell_price = 25
+effects = Array[Dictionary]([{
+"application": 1,
+"condition_value": 0.0,
+"duration": 0.0,
+"type": 10,
+"value": 50.0
+}])
+
+[sub_resource type="Resource" id="Resource_1i6a8"]
+script = ExtResource("1_vhsj5")
+id = 2
+internal_name = "mana_potion"
+display_name = "Зелье маны"
+description = "Восстанавливает 30 единиц маны."
+category = 1
+consumable_type = 2
+stackable = true
+max_stack = 20
+buy_price = 40
+sell_price = 20
+effects = Array[Dictionary]([{
+"application": 1,
+"condition_value": 0.0,
+"duration": 0.0,
+"type": 11,
+"value": 30.0
+}])
+
+[sub_resource type="Resource" id="Resource_65din"]
+script = ExtResource("1_vhsj5")
+id = 3
+internal_name = "stone_skin_potion"
+display_name = "Зелье каменной кожи"
+description = "Увеличивает броню на 4 единицы на 6 секунд."
+category = 1
+consumable_type = 3
+rarity = 1
+stackable = true
+max_stack = 10
+buy_price = 100
+sell_price = 50
+effects = Array[Dictionary]([{
+"application": 1,
+"condition_value": 0.0,
+"duration": 6.0,
+"type": 20,
+"value": 4.0
+}])
+
+[sub_resource type="Resource" id="Resource_had1k"]
+script = ExtResource("1_vhsj5")
+id = 4
+internal_name = "rage_potion"
+display_name = "Зелье ярости"
+description = "Увеличивает урон на 30% на 10 секунд."
+category = 1
+consumable_type = 3
+rarity = 2
+stackable = true
+max_stack = 5
+buy_price = 200
+sell_price = 100
+effects = Array[Dictionary]([{
+"application": 1,
+"condition_value": 0.0,
+"duration": 10.0,
+"type": 21,
+"value": 30.0
+}])
+
+[sub_resource type="Resource" id="Resource_cloqv"]
+script = ExtResource("1_vhsj5")
+id = 101
+internal_name = "iron_sword"
+display_name = "Железный меч"
+description = "Надёжный железный меч. Ничего особенного, но свою работу делает."
+category = 0
+equipment_type = 6
+equip_slot = 6
+buy_price = 150
+sell_price = 75
+stat_damage = 5
+
+[sub_resource type="Resource" id="Resource_c7c0t"]
+script = ExtResource("1_vhsj5")
+id = 102
+internal_name = "steel_helmet"
+display_name = "Стальной шлем"
+description = "Прочный шлем из закалённой стали."
+category = 0
+equipment_type = 1
+equip_slot = 1
+rarity = 1
+buy_price = 200
+sell_price = 100
+stat_max_hp = 10
+stat_armor = 3
+
+[sub_resource type="Resource" id="Resource_wdmen"]
+script = ExtResource("1_vhsj5")
+id = 103
+internal_name = "leather_armor"
+display_name = "Кожаный доспех"
+description = "Лёгкий доспех из выделанной кожи. Не стесняет движений."
+category = 0
+equipment_type = 2
+equip_slot = 2
+buy_price = 180
+sell_price = 90
+stat_armor = 2
+stat_speed_percent = 5
+
+[sub_resource type="Resource" id="Resource_452d0"]
+script = ExtResource("1_vhsj5")
+id = 104
+internal_name = "wooden_shield"
+display_name = "Деревянный щит"
+description = "Простой деревянный щит с металлической оковкой."
+category = 0
+equipment_type = 13
+equip_slot = 7
+buy_price = 120
+sell_price = 60
+stat_armor = 2
+stat_block_chance = 10
+
+[sub_resource type="Resource" id="Resource_k7rwe"]
+script = ExtResource("1_vhsj5")
+id = 105
+internal_name = "warrior_gloves"
+display_name = "Боевые перчатки"
+description = "Укреплённые перчатки воина. Усиливают хватку оружия."
+category = 0
+equipment_type = 5
+equip_slot = 5
+rarity = 1
+required_class = 1
+buy_price = 160
+sell_price = 80
+stat_damage = 2
+stat_crit_chance = 5
+
+[sub_resource type="Resource" id="Resource_1ky1m"]
+script = ExtResource("1_vhsj5")
+id = 201
+internal_name = "hermes_wings"
+display_name = "Крылья Гермеса"
+description = "Легендарные крылатые сандалии бога-посланника. Дарует способность совершить второй прыжок в воздухе."
+category = 2
+equip_slot = 19
+rarity = 2
+sell_price = 500
+sellable = false
+effects = Array[Dictionary]([{
+"application": 0,
+"condition_value": 0.0,
+"duration": 0.0,
+"type": 100,
+"value": 1.0
+}])
+is_unique = true
+
+[sub_resource type="Resource" id="Resource_u4tqc"]
+script = ExtResource("1_vhsj5")
+id = 202
+internal_name = "phoenix_feather"
+display_name = "Перо Феникса"
+description = "Магическое перо возрождения. Возвращает к жизни после смертельного удара."
+category = 2
+equip_slot = 19
+rarity = 4
+sell_price = 1000
+sellable = false
+effects = Array[Dictionary]([{
+"application": 0,
+"condition_value": 0.0,
+"duration": 0.0,
+"type": 103,
+"value": 50.0
+}])
+is_unique = true
+
+[sub_resource type="Resource" id="Resource_82ib5"]
+script = ExtResource("1_vhsj5")
+id = 203
+internal_name = "vampire_ring"
+display_name = "Кольцо вампира"
+description = "Проклятое кольцо, питающееся кровью врагов. Часть нанесённого урона возвращается как здоровье."
+category = 2
+equip_slot = 19
+rarity = 3
+sell_price = 750
+sellable = false
+effects = Array[Dictionary]([{
+"application": 2,
+"condition_value": 0.0,
+"duration": 0.0,
+"type": 101,
+"value": 10.0
+}])
+is_unique = true
+
+[sub_resource type="Resource" id="Resource_7001q"]
+script = ExtResource("1_vhsj5")
+id = 204
+internal_name = "berserker_amulet"
+display_name = "Амулет берсерка"
+description = "Амулет, пробуждающий первобытную ярость. Чем ближе к смерти — тем сильнее удар."
+category = 2
+equip_slot = 19
+rarity = 3
+sell_price = 750
+sellable = false
+effects = Array[Dictionary]([{
+"application": 5,
+"condition_value": 30.0,
+"duration": 0.0,
+"type": 21,
+"value": 50.0
+}])
+is_unique = true
+
+[resource]
+script = ExtResource("2_smofx")
+items = Array[ExtResource("1_vhsj5")]([SubResource("Resource_o6syc"), SubResource("Resource_1i6a8"), SubResource("Resource_65din"), SubResource("Resource_had1k"), SubResource("Resource_cloqv"), SubResource("Resource_c7c0t"), SubResource("Resource_wdmen"), SubResource("Resource_452d0"), SubResource("Resource_k7rwe"), SubResource("Resource_1ky1m"), SubResource("Resource_u4tqc"), SubResource("Resource_82ib5"), SubResource("Resource_7001q")])
+database_name = "Demo Items"

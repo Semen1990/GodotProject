@@ -1,9 +1,14 @@
 extends Node2D
 
+# ===========================================
+# LEVEL 1 - С ИНТЕГРАЦИЕЙ ИНВЕНТАРЯ
+# ===========================================
+
 @onready var player_spawn = $PlayerSpawn
 @onready var game_ui = $GameUI
 
 var current_player = null
+var last_armor_value: int = 0
 
 func _ready():
 	print("🎮 Level 1 loaded!")
@@ -13,6 +18,9 @@ func _ready():
 	if Global and Global.has_method("start_run"):
 		Global.start_run()
 		print("📊 Новый забег начат!")
+	
+	# === ИНИЦИАЛИЗАЦИЯ ИНВЕНТАРЯ ===
+	_initialize_inventory()
 	
 	# Ждем полной загрузки
 	await get_tree().process_frame
@@ -24,6 +32,93 @@ func _ready():
 	if Global and game_ui:
 		Global.register_game_ui(game_ui)
 		print("✅ Game UI registered")
+	
+	# === ТЕСТ ИНВЕНТАРЯ (можно удалить потом) ===
+	_test_inventory()
+
+
+# ===========================================
+# ИНИЦИАЛИЗАЦИЯ ИНВЕНТАРЯ
+# ===========================================
+
+func _initialize_inventory():
+	"""Инициализирует систему инвентаря"""
+	print("\n=== 🎒 ИНИЦИАЛИЗАЦИЯ ИНВЕНТАРЯ ===")
+	
+	# Проверяем что Inventory доступен (Autoload)
+	if not Inventory:
+		push_error("❌ Inventory Autoload не найден! Проверь Project Settings → Autoload")
+		return
+	
+	# Загружаем базу данных предметов
+	var db_path = "res://data/items/demo_database.tres"
+	
+	if not ResourceLoader.exists(db_path):
+		push_warning("⚠️ База данных не найдена: %s" % db_path)
+		push_warning("   Запусти create_demo_items.gd для создания базы!")
+		return
+	
+	var item_db = load(db_path) as GameItemDatabase
+	
+	if item_db:
+		Inventory.set_database(item_db)
+		print("✅ База данных загружена: %d предметов" % item_db.items.size())
+		
+		# Устанавливаем класс персонажа для бонусов
+		var char_class = _get_character_class()
+		Inventory.set_character_class(char_class)
+		print("✅ Класс персонажа: %s" % InventoryEnums.CharacterClass.keys()[char_class])
+	else:
+		push_error("❌ Не удалось загрузить базу данных предметов")
+	
+	print("=== ✅ ИНВЕНТАРЬ ГОТОВ ===\n")
+
+
+func _get_character_class() -> InventoryEnums.CharacterClass:
+	"""Возвращает класс персонажа для системы инвентаря"""
+	match Global.selected_character:
+		"warrior":
+			return InventoryEnums.CharacterClass.WARRIOR
+		"paladin":
+			return InventoryEnums.CharacterClass.PALADIN
+		"rogue":
+			return InventoryEnums.CharacterClass.ROGUE
+		"berserk":
+			return InventoryEnums.CharacterClass.BERSERK
+		_:
+			return InventoryEnums.CharacterClass.WARRIOR
+
+
+func _test_inventory():
+	"""Тестовая функция - добавляет предметы для проверки"""
+	# Проверяем что инвентарь инициализирован
+	if not Inventory or not Inventory.item_database:
+		print("⚠️ Инвентарь не инициализирован, тест пропущен")
+		return
+	
+	print("\n=== 🧪 ТЕСТ ИНВЕНТАРЯ ===")
+	
+	# Добавляем тестовые предметы
+	Inventory.add_item_by_id(1, 5)    # 5 зелий здоровья
+	Inventory.add_item_by_id(2, 3)    # 3 зелья маны
+	Inventory.add_item_by_id(101)     # Железный меч
+	Inventory.add_item_by_id(201)     # Крылья Гермеса (артефакт)
+	
+	# Выводим содержимое инвентаря
+	Inventory.debug_print()
+	
+	# Проверяем специальные эффекты
+	if Inventory.has_special_effect(InventoryEnums.EffectType.SPECIAL_DOUBLE_JUMP):
+		print("🦅 Двойной прыжок: ДОСТУПЕН (но артефакт не экипирован!)")
+	else:
+		print("🦅 Двойной прыжок: НЕ ДОСТУПЕН")
+	
+	print("=== ✅ ТЕСТ ЗАВЕРШЁН ===\n")
+
+
+# ===========================================
+# СПАВН ПЕРСОНАЖА
+# ===========================================
 
 func spawn_selected_character():
 	print("🔄 Attempting to spawn character...")
@@ -62,6 +157,11 @@ func spawn_selected_character():
 	else:
 		print("❌ Character scene not found")
 		create_fallback_player()
+
+
+# ===========================================
+# НАСТРОЙКА UI
+# ===========================================
 
 func setup_player_ui():
 	"""ИСПРАВЛЕНО: Подключает UI к персонажу"""
@@ -106,7 +206,6 @@ func setup_player_ui():
 	
 	print("=== ✅ UI ПОДКЛЮЧЕН ===\n")
 
-var last_armor_value: int = 0
 
 func _check_armor_changed():
 	"""Проверяет изменение брони и обновляет UI"""
@@ -117,11 +216,13 @@ func _check_armor_changed():
 		last_armor_value = current_player.armor
 		_on_player_armor_changed(current_player.armor)
 
+
 func _on_player_health_changed(new_health):
 	"""Обработчик изменения здоровья"""
 	print("💖 UI: HP изменено на ", new_health)
 	if game_ui:
 		game_ui.update_health(new_health)
+
 
 func _on_player_mana_changed(new_mana):
 	"""Обработчик изменения маны"""
@@ -129,11 +230,17 @@ func _on_player_mana_changed(new_mana):
 	if game_ui:
 		game_ui.update_mana(new_mana)
 
+
 func _on_player_armor_changed(new_armor):
 	"""Обработчик изменения брони"""
 	print("🛡️ UI: ARM изменена на ", new_armor)
 	if game_ui:
 		game_ui.update_armor(new_armor)
+
+
+# ===========================================
+# КАМЕРА
+# ===========================================
 
 func setup_player_camera():
 	if not current_player:
@@ -154,6 +261,11 @@ func setup_player_camera():
 	camera.limit_bottom = 1200
 	
 	camera.make_current()
+
+
+# ===========================================
+# РЕЗЕРВНЫЙ ИГРОК
+# ===========================================
 
 func create_fallback_player():
 	print("🔄 Creating fallback player...")

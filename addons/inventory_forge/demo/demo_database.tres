@@ -1,0 +1,85 @@
+[gd_resource type="Resource" script_class="ItemDatabase" load_steps=9 format=3 uid="uid://brmkxyrevtejq"]
+
+[ext_resource type="Script" uid="uid://cmpnse6xb1gml" path="res://addons/inventory_forge/resources/item_definition.gd" id="1_definition"]
+[ext_resource type="Script" uid="uid://dc4b62442egix" path="res://addons/inventory_forge/resources/item_database.gd" id="2_database"]
+
+[sub_resource type="Resource" id="item_health_potion"]
+script = ExtResource("1_definition")
+id = 1
+name_key = "DEMO_HEALTH_POTION_NAME"
+description_key = "DEMO_HEALTH_POTION_DESC"
+category = 2
+buy_price = 50
+sell_price = 25
+consumable = true
+effect_type = 1
+effect_value = 50
+
+[sub_resource type="Resource" id="item_iron_sword"]
+script = ExtResource("1_definition")
+id = 2
+name_key = "DEMO_IRON_SWORD_NAME"
+description_key = "DEMO_IRON_SWORD_DESC"
+category = 0
+stack_capacity = 1
+buy_price = 150
+sell_price = 75
+rarity = 1
+equippable = true
+
+[sub_resource type="Resource" id="item_magic_scroll"]
+script = ExtResource("1_definition")
+id = 3
+name_key = "DEMO_MAGIC_SCROLL_NAME"
+description_key = "DEMO_MAGIC_SCROLL_DESC"
+category = 3
+stack_capacity = 20
+buy_price = 200
+sell_price = 100
+rarity = 2
+consumable = true
+effect_type = 3
+effect_value = 20
+effect_duration = 30.0
+
+[sub_resource type="Resource" id="item_quest_key"]
+script = ExtResource("1_definition")
+id = 4
+name_key = "DEMO_QUEST_KEY_NAME"
+description_key = "DEMO_QUEST_KEY_DESC"
+stack_capacity = 1
+tradeable = false
+rarity = 3
+quest_id = "main_quest_001"
+is_ingredient = true
+material_type = 11
+
+[sub_resource type="Resource" id="item_leather_armor"]
+script = ExtResource("1_definition")
+id = 5
+name_key = "DEMO_LEATHER_ARMOR_NAME"
+description_key = "DEMO_LEATHER_ARMOR_DESC"
+category = 0
+stack_capacity = 1
+buy_price = 300
+sell_price = 150
+rarity = 1
+required_level = 5
+equippable = true
+
+[sub_resource type="Resource" id="item_rare_gem"]
+script = ExtResource("1_definition")
+id = 6
+name_key = "DEMO_RARE_GEM_NAME"
+description_key = "DEMO_RARE_GEM_DESC"
+category = 1
+stack_capacity = 50
+buy_price = 1000
+sell_price = 500
+rarity = 4
+craftable = true
+
+[resource]
+script = ExtResource("2_database")
+items = Array[ExtResource("1_definition")]([SubResource("item_health_potion"), SubResource("item_iron_sword"), SubResource("item_magic_scroll"), SubResource("item_quest_key"), SubResource("item_leather_armor"), SubResource("item_rare_gem")])
+_migration_v2_materials_done = true

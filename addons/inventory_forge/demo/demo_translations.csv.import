@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://xt3t6u026k3g"
+
+[deps]
+
+files=["res://addons/inventory_forge/demo/demo_translations.en.translation", "res://addons/inventory_forge/demo/demo_translations.it.translation"]
+
+source_file="res://addons/inventory_forge/demo/demo_translations.csv"
+dest_files=["res://addons/inventory_forge/demo/demo_translations.en.translation", "res://addons/inventory_forge/demo/demo_translations.it.translation"]
+
+[params]
+
+compress=true
+delimiter=0
