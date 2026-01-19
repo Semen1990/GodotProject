@@ -7,7 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://ceck3rjiaby11" path="res://scenes/Ui/simple_pause_menu.tscn" id="5_dywbp"]
 [ext_resource type="Script" uid="uid://yqteppxep2oc" path="res://scripts/game_ui.gd" id="7_2r1tl"]
 [ext_resource type="PackedScene" uid="uid://bdg7rk1sn2jln" path="res://scenes/enemies/Lizard.tscn" id="7_8a7m2"]
-[ext_resource type="Script" uid="uid://cc2q04j7j5qr6" path="res://scripts/ui/death_menu.gd" id="8_8a7m2"]
+[ext_resource type="Script" uid="uid://cc2q04j7j5qr6" path="res://scripts/inventory/ui/death_menu.gd" id="8_8a7m2"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dd0lh"]
 texture = ExtResource("2_dd0lh")
