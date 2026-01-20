@@ -1,13 +1,14 @@
 extends CanvasLayer
 class_name InventoryUI
-## Главное окно инвентаря
+## Главное окно инвентаря v3.0
 ##
 ## Путь: res://scripts/inventory/ui/inventory_ui.gd
 ##
-## ИСПРАВЛЕНО v2:
-## - Игра НЕ СТАВИТСЯ НА ПАУЗУ при открытии инвентаря
-## - Враги могут атаковать игрока пока открыт инвентарь
-## - Игрок не двигается но может получать урон
+## НОВОЕ:
+## - Спрайт персонажа с анимацией idle
+## - Панель характеристик (атака, броня, HP, скорость и т.д.)
+## - Исправлено использование зелий через ПКМ
+## - Игра НЕ на паузе
 
 # ===========================================
 # СИГНАЛЫ
@@ -46,17 +47,23 @@ var equipment_slots: Dictionary = {}
 var hotbar_slots: Array[InventorySlot] = []
 var selected_slot: InventorySlot = null
 
+# UI элементы
 var main_panel: Panel
-var inventory_container: VBoxContainer
 var tabs_container: HBoxContainer
 var slots_grid: GridContainer
-var equipment_panel: Panel
-var hotbar_panel: Panel
 var tooltip_panel: Panel
 var tooltip_label: RichTextLabel
 var close_button: Button
 var title_label: Label
 var dimmer: ColorRect
+
+# Спрайт персонажа
+var character_sprite: AnimatedSprite2D
+var character_panel: Panel
+
+# Панель характеристик
+var stats_panel: Panel
+var stats_labels: Dictionary = {}
 
 # ===========================================
 # ИНИЦИАЛИЗАЦИЯ
@@ -64,8 +71,6 @@ var dimmer: ColorRect
 
 func _ready():
 	layer = 100
-	
-	# ВАЖНО: Обрабатываем ввод ВСЕГДА (даже если бы была пауза)
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	
 	_create_ui()
@@ -74,30 +79,30 @@ func _ready():
 	visible = false
 	is_open = false
 	
-	print("📦 InventoryUI создан (нажми B чтобы открыть)")
+	print("📦 InventoryUI v3 создан")
 
 
 func _create_ui():
 	"""Создаёт всю структуру UI"""
 	
-	# === ЗАТЕМНЕНИЕ ФОНА (не блокирует игру!) ===
+	# === ЗАТЕМНЕНИЕ ФОНА ===
 	dimmer = ColorRect.new()
 	dimmer.name = "Dimmer"
 	dimmer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dimmer.color = Color(0, 0, 0, 0.4)  # Чуть прозрачнее
+	dimmer.color = Color(0, 0, 0, 0.5)
 	dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
 	dimmer.gui_input.connect(_on_dimmer_input)
 	add_child(dimmer)
 	
-	# === ГЛАВНАЯ ПАНЕЛЬ ===
+	# === ГЛАВНАЯ ПАНЕЛЬ (увеличена для характеристик) ===
 	main_panel = Panel.new()
 	main_panel.name = "MainPanel"
-	main_panel.custom_minimum_size = Vector2(700, 550)
+	main_panel.custom_minimum_size = Vector2(900, 600)
 	main_panel.set_anchors_preset(Control.PRESET_CENTER)
-	main_panel.offset_left = -350
-	main_panel.offset_top = -275
-	main_panel.offset_right = 350
-	main_panel.offset_bottom = 275
+	main_panel.offset_left = -450
+	main_panel.offset_top = -300
+	main_panel.offset_right = 450
+	main_panel.offset_bottom = 300
 	main_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	_style_panel(main_panel, Color(0.12, 0.12, 0.15, 0.95))
 	add_child(main_panel)
@@ -143,8 +148,11 @@ func _create_ui():
 	# Левая часть - инвентарь
 	_create_inventory_section(content)
 	
-	# Правая часть - экипировка
+	# Средняя часть - экипировка
 	_create_equipment_section(content)
+	
+	# Правая часть - персонаж и характеристики
+	_create_character_section(content)
 	
 	# === ПОДСКАЗКА ===
 	_create_tooltip()
@@ -179,7 +187,6 @@ func _create_inventory_section(parent: Control):
 	var inv_panel = Panel.new()
 	inv_panel.name = "InventorySection"
 	inv_panel.custom_minimum_size = Vector2(290, 0)
-	inv_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style_panel(inv_panel, Color(0.08, 0.08, 0.1, 0.8))
 	parent.add_child(inv_panel)
 	
@@ -204,7 +211,7 @@ func _create_inventory_section(parent: Control):
 	slots_grid.add_theme_constant_override("v_separation", SLOT_SPACING)
 	vbox.add_child(slots_grid)
 	
-	# Создаём 20 слотов
+	# 20 слотов
 	for i in range(20):
 		var slot = _create_inventory_slot(i)
 		slots_grid.add_child(slot)
@@ -274,11 +281,11 @@ func _create_hotbar_slot(index: int) -> InventorySlot:
 
 func _create_equipment_section(parent: Control):
 	"""Создаёт секцию экипировки"""
-	equipment_panel = Panel.new()
-	equipment_panel.name = "EquipmentSection"
-	equipment_panel.custom_minimum_size = Vector2(350, 0)
-	_style_panel(equipment_panel, Color(0.08, 0.08, 0.1, 0.8))
-	parent.add_child(equipment_panel)
+	var equip_panel = Panel.new()
+	equip_panel.name = "EquipmentSection"
+	equip_panel.custom_minimum_size = Vector2(200, 0)
+	_style_panel(equip_panel, Color(0.08, 0.08, 0.1, 0.8))
+	parent.add_child(equip_panel)
 	
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -286,20 +293,16 @@ func _create_equipment_section(parent: Control):
 	vbox.offset_top = 10
 	vbox.offset_right = -10
 	vbox.offset_bottom = -10
-	vbox.add_theme_constant_override("separation", 10)
-	equipment_panel.add_child(vbox)
+	vbox.add_theme_constant_override("separation", 8)
+	equip_panel.add_child(vbox)
 	
 	var equip_label = Label.new()
 	equip_label.text = "⚔️ Экипировка"
 	equip_label.add_theme_font_size_override("font_size", 16)
 	vbox.add_child(equip_label)
 	
-	# Слоты экипировки
+	# Слоты экипировки (компактнее)
 	_create_equipment_slots(vbox)
-	
-	# Разделитель
-	var sep = HSeparator.new()
-	vbox.add_child(sep)
 	
 	# Артефакты
 	var art_label = Label.new()
@@ -322,8 +325,8 @@ func _create_equipment_slots(parent: Control):
 	"""Создаёт сетку слотов экипировки"""
 	var grid = GridContainer.new()
 	grid.columns = 3
-	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 10)
+	grid.add_theme_constant_override("h_separation", 5)
+	grid.add_theme_constant_override("v_separation", 5)
 	parent.add_child(grid)
 	
 	var equip_layout = [
@@ -344,10 +347,11 @@ func _create_equipment_slots(parent: Control):
 	for data in equip_layout:
 		if data.slot == InventoryEnums.EquipSlot.NONE:
 			var spacer = Control.new()
-			spacer.custom_minimum_size = SLOT_SIZE
+			spacer.custom_minimum_size = Vector2(45, 45)
 			grid.add_child(spacer)
 		else:
 			var slot = _create_equip_slot(data.slot, data.label)
+			slot.custom_minimum_size = Vector2(45, 45)
 			grid.add_child(slot)
 
 
@@ -367,6 +371,7 @@ func _create_artifact_slots(parent: Control):
 	
 	for slot_type in artifact_slots_data:
 		var slot = _create_equip_slot(slot_type, "✨")
+		slot.custom_minimum_size = Vector2(40, 40)
 		hbox.add_child(slot)
 
 
@@ -386,7 +391,7 @@ func _create_ring_slots(parent: Control):
 	
 	for slot_type in ring_slots_data:
 		var slot = _create_equip_slot(slot_type, "💍")
-		slot.custom_minimum_size = Vector2(40, 40)
+		slot.custom_minimum_size = Vector2(35, 35)
 		hbox.add_child(slot)
 
 
@@ -406,6 +411,151 @@ func _create_equip_slot(slot_type: InventoryEnums.EquipSlot, label_text: String)
 	equipment_slots[slot_type] = slot
 	
 	return slot
+
+
+# ===========================================
+# СЕКЦИЯ ПЕРСОНАЖА И ХАРАКТЕРИСТИК
+# ===========================================
+
+func _create_character_section(parent: Control):
+	"""Создаёт секцию персонажа и характеристик"""
+	character_panel = Panel.new()
+	character_panel.name = "CharacterSection"
+	character_panel.custom_minimum_size = Vector2(300, 0)
+	character_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_panel(character_panel, Color(0.08, 0.08, 0.1, 0.8))
+	parent.add_child(character_panel)
+	
+	var vbox = VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.offset_left = 10
+	vbox.offset_top = 10
+	vbox.offset_right = -10
+	vbox.offset_bottom = -10
+	vbox.add_theme_constant_override("separation", 10)
+	character_panel.add_child(vbox)
+	
+	# Заголовок
+	var char_label = Label.new()
+	char_label.text = "👤 Персонаж"
+	char_label.add_theme_font_size_override("font_size", 16)
+	vbox.add_child(char_label)
+	
+	# Контейнер для спрайта
+	var sprite_container = CenterContainer.new()
+	sprite_container.custom_minimum_size = Vector2(0, 120)
+	vbox.add_child(sprite_container)
+	
+	# Создаём AnimatedSprite2D для персонажа
+	var sprite_holder = Control.new()
+	sprite_holder.custom_minimum_size = Vector2(100, 100)
+	sprite_container.add_child(sprite_holder)
+	
+	character_sprite = AnimatedSprite2D.new()
+	character_sprite.name = "CharacterSprite"
+	character_sprite.position = Vector2(50, 50)
+	character_sprite.scale = Vector2(3, 3)  # Увеличиваем для видимости
+	sprite_holder.add_child(character_sprite)
+	
+	# Разделитель
+	var sep = HSeparator.new()
+	vbox.add_child(sep)
+	
+	# Заголовок характеристик
+	var stats_title = Label.new()
+	stats_title.text = "📊 Характеристики"
+	stats_title.add_theme_font_size_override("font_size", 14)
+	vbox.add_child(stats_title)
+	
+	# Панель характеристик
+	_create_stats_panel(vbox)
+
+
+func _create_stats_panel(parent: Control):
+	"""Создаёт панель характеристик"""
+	var grid = GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 20)
+	grid.add_theme_constant_override("v_separation", 5)
+	parent.add_child(grid)
+	
+	# Основные характеристики
+	var stats_config = [
+		{"key": "health", "icon": "❤️", "label": "Здоровье", "color": Color(1.0, 0.4, 0.4)},
+		{"key": "mana", "icon": "💙", "label": "Мана", "color": Color(0.4, 0.6, 1.0)},
+		{"key": "attack", "icon": "⚔️", "label": "Атака", "color": Color(1.0, 0.8, 0.4)},
+		{"key": "armor", "icon": "🛡️", "label": "Броня", "color": Color(0.6, 0.6, 0.7)},
+		{"key": "speed", "icon": "👟", "label": "Скорость", "color": Color(0.5, 1.0, 0.5)},
+		{"key": "crit", "icon": "💥", "label": "Крит. шанс", "color": Color(1.0, 0.6, 0.2)},
+	]
+	
+	for stat in stats_config:
+		var hbox = HBoxContainer.new()
+		hbox.add_theme_constant_override("separation", 5)
+		
+		var icon_label = Label.new()
+		icon_label.text = stat.icon
+		icon_label.add_theme_font_size_override("font_size", 14)
+		hbox.add_child(icon_label)
+		
+		var name_label = Label.new()
+		name_label.text = stat.label + ":"
+		name_label.add_theme_font_size_override("font_size", 12)
+		name_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+		name_label.custom_minimum_size = Vector2(80, 0)
+		hbox.add_child(name_label)
+		
+		grid.add_child(hbox)
+		
+		var value_label = Label.new()
+		value_label.text = "0"
+		value_label.add_theme_font_size_override("font_size", 12)
+		value_label.add_theme_color_override("font_color", stat.color)
+		grid.add_child(value_label)
+		
+		stats_labels[stat.key] = value_label
+	
+	# Разделитель
+	var sep = HSeparator.new()
+	parent.add_child(sep)
+	
+	# Дополнительные характеристики (по умолчанию 0)
+	var extra_label = Label.new()
+	extra_label.text = "🔮 Сопротивления"
+	extra_label.add_theme_font_size_override("font_size", 12)
+	extra_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	parent.add_child(extra_label)
+	
+	var extra_grid = GridContainer.new()
+	extra_grid.columns = 2
+	extra_grid.add_theme_constant_override("h_separation", 15)
+	extra_grid.add_theme_constant_override("v_separation", 3)
+	parent.add_child(extra_grid)
+	
+	var extra_stats = [
+		{"key": "dodge", "label": "Уклонение", "color": Color(0.5, 0.8, 0.5)},
+		{"key": "lifesteal", "label": "Вампиризм", "color": Color(0.8, 0.2, 0.2)},
+		{"key": "fire_res", "label": "🔥 Огонь", "color": Color(1.0, 0.5, 0.2)},
+		{"key": "cold_res", "label": "❄️ Холод", "color": Color(0.5, 0.8, 1.0)},
+		{"key": "poison_res", "label": "☠️ Яд", "color": Color(0.5, 0.8, 0.3)},
+		{"key": "madness_res", "label": "🌀 Безумие", "color": Color(0.8, 0.4, 0.8)},
+		{"key": "bleed_res", "label": "🩸 Кровотечение", "color": Color(0.8, 0.2, 0.2)},
+	]
+	
+	for stat in extra_stats:
+		var name_lbl = Label.new()
+		name_lbl.text = stat.label + ":"
+		name_lbl.add_theme_font_size_override("font_size", 10)
+		name_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+		extra_grid.add_child(name_lbl)
+		
+		var val_lbl = Label.new()
+		val_lbl.text = "0%"
+		val_lbl.add_theme_font_size_override("font_size", 10)
+		val_lbl.add_theme_color_override("font_color", stat.color)
+		extra_grid.add_child(val_lbl)
+		
+		stats_labels[stat.key] = val_lbl
 
 
 func _create_tooltip():
@@ -456,11 +606,11 @@ func _connect_signals():
 
 
 # ===========================================
-# ОТКРЫТИЕ / ЗАКРЫТИЕ - БЕЗ ПАУЗЫ!
+# ОТКРЫТИЕ / ЗАКРЫТИЕ
 # ===========================================
 
 func show_inventory():
-	"""Открывает инвентарь - БЕЗ ПАУЗЫ"""
+	"""Открывает инвентарь"""
 	if is_open:
 		return
 	
@@ -471,12 +621,13 @@ func show_inventory():
 	_refresh_inventory()
 	_refresh_equipment()
 	_refresh_hotbar()
+	_update_character_display()
+	_update_stats_display()
 	
-	# НЕ СТАВИМ ПАУЗУ! Игра продолжается!
-	# Враги могут атаковать игрока
+	# НЕ ставим паузу!
 	
 	inventory_opened.emit()
-	print("📦 Инвентарь открыт (игра продолжается)")
+	print("📦 Инвентарь открыт")
 
 
 func hide_inventory():
@@ -489,8 +640,6 @@ func hide_inventory():
 	
 	tooltip_panel.visible = false
 	
-	# Паузу не снимаем - её и не было
-	
 	inventory_closed.emit()
 	print("📦 Инвентарь закрыт")
 
@@ -501,6 +650,91 @@ func toggle_inventory():
 		hide_inventory()
 	else:
 		show_inventory()
+
+
+# ===========================================
+# ОБНОВЛЕНИЕ ПЕРСОНАЖА И ХАРАКТЕРИСТИК
+# ===========================================
+
+func _update_character_display():
+	"""Обновляет спрайт персонажа"""
+	if not character_sprite:
+		return
+	
+	# Получаем игрока из Global
+	var player = null
+	if Global and Global.current_player:
+		player = Global.current_player
+	
+	if not player:
+		return
+	
+	# Получаем AnimatedSprite2D игрока
+	var player_sprite = player.get_node_or_null("AnimatedSprite2D")
+	if player_sprite and player_sprite.sprite_frames:
+		character_sprite.sprite_frames = player_sprite.sprite_frames
+		
+		# Пытаемся проиграть анимацию idle
+		if character_sprite.sprite_frames.has_animation("idle"):
+			character_sprite.play("idle")
+		elif character_sprite.sprite_frames.has_animation("demonstration"):
+			character_sprite.play("demonstration")
+		else:
+			# Берём первую доступную анимацию
+			var anims = character_sprite.sprite_frames.get_animation_names()
+			if anims.size() > 0:
+				character_sprite.play(anims[0])
+
+
+func _update_stats_display():
+	"""Обновляет отображение характеристик"""
+	var player = null
+	if Global and Global.current_player:
+		player = Global.current_player
+	
+	if not player:
+		return
+	
+	# Основные характеристики
+	if stats_labels.has("health"):
+		var hp_text = "%d/%d" % [player.current_health, player.max_health]
+		stats_labels["health"].text = hp_text
+	
+	if stats_labels.has("mana"):
+		var mp_text = "%d/%d" % [player.current_mana, player.max_mana]
+		stats_labels["mana"].text = mp_text
+	
+	if stats_labels.has("armor"):
+		stats_labels["armor"].text = str(player.armor)
+	
+	if stats_labels.has("speed"):
+		var speed = player.current_speed if "current_speed" in player else 200
+		stats_labels["speed"].text = str(speed)
+	
+	# Атака - пытаемся получить из разных источников
+	if stats_labels.has("attack"):
+		var attack = 2  # Базовый урон
+		if "BASE_DAMAGE" in player:
+			attack = player.BASE_DAMAGE
+		elif "base_damage" in player:
+			attack = player.base_damage
+		stats_labels["attack"].text = str(attack)
+	
+	# Крит шанс
+	if stats_labels.has("crit"):
+		var crit = 0
+		if "crit_chance" in player:
+			crit = player.crit_chance
+		stats_labels["crit"].text = "%d%%" % crit
+	
+	# Дополнительные (по умолчанию 0)
+	var extra_stats = ["dodge", "lifesteal", "fire_res", "cold_res", "poison_res", "madness_res", "bleed_res"]
+	for stat_key in extra_stats:
+		if stats_labels.has(stat_key):
+			var value = 0
+			if stat_key in player:
+				value = player.get(stat_key)
+			stats_labels[stat_key].text = "%d%%" % value
 
 
 # ===========================================
@@ -520,7 +754,6 @@ func _input(event: InputEvent):
 
 
 func _on_dimmer_input(event: InputEvent):
-	"""Клик по затемнению закрывает инвентарь"""
 	if event is InputEventMouseButton:
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			hide_inventory()
@@ -546,7 +779,6 @@ func _on_tab_pressed(tab_index: int):
 # ===========================================
 
 func _refresh_inventory():
-	"""Обновляет отображение инвентаря"""
 	if not Inventory:
 		return
 	
@@ -554,7 +786,6 @@ func _refresh_inventory():
 		var slot = inventory_slots[i]
 		var item = Inventory.get_item_at(i)
 		
-		# Фильтрация по вкладке
 		if item and current_tab != Tab.ALL:
 			var show = false
 			match current_tab:
@@ -572,7 +803,6 @@ func _refresh_inventory():
 
 
 func _refresh_equipment():
-	"""Обновляет отображение экипировки"""
 	if not Inventory:
 		return
 	
@@ -583,7 +813,6 @@ func _refresh_equipment():
 
 
 func _refresh_hotbar():
-	"""Обновляет быстрые слоты"""
 	if not Inventory:
 		return
 	
@@ -602,7 +831,6 @@ func _on_hotbar_changed(_index: int):
 # ===========================================
 
 func _on_inventory_slot_clicked(slot: InventorySlot):
-	"""Левый клик по слоту инвентаря"""
 	print("📦 Клик по слоту %d" % slot.slot_index)
 
 
@@ -614,10 +842,17 @@ func _on_inventory_slot_right_clicked(slot: InventorySlot):
 	var item = slot.current_item
 	
 	if item.is_usable():
-		# Используем предмет
+		# ИСПРАВЛЕНО: Сначала проверяем можно ли использовать
+		var item_id = item.get_item_id()
+		
+		if Inventory and Inventory.is_potion_used(item_id):
+			print("⚠️ Это зелье уже использовано в этой комнате!")
+			return
+		
+		# Отправляем сигнал (level1.gd применит эффекты)
 		item_used.emit(item)
 		
-		# Уменьшаем количество
+		# Уменьшаем количество ПОСЛЕ применения эффекта
 		item.remove(1)
 		
 		if item.is_empty():
@@ -625,29 +860,28 @@ func _on_inventory_slot_right_clicked(slot: InventorySlot):
 		
 		_refresh_inventory()
 		_refresh_hotbar()
+		_update_stats_display()
 	
 	elif item.is_equippable() or item.is_artifact():
-		# Экипируем
 		if Inventory.equip_item(slot.slot_index):
 			_refresh_inventory()
 			_refresh_equipment()
+			_update_stats_display()
 
 
 func _on_equip_slot_clicked(slot: InventorySlot):
-	"""Клик по слоту экипировки"""
 	print("⚔️ Клик по слоту экипировки: %s" % InventoryEnums.get_slot_name(slot.slot_type))
 
 
 func _on_equip_slot_right_clicked(slot: InventorySlot):
-	"""Правый клик - снять экипировку"""
 	if slot.current_item and Inventory:
 		Inventory.unequip_item(slot.slot_type)
 		_refresh_inventory()
 		_refresh_equipment()
+		_update_stats_display()
 
 
 func _on_hotbar_slot_clicked(slot: InventorySlot):
-	"""Клик по быстрому слоту"""
 	print("⚡ Клик по быстрому слоту %d" % slot.slot_index)
 
 
@@ -656,14 +890,12 @@ func _on_hotbar_slot_clicked(slot: InventorySlot):
 # ===========================================
 
 func _on_inventory_item_dropped(from_slot: InventorySlot, to_slot: InventorySlot):
-	"""Предмет перетащен между слотами инвентаря"""
 	if Inventory:
 		Inventory.move_item(from_slot.slot_index, to_slot.slot_index)
 		_refresh_inventory()
 
 
 func _on_equip_item_dropped(from_slot: InventorySlot, to_slot: InventorySlot):
-	"""Предмет перетащен в слот экипировки"""
 	if not from_slot.current_item or not Inventory:
 		return
 	
@@ -677,13 +909,14 @@ func _on_equip_item_dropped(from_slot: InventorySlot, to_slot: InventorySlot):
 		
 		_refresh_inventory()
 		_refresh_equipment()
+		_update_stats_display()
 
 
 func _on_hotbar_item_dropped(from_slot: InventorySlot, to_slot: InventorySlot):
-	"""Предмет перетащен в быстрый слот"""
 	if not from_slot.current_item or not Inventory:
 		return
 	
+	# В хотбар можно класть только расходники
 	if from_slot.current_item.is_usable():
 		Inventory.set_hotbar_item(to_slot.slot_index, from_slot.slot_index)
 		_refresh_hotbar()
@@ -694,7 +927,6 @@ func _on_hotbar_item_dropped(from_slot: InventorySlot, to_slot: InventorySlot):
 # ===========================================
 
 func _on_slot_hovered(slot: InventorySlot):
-	"""Наведение на слот"""
 	if not slot.current_item:
 		tooltip_panel.visible = false
 		return
@@ -702,11 +934,9 @@ func _on_slot_hovered(slot: InventorySlot):
 	tooltip_label.text = slot.current_item.generate_tooltip()
 	tooltip_panel.visible = true
 	
-	# Позиционируем подсказку
 	var mouse_pos = get_viewport().get_mouse_position()
 	tooltip_panel.position = mouse_pos + Vector2(15, 15)
 	
-	# Не даём выйти за экран
 	var viewport_size = get_viewport().get_visible_rect().size
 	if tooltip_panel.position.x + tooltip_panel.size.x > viewport_size.x:
 		tooltip_panel.position.x = mouse_pos.x - tooltip_panel.size.x - 15
@@ -715,12 +945,14 @@ func _on_slot_hovered(slot: InventorySlot):
 
 
 func _on_slot_unhovered(_slot: InventorySlot):
-	"""Курсор ушёл со слота"""
 	tooltip_panel.visible = false
 
 
 func _process(_delta):
-	# Обновляем позицию подсказки
 	if tooltip_panel.visible:
 		var mouse_pos = get_viewport().get_mouse_position()
 		tooltip_panel.position = mouse_pos + Vector2(15, 15)
+	
+	# Обновляем статы периодически пока открыт инвентарь
+	if is_open:
+		_update_stats_display()

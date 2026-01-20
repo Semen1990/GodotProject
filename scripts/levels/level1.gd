@@ -465,23 +465,24 @@ func _add_starting_items():
 	print("")
 	print("=== 🧪 СТАРТОВЫЕ ПРЕДМЕТЫ ===")
 	
+	# Зелья (игрок сам решает какие класть в быстрые слоты)
 	Inventory.add_item_by_id(1, 5)    # 5 малых зелий здоровья
 	Inventory.add_item_by_id(2, 5)    # 5 малых зелий маны
 	Inventory.add_item_by_id(3, 3)    # 3 малых зелья каменной кожи
 	Inventory.add_item_by_id(4, 2)    # 2 зелья ярости
 	
+	# Экипировка
 	Inventory.add_item_by_id(101)     # Железный меч
 	Inventory.add_item_by_id(102)     # Стальной шлем
 	Inventory.add_item_by_id(103)     # Кожаный доспех
 	Inventory.add_item_by_id(104)     # Деревянный щит
 	Inventory.add_item_by_id(105)     # Боевые перчатки
 	
-	Inventory.set_hotbar_item(0, 0)
-	Inventory.set_hotbar_item(1, 1)
-	Inventory.set_hotbar_item(2, 2)
-	Inventory.set_hotbar_item(3, 3)
+	# НЕ заполняем хотбар автоматически!
+	# Игрок сам перетаскивает зелья в быстрые слоты
 	
 	print("✅ Добавлено 9 предметов")
+	print("💡 Перетащите зелья в быстрые слоты [1-4]")
 
 
 # ===========================================
