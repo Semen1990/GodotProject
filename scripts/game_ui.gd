@@ -1,7 +1,7 @@
 extends CanvasLayer
 
 # ===========================================
-# GAME UI v5.1 - С ИКОНКОЙ СПОСОБНОСТИ ИЗ ФАЙЛА
+# GAME UI v6.0 - С ЦИФРОВЫМИ ЗНАЧЕНИЯМИ HP/MP
 # ===========================================
 
 # Контейнеры
@@ -10,8 +10,10 @@ var stats_vbox: VBoxContainer
 var keys_hbox: HBoxContainer
 
 # Здоровье
+var health_container: VBoxContainer
 var health_label: Label
 var health_bar: ProgressBar
+var health_value_label: Label  # НОВОЕ: Цифры внутри полоски
 
 # Броня  
 var armor_label: Label
@@ -21,11 +23,12 @@ var armor_container: HBoxContainer
 # Мана
 var mana_label: Label
 var mana_bar: ProgressBar
+var mana_value_label: Label  # НОВОЕ: Цифры внутри полоски
 var mana_container: VBoxContainer
 
 # Способность
 var ability_container: VBoxContainer
-var ability_button: TextureRect  # Изменено на TextureRect для иконки
+var ability_button: TextureRect
 var ability_cooldown: ColorRect
 var ability_label: Label
 
@@ -41,9 +44,9 @@ var current_stats = {
 var key_labels: Array = []
 
 func _ready():
-	print("\n=== 🎮 GAME UI v5.1 ===")
+	print("\n=== 🎮 GAME UI v6.0 ===")
 	_create_all_ui()
-	print("✅ UI создан")
+	print("✅ UI создан с цифровыми значениями HP/MP")
 
 func _create_all_ui():
 	"""Создаёт весь UI с нуля"""
@@ -51,7 +54,7 @@ func _create_all_ui():
 	# === ЛЕВЫЙ ВЕРХНИЙ УГОЛ - СТАТЫ ===
 	stats_vbox = VBoxContainer.new()
 	stats_vbox.position = Vector2(20, 20)
-	stats_vbox.add_theme_constant_override("separation", 10)
+	stats_vbox.add_theme_constant_override("separation", 8)
 	add_child(stats_vbox)
 	
 	# Здоровье
@@ -69,34 +72,64 @@ func _create_all_ui():
 	# === ПРАВЫЙ ВЕРХНИЙ УГОЛ - КЛЮЧИ ===
 	_create_keys_ui()
 
+
 func _create_health_ui():
-	"""Создаёт UI здоровья"""
-	var container = VBoxContainer.new()
-	container.add_theme_constant_override("separation", 2)
-	stats_vbox.add_child(container)
+	"""Создаёт UI здоровья с цифрами внутри"""
+	health_container = VBoxContainer.new()
+	health_container.add_theme_constant_override("separation", 2)
+	stats_vbox.add_child(health_container)
 	
+	# Заголовок
 	health_label = Label.new()
 	health_label.text = "❤️ ЗДОРОВЬЕ"
-	health_label.add_theme_font_size_override("font_size", 16)
-	health_label.add_theme_color_override("font_color", Color(1, 0.3, 0.3))
-	container.add_child(health_label)
+	health_label.add_theme_font_size_override("font_size", 14)
+	health_label.add_theme_color_override("font_color", Color(1, 0.4, 0.4))
+	health_container.add_child(health_label)
 	
+	# Контейнер для полоски с цифрами
+	var bar_container = Control.new()
+	bar_container.custom_minimum_size = Vector2(200, 24)
+	health_container.add_child(bar_container)
+	
+	# Полоска здоровья
 	health_bar = ProgressBar.new()
-	health_bar.custom_minimum_size = Vector2(200, 20)
+	health_bar.set_anchors_preset(Control.PRESET_FULL_RECT)
 	health_bar.max_value = 12
 	health_bar.value = 12
 	health_bar.show_percentage = false
 	
-	# Стилизация
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.8, 0.2, 0.2)
-	health_bar.add_theme_stylebox_override("fill", style)
+	# Стилизация полоски
+	var fill_style = StyleBoxFlat.new()
+	fill_style.bg_color = Color(0.85, 0.2, 0.2)
+	fill_style.corner_radius_top_left = 4
+	fill_style.corner_radius_top_right = 4
+	fill_style.corner_radius_bottom_left = 4
+	fill_style.corner_radius_bottom_right = 4
+	health_bar.add_theme_stylebox_override("fill", fill_style)
 	
 	var bg_style = StyleBoxFlat.new()
 	bg_style.bg_color = Color(0.2, 0.1, 0.1)
+	bg_style.corner_radius_top_left = 4
+	bg_style.corner_radius_top_right = 4
+	bg_style.corner_radius_bottom_left = 4
+	bg_style.corner_radius_bottom_right = 4
 	health_bar.add_theme_stylebox_override("background", bg_style)
 	
-	container.add_child(health_bar)
+	bar_container.add_child(health_bar)
+	
+	# === ЦИФРЫ ВНУТРИ ПОЛОСКИ ===
+	health_value_label = Label.new()
+	health_value_label.text = "12 / 12"
+	health_value_label.set_anchors_preset(Control.PRESET_CENTER)
+	health_value_label.position = Vector2(-30, -8)  # Центрируем
+	health_value_label.add_theme_font_size_override("font_size", 14)
+	health_value_label.add_theme_color_override("font_color", Color.WHITE)
+	health_value_label.add_theme_color_override("font_shadow_color", Color.BLACK)
+	health_value_label.add_theme_constant_override("shadow_offset_x", 1)
+	health_value_label.add_theme_constant_override("shadow_offset_y", 1)
+	health_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bar_container.add_child(health_value_label)
+
 
 func _create_armor_ui():
 	"""Создаёт UI брони"""
@@ -106,56 +139,84 @@ func _create_armor_ui():
 	
 	armor_label = Label.new()
 	armor_label.text = "🛡️ БРОНЯ:"
-	armor_label.add_theme_font_size_override("font_size", 16)
+	armor_label.add_theme_font_size_override("font_size", 14)
 	armor_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
 	armor_container.add_child(armor_label)
 	
 	armor_value_label = Label.new()
 	armor_value_label.text = "2"
-	armor_value_label.add_theme_font_size_override("font_size", 18)
+	armor_value_label.add_theme_font_size_override("font_size", 16)
 	armor_value_label.add_theme_color_override("font_color", Color(0.9, 0.9, 1.0))
 	armor_container.add_child(armor_value_label)
 
+
 func _create_mana_ui():
-	"""Создаёт UI маны"""
+	"""Создаёт UI маны с цифрами внутри"""
 	mana_container = VBoxContainer.new()
 	mana_container.add_theme_constant_override("separation", 2)
 	mana_container.visible = false  # Скрыта по умолчанию
 	stats_vbox.add_child(mana_container)
 	
+	# Заголовок
 	mana_label = Label.new()
 	mana_label.text = "💧 МАНА"
-	mana_label.add_theme_font_size_override("font_size", 16)
-	mana_label.add_theme_color_override("font_color", Color(0.3, 0.5, 1.0))
+	mana_label.add_theme_font_size_override("font_size", 14)
+	mana_label.add_theme_color_override("font_color", Color(0.4, 0.6, 1.0))
 	mana_container.add_child(mana_label)
 	
+	# Контейнер для полоски с цифрами
+	var bar_container = Control.new()
+	bar_container.custom_minimum_size = Vector2(200, 20)
+	mana_container.add_child(bar_container)
+	
+	# Полоска маны
 	mana_bar = ProgressBar.new()
-	mana_bar.custom_minimum_size = Vector2(200, 16)
+	mana_bar.set_anchors_preset(Control.PRESET_FULL_RECT)
 	mana_bar.max_value = 10
 	mana_bar.value = 10
 	mana_bar.show_percentage = false
 	
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.2, 0.4, 0.9)
-	mana_bar.add_theme_stylebox_override("fill", style)
+	var fill_style = StyleBoxFlat.new()
+	fill_style.bg_color = Color(0.2, 0.4, 0.9)
+	fill_style.corner_radius_top_left = 4
+	fill_style.corner_radius_top_right = 4
+	fill_style.corner_radius_bottom_left = 4
+	fill_style.corner_radius_bottom_right = 4
+	mana_bar.add_theme_stylebox_override("fill", fill_style)
 	
 	var bg_style = StyleBoxFlat.new()
-	bg_style.bg_color = Color(0.1, 0.1, 0.2)
+	bg_style.bg_color = Color(0.1, 0.1, 0.25)
+	bg_style.corner_radius_top_left = 4
+	bg_style.corner_radius_top_right = 4
+	bg_style.corner_radius_bottom_left = 4
+	bg_style.corner_radius_bottom_right = 4
 	mana_bar.add_theme_stylebox_override("background", bg_style)
 	
-	mana_container.add_child(mana_bar)
+	bar_container.add_child(mana_bar)
+	
+	# === ЦИФРЫ ВНУТРИ ПОЛОСКИ ===
+	mana_value_label = Label.new()
+	mana_value_label.text = "10 / 10"
+	mana_value_label.set_anchors_preset(Control.PRESET_CENTER)
+	mana_value_label.position = Vector2(-25, -7)
+	mana_value_label.add_theme_font_size_override("font_size", 12)
+	mana_value_label.add_theme_color_override("font_color", Color.WHITE)
+	mana_value_label.add_theme_color_override("font_shadow_color", Color.BLACK)
+	mana_value_label.add_theme_constant_override("shadow_offset_x", 1)
+	mana_value_label.add_theme_constant_override("shadow_offset_y", 1)
+	mana_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bar_container.add_child(mana_value_label)
+
 
 func _create_ability_ui():
 	"""Создаёт UI способности с иконкой из файла"""
 	ability_container = VBoxContainer.new()
-	ability_container.position = Vector2(20, 160)
+	ability_container.position = Vector2(20, 150)
 	add_child(ability_container)
 	
-	# Контейнер для иконки (чтобы добавить рамку)
 	var icon_panel = PanelContainer.new()
 	icon_panel.custom_minimum_size = Vector2(54, 54)
 	
-	# Стиль рамки
 	var panel_style = StyleBoxFlat.new()
 	panel_style.bg_color = Color(0.15, 0.15, 0.2, 0.9)
 	panel_style.border_color = Color(0.6, 0.6, 0.7)
@@ -164,36 +225,29 @@ func _create_ability_ui():
 	icon_panel.add_theme_stylebox_override("panel", panel_style)
 	ability_container.add_child(icon_panel)
 	
-	# Иконка способности из файла
 	ability_button = TextureRect.new()
 	ability_button.custom_minimum_size = Vector2(50, 50)
 	ability_button.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	ability_button.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	
-	# Загружаем иконку из файла
 	var icon_path = "res://assets/Spell/shield_defence.png"
 	if ResourceLoader.exists(icon_path):
 		var icon_texture = load(icon_path)
 		ability_button.texture = icon_texture
-		print("✅ Иконка способности загружена: ", icon_path)
 	else:
-		# Запасной вариант - создаём простую иконку
-		print("⚠️ Иконка не найдена: ", icon_path, " - используем запасную")
 		_create_fallback_ability_icon()
 	
 	icon_panel.add_child(ability_button)
 	
-	# Оверлей кулдауна
 	ability_cooldown = ColorRect.new()
 	ability_cooldown.color = Color(0, 0, 0, 0.7)
 	ability_cooldown.custom_minimum_size = Vector2(50, 50)
 	ability_cooldown.size = Vector2(50, 0)
-	ability_cooldown.position = Vector2(2, 52)  # Учитываем рамку
+	ability_cooldown.position = Vector2(2, 52)
 	ability_cooldown.visible = false
 	ability_cooldown.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	icon_panel.add_child(ability_cooldown)
 	
-	# Хоткей
 	ability_label = Label.new()
 	ability_label.text = "[RMB]"
 	ability_label.add_theme_font_size_override("font_size", 12)
@@ -201,25 +255,21 @@ func _create_ability_ui():
 	ability_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ability_container.add_child(ability_label)
 
+
 func _create_fallback_ability_icon():
-	"""Создаёт запасную иконку если файл не найден"""
+	"""Создаёт запасную иконку"""
 	var image = Image.create(50, 50, false, Image.FORMAT_RGBA8)
 	
-	# Рисуем простой щит
 	for x in range(50):
 		for y in range(50):
 			var color = Color(0.3, 0.4, 0.6, 0.0)
-			
-			# Форма щита
 			var center_x = 25
 			var in_shield = false
 			
 			if y < 35:
-				# Верхняя часть - прямоугольник
 				if x >= 8 and x <= 42:
 					in_shield = true
 			else:
-				# Нижняя часть - треугольник
 				var width = 42 - 8
 				var progress = float(y - 35) / 15.0
 				var half_width = (width / 2) * (1.0 - progress)
@@ -228,7 +278,6 @@ func _create_fallback_ability_icon():
 			
 			if in_shield:
 				color = Color(0.4, 0.5, 0.7, 1.0)
-				# Блик
 				if x < 20 and y < 25:
 					color = color.lightened(0.2)
 	
@@ -237,6 +286,7 @@ func _create_fallback_ability_icon():
 	var texture = ImageTexture.create_from_image(image)
 	ability_button.texture = texture
 
+
 func _create_keys_ui():
 	"""Создаёт UI ключей"""
 	keys_hbox = HBoxContainer.new()
@@ -244,12 +294,12 @@ func _create_keys_ui():
 	add_child(keys_hbox)
 	
 	var colors = [
-		Color(1.0, 0.2, 0.2),  # Красный
-		Color(0.2, 0.5, 1.0),  # Синий
-		Color(0.2, 0.9, 0.2),  # Зелёный
-		Color(1.0, 0.9, 0.0),  # Жёлтый
-		Color(0.8, 0.2, 0.8),  # Фиолетовый
-		Color(1.0, 0.5, 0.0)   # Оранжевый
+		Color(1.0, 0.2, 0.2),
+		Color(0.2, 0.5, 1.0),
+		Color(0.2, 0.9, 0.2),
+		Color(1.0, 0.9, 0.0),
+		Color(0.8, 0.2, 0.8),
+		Color(1.0, 0.5, 0.0)
 	]
 	
 	key_labels.clear()
@@ -275,22 +325,22 @@ func _create_keys_ui():
 		keys_hbox.add_child(slot)
 		key_labels.append(count)
 	
-	# Позиционируем справа
 	_update_keys_position()
 
+
 func _update_keys_position():
-	"""Позиционирует ключи в правом верхнем углу"""
 	await get_tree().process_frame
 	var viewport_size = get_viewport().get_visible_rect().size
 	keys_hbox.position = Vector2(viewport_size.x - 320, 20)
 
+
 func _process(_delta):
-	# Обновляем позицию ключей при изменении размера окна
 	if keys_hbox:
 		var viewport_size = get_viewport().get_visible_rect().size
 		var target_x = viewport_size.x - 320
 		if abs(keys_hbox.position.x - target_x) > 10:
 			keys_hbox.position.x = target_x
+
 
 # ===========================================
 # НАСТРОЙКА ПЕРСОНАЖА
@@ -307,6 +357,9 @@ func setup_character_ui(stats: Dictionary):
 		health_bar.max_value = current_stats["max_health"]
 		health_bar.value = current_stats["health"]
 	
+	# Обновляем цифры HP
+	_update_health_text()
+	
 	# Броня
 	if armor_container:
 		armor_container.visible = current_stats.get("armor", 0) > 0
@@ -320,40 +373,71 @@ func setup_character_ui(stats: Dictionary):
 		mana_bar.max_value = current_stats["max_mana"]
 		mana_bar.value = current_stats["mana"]
 	
+	# Обновляем цифры маны
+	_update_mana_text()
+	
 	print("✅ HP:", current_stats["health"], "/", current_stats["max_health"])
 	print("✅ ARM:", current_stats["armor"])
 	print("✅ MP:", current_stats["mana"], "/", current_stats["max_mana"])
+
+
+# ===========================================
+# ОБНОВЛЕНИЕ ЦИФРОВЫХ ЗНАЧЕНИЙ
+# ===========================================
+
+func _update_health_text():
+	"""Обновляет текст здоровья"""
+	if health_value_label:
+		health_value_label.text = "%d / %d" % [current_stats["health"], current_stats["max_health"]]
+
+
+func _update_mana_text():
+	"""Обновляет текст маны"""
+	if mana_value_label:
+		mana_value_label.text = "%d / %d" % [current_stats["mana"], current_stats["max_mana"]]
+
 
 # ===========================================
 # СМЕНА ИКОНКИ СПОСОБНОСТИ
 # ===========================================
 
 func set_ability_icon(icon_path: String):
-	"""Меняет иконку способности"""
 	if ability_button and ResourceLoader.exists(icon_path):
 		var texture = load(icon_path)
 		ability_button.texture = texture
-		print("🎯 Иконка способности изменена: ", icon_path)
+
 
 func set_ability_hotkey(hotkey_text: String):
-	"""Меняет текст хоткея под иконкой"""
 	if ability_label:
 		ability_label.text = hotkey_text
 
+
 # ===========================================
-# ОБНОВЛЕНИЕ
+# ОБНОВЛЕНИЕ СТАТОВ
 # ===========================================
 
 func update_health(new_health: int):
 	current_stats["health"] = clamp(new_health, 0, current_stats["max_health"])
 	if health_bar:
 		health_bar.value = current_stats["health"]
+	_update_health_text()
 	print("❤️ HP:", current_stats["health"], "/", current_stats["max_health"])
+
+
+func update_max_health(new_max: int):
+	"""Обновляет максимальное здоровье"""
+	current_stats["max_health"] = max(1, new_max)
+	if health_bar:
+		health_bar.max_value = current_stats["max_health"]
+	_update_health_text()
+
 
 func update_mana(new_mana: int):
 	current_stats["mana"] = clamp(new_mana, 0, current_stats["max_mana"])
 	if mana_bar:
 		mana_bar.value = current_stats["mana"]
+	_update_mana_text()
+
 
 func update_max_mana(new_max: int):
 	current_stats["max_mana"] = max(0, new_max)
@@ -361,6 +445,8 @@ func update_max_mana(new_max: int):
 		mana_container.visible = current_stats["max_mana"] > 0
 	if mana_bar:
 		mana_bar.max_value = current_stats["max_mana"]
+	_update_mana_text()
+
 
 func update_armor(new_armor: int):
 	current_stats["armor"] = max(0, new_armor)
@@ -369,13 +455,14 @@ func update_armor(new_armor: int):
 	if armor_value_label:
 		armor_value_label.text = str(current_stats["armor"])
 
+
 func update_keys(counts: Array):
 	for i in range(min(6, counts.size())):
 		if i < key_labels.size():
 			key_labels[i].text = str(counts[i])
 
+
 func update_ability_cooldown(_id: String, percent: float):
-	"""Обновляет визуал кулдауна (0.0 = на кулдауне, 1.0 = готово)"""
 	if not ability_cooldown:
 		return
 	
@@ -383,7 +470,6 @@ func update_ability_cooldown(_id: String, percent: float):
 		ability_cooldown.visible = false
 	else:
 		ability_cooldown.visible = true
-		# Заполняем снизу вверх
 		var height = 50.0 * (1.0 - percent)
 		ability_cooldown.size = Vector2(50, height)
 		ability_cooldown.position = Vector2(2, 52 - height)

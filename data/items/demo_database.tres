@@ -1,14 +1,28 @@
-[gd_resource type="Resource" script_class="GameItemDatabase" load_steps=16 format=3]
+[gd_resource type="Resource" script_class="GameItemDatabase" load_steps=29 format=3 uid="uid://d4hj0wlwg75ny"]
 
-[ext_resource type="Script" path="res://scripts/inventory/core/game_item_data.gd" id="1_vhsj5"]
-[ext_resource type="Script" path="res://scripts/inventory/core/game_item_database.gd" id="2_smofx"]
+[ext_resource type="Script" uid="uid://bwl0o37roblqn" path="res://scripts/inventory/core/game_item_data.gd" id="1_vhsj5"]
+[ext_resource type="Texture2D" uid="uid://lwggqhycvrv8" path="res://assets/items/potions/Small Health Potion.png" id="2_o6syc"]
+[ext_resource type="Script" uid="uid://c74oyugmll567" path="res://scripts/inventory/core/game_item_database.gd" id="2_smofx"]
+[ext_resource type="Texture2D" uid="uid://bf76vct2td88o" path="res://assets/items/potions/Small Mana Potion.png" id="3_1i6a8"]
+[ext_resource type="Texture2D" uid="uid://d0t4oieiviok3" path="res://assets/items/potions/Small Stone Skin Potion.png" id="4_82ib5"]
+[ext_resource type="Texture2D" uid="uid://6fu5ae50jjh4" path="res://assets/items/potions/Potion of Rage.png" id="5_7001q"]
+[ext_resource type="Texture2D" uid="uid://dggpwtgc8qjh2" path="res://assets/items/weapons/Iron Sword.png" id="6_u74o6"]
+[ext_resource type="Texture2D" uid="uid://sr2hkww3v86p" path="res://assets/items/armor/Steel Helmet.png" id="7_bwgfx"]
+[ext_resource type="Texture2D" uid="uid://bm5x0bi2xuq8y" path="res://assets/items/armor/Leather Armor.png" id="8_qw2to"]
+[ext_resource type="Texture2D" uid="uid://b2sxaavowk0nr" path="res://assets/items/shields/Wooden Shield.png" id="9_qjn4y"]
+[ext_resource type="Texture2D" uid="uid://dhblw6xa5xtj8" path="res://assets/items/armor/Combat Gloves.png" id="10_j05ey"]
+[ext_resource type="Texture2D" uid="uid://nvak0ltin10l" path="res://assets/items/artifacts/hermes_wings.png" id="11_1ibyf"]
+[ext_resource type="Texture2D" uid="uid://c51th2vlxvshy" path="res://assets/items/artifacts/phoenix_feather.png" id="12_dn55n"]
+[ext_resource type="Texture2D" uid="uid://er4cq5ng3rl0" path="res://assets/items/artifacts/vampire_ring.png" id="13_jhhp7"]
+[ext_resource type="Texture2D" uid="uid://dbjbtajpxq3v3" path="res://assets/items/artifacts/berserker_amulet.png" id="14_4l0oi"]
 
 [sub_resource type="Resource" id="Resource_o6syc"]
 script = ExtResource("1_vhsj5")
 id = 1
 internal_name = "health_potion"
-display_name = "Зелье здоровья"
-description = "Восстанавливает 50 единиц здоровья."
+display_name = "Малое зелье здоровья"
+description = "Восстанавливает 2 единицы здоровья."
+icon = ExtResource("2_o6syc")
 category = 1
 consumable_type = 1
 stackable = true
@@ -17,18 +31,18 @@ buy_price = 50
 sell_price = 25
 effects = Array[Dictionary]([{
 "application": 1,
-"condition_value": 0.0,
 "duration": 0.0,
 "type": 10,
-"value": 50.0
+"value": 2.0
 }])
 
 [sub_resource type="Resource" id="Resource_1i6a8"]
 script = ExtResource("1_vhsj5")
 id = 2
 internal_name = "mana_potion"
-display_name = "Зелье маны"
-description = "Восстанавливает 30 единиц маны."
+display_name = "Малое зелье маны"
+description = "Восстанавливает 2 единицы маны."
+icon = ExtResource("3_1i6a8")
 category = 1
 consumable_type = 2
 stackable = true
@@ -37,18 +51,18 @@ buy_price = 40
 sell_price = 20
 effects = Array[Dictionary]([{
 "application": 1,
-"condition_value": 0.0,
 "duration": 0.0,
 "type": 11,
-"value": 30.0
+"value": 2.0
 }])
 
 [sub_resource type="Resource" id="Resource_65din"]
 script = ExtResource("1_vhsj5")
 id = 3
 internal_name = "stone_skin_potion"
-display_name = "Зелье каменной кожи"
-description = "Увеличивает броню на 4 единицы на 6 секунд."
+display_name = "Малое зелье каменной кожи"
+description = "Увеличивает броню на 1 до конца комнаты."
+icon = ExtResource("4_82ib5")
 category = 1
 consumable_type = 3
 rarity = 1
@@ -58,10 +72,9 @@ buy_price = 100
 sell_price = 50
 effects = Array[Dictionary]([{
 "application": 1,
-"condition_value": 0.0,
-"duration": 6.0,
+"duration": 0.0,
 "type": 20,
-"value": 4.0
+"value": 1.0
 }])
 
 [sub_resource type="Resource" id="Resource_had1k"]
@@ -69,7 +82,8 @@ script = ExtResource("1_vhsj5")
 id = 4
 internal_name = "rage_potion"
 display_name = "Зелье ярости"
-description = "Увеличивает урон на 30% на 10 секунд."
+description = "Увеличивает урон на 1 до конца комнаты."
+icon = ExtResource("5_7001q")
 category = 1
 consumable_type = 3
 rarity = 2
@@ -79,10 +93,9 @@ buy_price = 200
 sell_price = 100
 effects = Array[Dictionary]([{
 "application": 1,
-"condition_value": 0.0,
-"duration": 10.0,
+"duration": 0.0,
 "type": 21,
-"value": 30.0
+"value": 1.0
 }])
 
 [sub_resource type="Resource" id="Resource_cloqv"]
@@ -91,6 +104,7 @@ id = 101
 internal_name = "iron_sword"
 display_name = "Железный меч"
 description = "Надёжный железный меч. Ничего особенного, но свою работу делает."
+icon = ExtResource("6_u74o6")
 category = 0
 equipment_type = 6
 equip_slot = 6
@@ -104,6 +118,7 @@ id = 102
 internal_name = "steel_helmet"
 display_name = "Стальной шлем"
 description = "Прочный шлем из закалённой стали."
+icon = ExtResource("7_bwgfx")
 category = 0
 equipment_type = 1
 equip_slot = 1
@@ -119,6 +134,7 @@ id = 103
 internal_name = "leather_armor"
 display_name = "Кожаный доспех"
 description = "Лёгкий доспех из выделанной кожи. Не стесняет движений."
+icon = ExtResource("8_qw2to")
 category = 0
 equipment_type = 2
 equip_slot = 2
@@ -133,6 +149,7 @@ id = 104
 internal_name = "wooden_shield"
 display_name = "Деревянный щит"
 description = "Простой деревянный щит с металлической оковкой."
+icon = ExtResource("9_qjn4y")
 category = 0
 equipment_type = 13
 equip_slot = 7
@@ -147,6 +164,7 @@ id = 105
 internal_name = "warrior_gloves"
 display_name = "Боевые перчатки"
 description = "Укреплённые перчатки воина. Усиливают хватку оружия."
+icon = ExtResource("10_j05ey")
 category = 0
 equipment_type = 5
 equip_slot = 5
@@ -163,6 +181,7 @@ id = 201
 internal_name = "hermes_wings"
 display_name = "Крылья Гермеса"
 description = "Легендарные крылатые сандалии бога-посланника. Дарует способность совершить второй прыжок в воздухе."
+icon = ExtResource("11_1ibyf")
 category = 2
 equip_slot = 19
 rarity = 2
@@ -183,6 +202,7 @@ id = 202
 internal_name = "phoenix_feather"
 display_name = "Перо Феникса"
 description = "Магическое перо возрождения. Возвращает к жизни после смертельного удара."
+icon = ExtResource("12_dn55n")
 category = 2
 equip_slot = 19
 rarity = 4
@@ -203,6 +223,7 @@ id = 203
 internal_name = "vampire_ring"
 display_name = "Кольцо вампира"
 description = "Проклятое кольцо, питающееся кровью врагов. Часть нанесённого урона возвращается как здоровье."
+icon = ExtResource("13_jhhp7")
 category = 2
 equip_slot = 19
 rarity = 3
@@ -223,6 +244,7 @@ id = 204
 internal_name = "berserker_amulet"
 display_name = "Амулет берсерка"
 description = "Амулет, пробуждающий первобытную ярость. Чем ближе к смерти — тем сильнее удар."
+icon = ExtResource("14_4l0oi")
 category = 2
 equip_slot = 19
 rarity = 3

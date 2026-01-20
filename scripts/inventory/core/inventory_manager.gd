@@ -12,65 +12,52 @@ class_name InventoryManager
 # СИГНАЛЫ
 # ===========================================
 
-# --- Сумка ---
 signal item_added(item: InventoryItem, slot_index: int)
 signal item_removed(item: InventoryItem, slot_index: int)
 signal item_moved(item: InventoryItem, from_index: int, to_index: int)
 signal inventory_changed()
 signal inventory_full()
 
-# --- Экипировка ---
 signal item_equipped(item: InventoryItem, slot: InventoryEnums.EquipSlot)
 signal item_unequipped(item: InventoryItem, slot: InventoryEnums.EquipSlot)
 signal equipment_changed()
 
-# --- Быстрые слоты ---
 signal hotbar_changed(slot_index: int)
 signal hotbar_item_used(slot_index: int, item: InventoryItem)
 
-# --- Статы ---
 signal stats_updated(stats: Dictionary)
 
 # ===========================================
 # КОНСТАНТЫ
 # ===========================================
 
-## Базовое количество слотов в сумке
 const BASE_INVENTORY_SLOTS: int = 20
-
-## Максимальное количество слотов
 const MAX_INVENTORY_SLOTS: int = 60
-
-## Количество быстрых слотов
 const HOTBAR_SLOTS: int = 4
 
 # ===========================================
 # ДАННЫЕ
 # ===========================================
 
-## База данных предметов
 var item_database: GameItemDatabase = null
-
-## Слоты инвентаря (сумка)
 var inventory_slots: Array[InventoryItem] = []
-
-## Текущее количество слотов
 var current_slot_count: int = BASE_INVENTORY_SLOTS
-
-## Слоты экипировки (ключ = EquipSlot, значение = InventoryItem)
 var equipment_slots: Dictionary = {}
-
-## Быстрые слоты (0-3 для клавиш 1-4)
 var hotbar_slots: Array[InventoryItem] = []
-
-## Текущий класс персонажа (для ограничений)
 var character_class: InventoryEnums.CharacterClass = InventoryEnums.CharacterClass.WARRIOR
-
-## Уровень персонажа (для ограничений)
 var character_level: int = 1
-
-## Бонусные слоты от эффектов
 var bonus_slots: int = 0
+
+# === СИСТЕМА ИСПОЛЬЗОВАННЫХ ЗЕЛИЙ ===
+# Хранит ID зелий, использованных в текущей комнате
+var used_potions_this_room: Array[int] = []
+
+# === АКТИВНЫЕ БАФФЫ ОТ ЗЕЛИЙ ===
+# Ключ = ID предмета, Значение = словарь с данными баффа
+var active_potion_buffs: Dictionary = {}
+
+# === ФЛАГ ИНИЦИАЛИЗАЦИИ ===
+var is_initialized: bool = false
 
 # ===========================================
 # ИНИЦИАЛИЗАЦИЯ
@@ -84,48 +71,99 @@ func _ready():
 	print("   Быстрых слотов: %d" % HOTBAR_SLOTS)
 
 
-## Инициализирует все слоты
 func _initialize_slots():
-	# Инвентарь (сумка)
+	"""Инициализирует все слоты"""
 	inventory_slots.clear()
 	inventory_slots.resize(MAX_INVENTORY_SLOTS)
 	for i in range(MAX_INVENTORY_SLOTS):
 		inventory_slots[i] = null
 	
-	# Экипировка
 	equipment_slots.clear()
 	for slot in InventoryEnums.EquipSlot.values():
 		if slot != InventoryEnums.EquipSlot.NONE:
 			equipment_slots[slot] = null
 	
-	# Быстрые слоты
 	hotbar_slots.clear()
 	hotbar_slots.resize(HOTBAR_SLOTS)
 	for i in range(HOTBAR_SLOTS):
 		hotbar_slots[i] = null
 
 
-## Устанавливает базу данных предметов
+# ===========================================
+# ОЧИСТКА ИНВЕНТАРЯ (для нового забега)
+# ===========================================
+
+func clear_all():
+	"""Полностью очищает инвентарь для нового забега"""
+	print("🗑️ Очистка инвентаря...")
+	
+	_initialize_slots()
+	bonus_slots = 0
+	current_slot_count = BASE_INVENTORY_SLOTS
+	
+	# Очищаем использованные зелья
+	used_potions_this_room.clear()
+	active_potion_buffs.clear()
+	
+	# Сбрасываем флаг инициализации
+	is_initialized = false
+	
+	inventory_changed.emit()
+	equipment_changed.emit()
+	
+	print("✅ Инвентарь очищен")
+
+
+func reset_for_new_room():
+	"""Сбрасывает состояние для новой комнаты"""
+	print("🚪 Новая комната - сброс зелий")
+	
+	# Сбрасываем использованные зелья
+	used_potions_this_room.clear()
+	
+	# Убираем все активные баффы от зелий
+	active_potion_buffs.clear()
+	
+	print("✅ Зелья можно использовать снова")
+
+
+func reset_on_death():
+	"""Сбрасывает баффы при смерти"""
+	print("💀 Смерть - сброс баффов от зелий")
+	
+	# Очищаем использованные зелья (можно использовать после возрождения)
+	used_potions_this_room.clear()
+	
+	# Очищаем активные баффы
+	active_potion_buffs.clear()
+	
+	print("✅ Баффы от зелий сброшены")
+
+
+# ===========================================
+# НАСТРОЙКА
+# ===========================================
+
 func set_database(database: GameItemDatabase):
 	item_database = database
 	print("🎒 База данных установлена: %d предметов" % database.items.size())
 
 
-## Устанавливает класс персонажа
 func set_character_class(char_class: InventoryEnums.CharacterClass):
 	character_class = char_class
 	
-	# Применяем классовые бонусы
-	match char_class:
-		InventoryEnums.CharacterClass.WARRIOR:
-			# "Вьючная сила" - +4 слота
-			add_bonus_slots(4)
+	# Применяем классовые бонусы только если ещё не применяли
+	if not is_initialized:
+		match char_class:
+			InventoryEnums.CharacterClass.WARRIOR:
+				add_bonus_slots(4)
+		is_initialized = true
+
 
 # ===========================================
 # УПРАВЛЕНИЕ СЛОТАМИ
 # ===========================================
 
-## Добавляет бонусные слоты
 func add_bonus_slots(amount: int):
 	bonus_slots += amount
 	current_slot_count = mini(BASE_INVENTORY_SLOTS + bonus_slots, MAX_INVENTORY_SLOTS)
@@ -133,12 +171,10 @@ func add_bonus_slots(amount: int):
 	inventory_changed.emit()
 
 
-## Возвращает текущее количество доступных слотов
 func get_available_slot_count() -> int:
 	return current_slot_count
 
 
-## Возвращает количество занятых слотов
 func get_used_slot_count() -> int:
 	var count = 0
 	for i in range(current_slot_count):
@@ -147,21 +183,66 @@ func get_used_slot_count() -> int:
 	return count
 
 
-## Возвращает количество свободных слотов
 func get_free_slot_count() -> int:
 	return current_slot_count - get_used_slot_count()
 
 
-## Проверяет, есть ли свободные слоты
 func has_free_slots() -> bool:
 	return get_free_slot_count() > 0
+
+
+# ===========================================
+# СИСТЕМА ЗЕЛИЙ (1 РАЗ ЗА КОМНАТУ)
+# ===========================================
+
+func can_use_potion(item_id: int) -> bool:
+	"""Проверяет, можно ли использовать зелье"""
+	return not item_id in used_potions_this_room
+
+
+func mark_potion_used(item_id: int):
+	"""Помечает зелье как использованное в этой комнате"""
+	if not item_id in used_potions_this_room:
+		used_potions_this_room.append(item_id)
+		print("🧪 Зелье ID %d помечено как использованное" % item_id)
+
+
+func is_potion_used(item_id: int) -> bool:
+	"""Проверяет, использовано ли зелье в этой комнате"""
+	return item_id in used_potions_this_room
+
+
+func add_active_buff(item_id: int, buff_data: Dictionary):
+	"""Добавляет активный бафф от зелья"""
+	active_potion_buffs[item_id] = buff_data
+	print("✨ Добавлен бафф от зелья ID %d: %s" % [item_id, buff_data])
+
+
+func remove_active_buff(item_id: int):
+	"""Удаляет активный бафф"""
+	if item_id in active_potion_buffs:
+		active_potion_buffs.erase(item_id)
+
+
+func get_active_buffs() -> Dictionary:
+	"""Возвращает все активные баффы"""
+	return active_potion_buffs.duplicate()
+
+
+func get_total_buff_value(stat_name: String) -> int:
+	"""Возвращает суммарное значение баффа по имени стата"""
+	var total = 0
+	for item_id in active_potion_buffs:
+		var buff = active_potion_buffs[item_id]
+		if buff.has(stat_name):
+			total += buff[stat_name]
+	return total
+
 
 # ===========================================
 # ДОБАВЛЕНИЕ ПРЕДМЕТОВ
 # ===========================================
 
-## Добавляет предмет в инвентарь
-## Возвращает количество, которое НЕ поместилось
 func add_item(item: InventoryItem) -> int:
 	if item == null or item.is_empty():
 		return 0
@@ -189,12 +270,10 @@ func add_item(item: InventoryItem) -> int:
 		inventory_changed.emit()
 		return 0
 	
-	# Инвентарь полон
 	inventory_full.emit()
 	return remaining
 
 
-## Добавляет предмет по ID (создаёт новый экземпляр)
 func add_item_by_id(item_id: int, quantity: int = 1) -> int:
 	if item_database == null:
 		push_error("InventoryManager: база данных не установлена")
@@ -207,7 +286,6 @@ func add_item_by_id(item_id: int, quantity: int = 1) -> int:
 	return add_item(item)
 
 
-## Добавляет предмет по внутреннему имени
 func add_item_by_name(internal_name: String, quantity: int = 1) -> int:
 	if item_database == null:
 		push_error("InventoryManager: база данных не установлена")
@@ -222,18 +300,17 @@ func add_item_by_name(internal_name: String, quantity: int = 1) -> int:
 	return add_item(item)
 
 
-## Находит первый пустой слот
 func _find_empty_slot() -> int:
 	for i in range(current_slot_count):
 		if inventory_slots[i] == null:
 			return i
 	return -1
 
+
 # ===========================================
 # УДАЛЕНИЕ ПРЕДМЕТОВ
 # ===========================================
 
-## Удаляет предмет из слота
 func remove_item_at(slot_index: int) -> InventoryItem:
 	if slot_index < 0 or slot_index >= current_slot_count:
 		return null
@@ -249,8 +326,6 @@ func remove_item_at(slot_index: int) -> InventoryItem:
 	return item
 
 
-## Удаляет указанное количество предмета по ID
-## Возвращает сколько реально удалено
 func remove_item_by_id(item_id: int, quantity: int = 1) -> int:
 	var removed = 0
 	
@@ -260,7 +335,6 @@ func remove_item_by_id(item_id: int, quantity: int = 1) -> int:
 			inventory_slots[i].remove(to_remove)
 			removed += to_remove
 			
-			# Удаляем пустой слот
 			if inventory_slots[i].is_empty():
 				var old_item = inventory_slots[i]
 				inventory_slots[i] = null
@@ -275,12 +349,10 @@ func remove_item_by_id(item_id: int, quantity: int = 1) -> int:
 	return removed
 
 
-## Проверяет наличие предмета
 func has_item(item_id: int, quantity: int = 1) -> bool:
 	return get_item_count(item_id) >= quantity
 
 
-## Возвращает общее количество предмета в инвентаре
 func get_item_count(item_id: int) -> int:
 	var count = 0
 	for i in range(current_slot_count):
@@ -288,11 +360,11 @@ func get_item_count(item_id: int) -> int:
 			count += inventory_slots[i].quantity
 	return count
 
+
 # ===========================================
 # ПЕРЕМЕЩЕНИЕ ПРЕДМЕТОВ
 # ===========================================
 
-## Перемещает предмет между слотами
 func move_item(from_index: int, to_index: int) -> bool:
 	if from_index < 0 or from_index >= current_slot_count:
 		return false
@@ -302,6 +374,9 @@ func move_item(from_index: int, to_index: int) -> bool:
 		return false
 	
 	var from_item = inventory_slots[from_index]
+	if from_item == null:
+		return false
+	
 	var to_item = inventory_slots[to_index]
 	
 	# Если целевой слот пуст - просто перемещаем
@@ -312,8 +387,8 @@ func move_item(from_index: int, to_index: int) -> bool:
 		inventory_changed.emit()
 		return true
 	
-	# Если одинаковые стакаемые предметы - объединяем
-	if from_item.is_same_type(to_item) and from_item.is_stackable():
+	# Если одинаковые предметы - пытаемся объединить стаки
+	if from_item.is_same_type(to_item) and to_item.is_stackable():
 		var overflow = to_item.add(from_item.quantity)
 		if overflow == 0:
 			inventory_slots[from_index] = null
@@ -322,7 +397,7 @@ func move_item(from_index: int, to_index: int) -> bool:
 		inventory_changed.emit()
 		return true
 	
-	# Иначе меняем местами
+	# Иначе - меняем местами
 	inventory_slots[from_index] = to_item
 	inventory_slots[to_index] = from_item
 	item_moved.emit(from_item, from_index, to_index)
@@ -330,155 +405,106 @@ func move_item(from_index: int, to_index: int) -> bool:
 	return true
 
 
-## Разделяет стак
-func split_stack(slot_index: int, amount: int) -> bool:
-	if slot_index < 0 or slot_index >= current_slot_count:
-		return false
-	
-	var item = inventory_slots[slot_index]
-	if item == null or not item.is_stackable():
-		return false
-	
-	if amount <= 0 or amount >= item.quantity:
-		return false
-	
-	var empty_slot = _find_empty_slot()
-	if empty_slot < 0:
-		inventory_full.emit()
-		return false
-	
-	var new_item = item.split(amount)
-	inventory_slots[empty_slot] = new_item
-	
-	item_added.emit(new_item, empty_slot)
-	inventory_changed.emit()
-	return true
+func get_item_at(index: int) -> InventoryItem:
+	if index < 0 or index >= current_slot_count:
+		return null
+	return inventory_slots[index]
+
 
 # ===========================================
 # ЭКИПИРОВКА
 # ===========================================
 
-## Экипирует предмет из инвентаря
-func equip_item(inventory_index: int, target_slot: InventoryEnums.EquipSlot = InventoryEnums.EquipSlot.NONE) -> bool:
+func equip_item(inventory_index: int, slot: InventoryEnums.EquipSlot = InventoryEnums.EquipSlot.NONE) -> bool:
 	if inventory_index < 0 or inventory_index >= current_slot_count:
 		return false
 	
 	var item = inventory_slots[inventory_index]
-	if item == null or not item.is_equippable():
-		return false
-	
-	# Определяем слот
-	var valid_slots = item.get_valid_equip_slots()
-	if valid_slots.is_empty():
-		return false
-	
-	var slot = target_slot
-	if slot == InventoryEnums.EquipSlot.NONE or slot not in valid_slots:
-		# Ищем первый свободный подходящий слот
-		slot = InventoryEnums.EquipSlot.NONE
-		for s in valid_slots:
-			if equipment_slots.get(s) == null:
-				slot = s
-				break
-		
-		# Если все заняты - берём первый
-		if slot == InventoryEnums.EquipSlot.NONE:
-			slot = valid_slots[0]
-	
-	# Проверяем требования
-	if not _can_equip(item):
-		return false
-	
-	# Снимаем текущий предмет из слота (если есть)
-	var old_item = equipment_slots.get(slot)
-	if old_item != null:
-		# Пытаемся положить в инвентарь
-		var overflow = add_item(old_item)
-		if overflow > 0:
-			inventory_full.emit()
-			return false
-		item_unequipped.emit(old_item, slot)
-	
-	# Экипируем новый
-	equipment_slots[slot] = item
-	inventory_slots[inventory_index] = null
-	
-	# Привязываем если нужно
-	if item.data and item.data.binds_on_equip:
-		item.bind()
-	
-	item_equipped.emit(item, slot)
-	item_removed.emit(item, inventory_index)
-	equipment_changed.emit()
-	inventory_changed.emit()
-	
-	_recalculate_stats()
-	
-	return true
-
-
-## Снимает экипировку
-func unequip_item(slot: InventoryEnums.EquipSlot) -> bool:
-	var item = equipment_slots.get(slot)
-	if item == null:
-		return false
-	
-	# Проверяем место в инвентаре
-	if not has_free_slots():
-		inventory_full.emit()
-		return false
-	
-	equipment_slots[slot] = null
-	add_item(item)
-	
-	item_unequipped.emit(item, slot)
-	equipment_changed.emit()
-	
-	_recalculate_stats()
-	
-	return true
-
-
-## Проверяет, можно ли экипировать предмет
-func _can_equip(item: InventoryItem) -> bool:
 	if item == null or item.data == null:
 		return false
 	
-	# Проверка класса
-	if not item.data.can_class_use(character_class):
+	# Проверяем, можно ли экипировать
+	if not item.is_equippable():
 		return false
 	
-	# Проверка уровня
-	if not item.data.meets_level_requirement(character_level):
+	# Определяем слот
+	if slot == InventoryEnums.EquipSlot.NONE:
+		var valid_slots = item.get_valid_equip_slots()
+		if valid_slots.is_empty():
+			return false
+		slot = valid_slots[0]
+	
+	# Проверяем, подходит ли слот
+	if not item.can_equip_in_slot(slot):
 		return false
+	
+	# Если в слоте уже есть предмет - снимаем его
+	var old_item = equipment_slots.get(slot)
+	if old_item != null:
+		# Ищем пустой слот в инвентаре
+		var empty = _find_empty_slot()
+		if empty < 0:
+			return false  # Нет места
+		inventory_slots[empty] = old_item
+		item_unequipped.emit(old_item, slot)
+	
+	# Экипируем новый предмет
+	equipment_slots[slot] = item
+	inventory_slots[inventory_index] = null
+	
+	item_equipped.emit(item, slot)
+	equipment_changed.emit()
+	inventory_changed.emit()
+	
+	# ВАЖНО: Пересчитываем статы
+	_recalculate_stats()
 	
 	return true
 
 
-## Возвращает экипированный предмет
+func unequip_item(slot: InventoryEnums.EquipSlot) -> bool:
+	if not equipment_slots.has(slot):
+		return false
+	
+	var item = equipment_slots[slot]
+	if item == null:
+		return false
+	
+	# Ищем пустой слот
+	var empty = _find_empty_slot()
+	if empty < 0:
+		return false
+	
+	inventory_slots[empty] = item
+	equipment_slots[slot] = null
+	
+	item_unequipped.emit(item, slot)
+	equipment_changed.emit()
+	inventory_changed.emit()
+	
+	# ВАЖНО: Пересчитываем статы
+	_recalculate_stats()
+	
+	return true
+
+
 func get_equipped_item(slot: InventoryEnums.EquipSlot) -> InventoryItem:
 	return equipment_slots.get(slot)
 
 
-## Возвращает все экипированные предметы
-func get_all_equipped() -> Dictionary:
-	var result: Dictionary = {}
-	for slot in equipment_slots:
-		if equipment_slots[slot] != null:
-			result[slot] = equipment_slots[slot]
-	return result
+func is_slot_equipped(slot: InventoryEnums.EquipSlot) -> bool:
+	return equipment_slots.get(slot) != null
+
 
 # ===========================================
-# БЫСТРЫЕ СЛОТЫ (1-4)
+# БЫСТРЫЕ СЛОТЫ (HOTBAR)
 # ===========================================
 
-## Устанавливает предмет в быстрый слот
 func set_hotbar_item(hotbar_index: int, inventory_index: int) -> bool:
 	if hotbar_index < 0 or hotbar_index >= HOTBAR_SLOTS:
 		return false
 	
 	if inventory_index < 0 or inventory_index >= current_slot_count:
-		# Очищаем слот
 		hotbar_slots[hotbar_index] = null
 		hotbar_changed.emit(hotbar_index)
 		return true
@@ -487,7 +513,6 @@ func set_hotbar_item(hotbar_index: int, inventory_index: int) -> bool:
 	if item == null:
 		return false
 	
-	# Только расходники могут быть в быстрых слотах
 	if not item.is_usable():
 		return false
 	
@@ -496,7 +521,6 @@ func set_hotbar_item(hotbar_index: int, inventory_index: int) -> bool:
 	return true
 
 
-## Использует предмет из быстрого слота
 func use_hotbar_item(hotbar_index: int) -> bool:
 	if hotbar_index < 0 or hotbar_index >= HOTBAR_SLOTS:
 		return false
@@ -507,14 +531,11 @@ func use_hotbar_item(hotbar_index: int) -> bool:
 		hotbar_changed.emit(hotbar_index)
 		return false
 	
-	# Используем предмет
 	if _use_item(item):
 		hotbar_item_used.emit(hotbar_index, item)
 		
-		# Удаляем если закончился
 		if item.is_empty():
 			hotbar_slots[hotbar_index] = null
-			# Удаляем из инвентаря тоже
 			for i in range(current_slot_count):
 				if inventory_slots[i] == item:
 					inventory_slots[i] = null
@@ -527,23 +548,31 @@ func use_hotbar_item(hotbar_index: int) -> bool:
 	return false
 
 
-## Возвращает предмет из быстрого слота
 func get_hotbar_item(hotbar_index: int) -> InventoryItem:
 	if hotbar_index < 0 or hotbar_index >= HOTBAR_SLOTS:
 		return null
 	return hotbar_slots[hotbar_index]
 
+
 # ===========================================
 # ИСПОЛЬЗОВАНИЕ ПРЕДМЕТОВ
 # ===========================================
 
-## Использует предмет (внутренний метод)
 func _use_item(item: InventoryItem) -> bool:
 	if item == null or item.data == null:
 		return false
 	
 	if not item.is_usable():
 		return false
+	
+	# ПРОВЕРКА: Зелье уже использовано в этой комнате?
+	var item_id = item.get_item_id()
+	if is_potion_used(item_id):
+		print("⚠️ Зелье уже использовано в этой комнате!")
+		return false
+	
+	# Помечаем зелье как использованное
+	mark_potion_used(item_id)
 	
 	# Применяем эффекты
 	for effect in item.data.effects:
@@ -555,23 +584,20 @@ func _use_item(item: InventoryItem) -> bool:
 	return true
 
 
-## Применяет эффект (заглушка - нужно подключить к персонажу)
 func _apply_effect(effect: Dictionary):
 	var effect_type = effect.get("type", InventoryEnums.EffectType.NONE)
 	var value = effect.get("value", 0.0)
 	var duration = effect.get("duration", 0.0)
 	
 	print("🧪 Применяем эффект: тип=%d, значение=%.1f, длительность=%.1f" % [effect_type, value, duration])
-	
-	# TODO: Подключить к системе персонажа
-	# Global.current_player.apply_effect(effect_type, value, duration)
+
 
 # ===========================================
-# РАСЧЁТ СТАТОВ
+# РАСЧЁТ СТАТОВ ОТ ЭКИПИРОВКИ
 # ===========================================
 
-## Пересчитывает статы от экипировки
 func _recalculate_stats():
+	"""Пересчитывает статы от экипировки"""
 	var total_stats = {
 		"max_hp": 0,
 		"max_mana": 0,
@@ -587,7 +613,6 @@ func _recalculate_stats():
 	
 	var special_effects: Array[Dictionary] = []
 	
-	# Суммируем от всей экипировки
 	for slot in equipment_slots:
 		var item = equipment_slots[slot]
 		if item == null or item.data == null:
@@ -597,19 +622,18 @@ func _recalculate_stats():
 		for stat_name in stats:
 			total_stats[stat_name] = total_stats.get(stat_name, 0) + stats[stat_name]
 		
-		# Собираем специальные эффекты
 		for effect in item.data.effects:
 			if effect.get("application") == InventoryEnums.EffectApplication.PASSIVE:
 				special_effects.append(effect)
 	
 	total_stats["special_effects"] = special_effects
 	
-	print("📊 Статы обновлены: ", total_stats)
+	print("📊 Статы от экипировки: ", total_stats)
 	stats_updated.emit(total_stats)
 
 
-## Возвращает текущие бонусы от экипировки
 func get_equipment_stats() -> Dictionary:
+	"""Возвращает текущие бонусы от экипировки"""
 	var total_stats = {
 		"max_hp": 0,
 		"max_mana": 0,
@@ -635,7 +659,6 @@ func get_equipment_stats() -> Dictionary:
 	return total_stats
 
 
-## Проверяет наличие специального эффекта
 func has_special_effect(effect_type: InventoryEnums.EffectType) -> bool:
 	for slot in equipment_slots:
 		var item = equipment_slots[slot]
@@ -645,7 +668,6 @@ func has_special_effect(effect_type: InventoryEnums.EffectType) -> bool:
 	return false
 
 
-## Возвращает суммарное значение специального эффекта
 func get_special_effect_value(effect_type: InventoryEnums.EffectType) -> float:
 	var total = 0.0
 	for slot in equipment_slots:
@@ -654,11 +676,11 @@ func get_special_effect_value(effect_type: InventoryEnums.EffectType) -> float:
 			total += item.data.get_effect_value(effect_type)
 	return total
 
+
 # ===========================================
 # СОХРАНЕНИЕ / ЗАГРУЗКА
 # ===========================================
 
-## Сериализует весь инвентарь
 func serialize() -> Dictionary:
 	var inv_data: Array[Dictionary] = []
 	for i in range(current_slot_count):
@@ -676,7 +698,6 @@ func serialize() -> Dictionary:
 	var hotbar_data: Array = []
 	for i in range(HOTBAR_SLOTS):
 		if hotbar_slots[i] != null:
-			# Ищем индекс в инвентаре
 			var inv_index = -1
 			for j in range(current_slot_count):
 				if inventory_slots[j] == hotbar_slots[i]:
@@ -696,7 +717,6 @@ func serialize() -> Dictionary:
 	}
 
 
-## Десериализует инвентарь
 func deserialize(data: Dictionary):
 	if item_database == null:
 		push_error("InventoryManager: база данных не установлена для десериализации")
@@ -709,7 +729,6 @@ func deserialize(data: Dictionary):
 	character_class = data.get("character_class", InventoryEnums.CharacterClass.WARRIOR)
 	character_level = data.get("character_level", 1)
 	
-	# Загружаем инвентарь
 	var inv_data = data.get("inventory", [])
 	for entry in inv_data:
 		var slot = entry.get("slot", -1)
@@ -719,16 +738,14 @@ func deserialize(data: Dictionary):
 			if item != null:
 				inventory_slots[slot] = item
 	
-	# Загружаем экипировку
 	var equip_data = data.get("equipment", {})
 	for slot_str in equip_data:
 		var slot = int(slot_str)
-		var item_data = equip_data[slot_str]
-		var item = InventoryItem.deserialize(item_data, item_database)
+		var item_data_dict = equip_data[slot_str]
+		var item = InventoryItem.deserialize(item_data_dict, item_database)
 		if item != null:
 			equipment_slots[slot] = item
 	
-	# Загружаем быстрые слоты (ссылки на инвентарь)
 	var hotbar_data = data.get("hotbar", [])
 	for i in range(mini(hotbar_data.size(), HOTBAR_SLOTS)):
 		var inv_index = hotbar_data[i]
@@ -741,11 +758,11 @@ func deserialize(data: Dictionary):
 	
 	print("🎒 Инвентарь загружен")
 
+
 # ===========================================
 # ОТЛАДКА
 # ===========================================
 
-## Выводит содержимое инвентаря
 func debug_print():
 	print("=== ИНВЕНТАРЬ (%d/%d) ===" % [get_used_slot_count(), current_slot_count])
 	for i in range(current_slot_count):
@@ -762,3 +779,6 @@ func debug_print():
 	for i in range(HOTBAR_SLOTS):
 		var item = hotbar_slots[i]
 		print("  [%d] %s" % [i + 1, item if item else "Пусто"])
+	
+	print("=== ИСПОЛЬЗОВАННЫЕ ЗЕЛЬЯ ===")
+	print("  ", used_potions_this_room)
