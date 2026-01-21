@@ -980,7 +980,7 @@ func _on_hotbar_changed(_index: int):
 # ОБРАБОТКА КЛИКОВ
 # ===========================================
 
-func _on_inventory_slot_clicked(slot: InventorySlot):
+func _on_inventory_slot_clicked(slot: InventorySlot, _button: int):
 	pass
 
 
@@ -1014,7 +1014,7 @@ func _on_inventory_slot_right_clicked(slot: InventorySlot):
 			_update_stats_display()
 
 
-func _on_equip_slot_clicked(slot: InventorySlot):
+func _on_equip_slot_clicked(slot: InventorySlot, _button: int):
 	pass
 
 
@@ -1026,7 +1026,7 @@ func _on_equip_slot_right_clicked(slot: InventorySlot):
 		_update_stats_display()
 
 
-func _on_hotbar_slot_clicked(slot: InventorySlot):
+func _on_hotbar_slot_clicked(slot: InventorySlot, _button: int):
 	pass
 
 
