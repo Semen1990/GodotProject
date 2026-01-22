@@ -1,15 +1,15 @@
 extends Node
 class_name InventoryManager
-## Главный менеджер инвентаря.
-## Управляет сумкой, экипировкой и быстрыми слотами.
+## Ð“Ð»Ð°Ð²Ð½Ñ‹Ð¹ Ð¼ÐµÐ½ÐµÐ´Ð¶ÐµÑ€ Ð¸Ð½Ð²ÐµÐ½Ñ‚Ð°Ñ€Ñ.
+## Ð£Ð¿Ñ€Ð°Ð²Ð»ÑÐµÑ‚ ÑÑƒÐ¼ÐºÐ¾Ð¹, ÑÐºÐ¸Ð¿Ð¸Ñ€Ð¾Ð²ÐºÐ¾Ð¹ Ð¸ Ð±Ñ‹ÑÑ‚Ñ€Ñ‹Ð¼Ð¸ ÑÐ»Ð¾Ñ‚Ð°Ð¼Ð¸.
 ##
-## Путь: res://scripts/inventory/core/inventory_manager.gd
+## ÐŸÑƒÑ‚ÑŒ: res://scripts/inventory/core/inventory_manager.gd
 ##
-## Добавьте как Autoload: Project Settings → Autoload → inventory_manager.gd
-## Имя: Inventory
+## Ð”Ð¾Ð±Ð°Ð²ÑŒÑ‚Ðµ ÐºÐ°Ðº Autoload: Project Settings â†’ Autoload â†’ inventory_manager.gd
+## Ð˜Ð¼Ñ: Inventory
 
 # ===========================================
-# СИГНАЛЫ
+# Ð¡Ð˜Ð“ÐÐÐ›Ð«
 # ===========================================
 
 signal item_added(item: InventoryItem, slot_index: int)
@@ -28,7 +28,7 @@ signal hotbar_item_used(slot_index: int, item: InventoryItem)
 signal stats_updated(stats: Dictionary)
 
 # ===========================================
-# КОНСТАНТЫ
+# ÐšÐžÐÐ¡Ð¢ÐÐÐ¢Ð«
 # ===========================================
 
 const BASE_INVENTORY_SLOTS: int = 20
@@ -36,7 +36,7 @@ const MAX_INVENTORY_SLOTS: int = 60
 const HOTBAR_SLOTS: int = 4
 
 # ===========================================
-# ДАННЫЕ
+# Ð”ÐÐÐÐ«Ð•
 # ===========================================
 
 var item_database: GameItemDatabase = null
@@ -48,31 +48,31 @@ var character_class: InventoryEnums.CharacterClass = InventoryEnums.CharacterCla
 var character_level: int = 1
 var bonus_slots: int = 0
 
-# === СИСТЕМА ИСПОЛЬЗОВАННЫХ ЗЕЛИЙ ===
-# Хранит ID зелий, использованных в текущей комнате
+# === Ð¡Ð˜Ð¡Ð¢Ð•ÐœÐ Ð˜Ð¡ÐŸÐžÐ›Ð¬Ð—ÐžÐ’ÐÐÐÐ«Ð¥ Ð—Ð•Ð›Ð˜Ð™ ===
+# Ð¥Ñ€Ð°Ð½Ð¸Ñ‚ ID Ð·ÐµÐ»Ð¸Ð¹, Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð½Ñ‹Ñ… Ð² Ñ‚ÐµÐºÑƒÑ‰ÐµÐ¹ ÐºÐ¾Ð¼Ð½Ð°Ñ‚Ðµ
 var used_potions_this_room: Array[int] = []
 
-# === АКТИВНЫЕ БАФФЫ ОТ ЗЕЛИЙ ===
-# Ключ = ID предмета, Значение = словарь с данными баффа
+# === ÐÐšÐ¢Ð˜Ð’ÐÐ«Ð• Ð‘ÐÐ¤Ð¤Ð« ÐžÐ¢ Ð—Ð•Ð›Ð˜Ð™ ===
+# ÐšÐ»ÑŽÑ‡ = ID Ð¿Ñ€ÐµÐ´Ð¼ÐµÑ‚Ð°, Ð—Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ = ÑÐ»Ð¾Ð²Ð°Ñ€ÑŒ Ñ Ð´Ð°Ð½Ð½Ñ‹Ð¼Ð¸ Ð±Ð°Ñ„Ñ„Ð°
 var active_potion_buffs: Dictionary = {}
 
-# === ФЛАГ ИНИЦИАЛИЗАЦИИ ===
+# === Ð¤Ð›ÐÐ“ Ð˜ÐÐ˜Ð¦Ð˜ÐÐ›Ð˜Ð—ÐÐ¦Ð˜Ð˜ ===
 var is_initialized: bool = false
 
 # ===========================================
-# ИНИЦИАЛИЗАЦИЯ
+# Ð˜ÐÐ˜Ð¦Ð˜ÐÐ›Ð˜Ð—ÐÐ¦Ð˜Ð¯
 # ===========================================
 
 func _ready():
 	_initialize_slots()
-	print("🎒 InventoryManager инициализирован")
-	print("   Слотов инвентаря: %d" % current_slot_count)
-	print("   Слотов экипировки: %d" % equipment_slots.size())
-	print("   Быстрых слотов: %d" % HOTBAR_SLOTS)
+	print("ðŸŽ’ InventoryManager Ð¸Ð½Ð¸Ñ†Ð¸Ð°Ð»Ð¸Ð·Ð¸Ñ€Ð¾Ð²Ð°Ð½")
+	print("   Ð¡Ð»Ð¾Ñ‚Ð¾Ð² Ð¸Ð½Ð²ÐµÐ½Ñ‚Ð°Ñ€Ñ: %d" % current_slot_count)
+	print("   Ð¡Ð»Ð¾Ñ‚Ð¾Ð² ÑÐºÐ¸Ð¿Ð¸Ñ€Ð¾Ð²ÐºÐ¸: %d" % equipment_slots.size())
+	print("   Ð‘Ñ‹ÑÑ‚Ñ€Ñ‹Ñ… ÑÐ»Ð¾Ñ‚Ð¾Ð²: %d" % HOTBAR_SLOTS)
 
 
 func _initialize_slots():
-	"""Инициализирует все слоты"""
+	"""Ð˜Ð½Ð¸Ñ†Ð¸Ð°Ð»Ð¸Ð·Ð¸Ñ€ÑƒÐµÑ‚ Ð²ÑÐµ ÑÐ»Ð¾Ñ‚Ñ‹"""
 	inventory_slots.clear()
 	inventory_slots.resize(MAX_INVENTORY_SLOTS)
 	for i in range(MAX_INVENTORY_SLOTS):
@@ -90,69 +90,69 @@ func _initialize_slots():
 
 
 # ===========================================
-# ОЧИСТКА ИНВЕНТАРЯ (для нового забега)
+# ÐžÐ§Ð˜Ð¡Ð¢ÐšÐ Ð˜ÐÐ’Ð•ÐÐ¢ÐÐ Ð¯ (Ð´Ð»Ñ Ð½Ð¾Ð²Ð¾Ð³Ð¾ Ð·Ð°Ð±ÐµÐ³Ð°)
 # ===========================================
 
 func clear_all():
-	"""Полностью очищает инвентарь для нового забега"""
-	print("🗑️ Очистка инвентаря...")
+	"""ÐŸÐ¾Ð»Ð½Ð¾ÑÑ‚ÑŒÑŽ Ð¾Ñ‡Ð¸Ñ‰Ð°ÐµÑ‚ Ð¸Ð½Ð²ÐµÐ½Ñ‚Ð°Ñ€ÑŒ Ð´Ð»Ñ Ð½Ð¾Ð²Ð¾Ð³Ð¾ Ð·Ð°Ð±ÐµÐ³Ð°"""
+	print("ðŸ—‘ï¸ ÐžÑ‡Ð¸ÑÑ‚ÐºÐ° Ð¸Ð½Ð²ÐµÐ½Ñ‚Ð°Ñ€Ñ...")
 	
 	_initialize_slots()
 	bonus_slots = 0
 	current_slot_count = BASE_INVENTORY_SLOTS
 	
-	# Очищаем использованные зелья
+	# ÐžÑ‡Ð¸Ñ‰Ð°ÐµÐ¼ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð½Ñ‹Ðµ Ð·ÐµÐ»ÑŒÑ
 	used_potions_this_room.clear()
 	active_potion_buffs.clear()
 	
-	# Сбрасываем флаг инициализации
+	# Ð¡Ð±Ñ€Ð°ÑÑ‹Ð²Ð°ÐµÐ¼ Ñ„Ð»Ð°Ð³ Ð¸Ð½Ð¸Ñ†Ð¸Ð°Ð»Ð¸Ð·Ð°Ñ†Ð¸Ð¸
 	is_initialized = false
 	
 	inventory_changed.emit()
 	equipment_changed.emit()
 	
-	print("✅ Инвентарь очищен")
+	print("âœ… Ð˜Ð½Ð²ÐµÐ½Ñ‚Ð°Ñ€ÑŒ Ð¾Ñ‡Ð¸Ñ‰ÐµÐ½")
 
 
 func reset_for_new_room():
-	"""Сбрасывает состояние для новой комнаты"""
-	print("🚪 Новая комната - сброс зелий")
+	"""Ð¡Ð±Ñ€Ð°ÑÑ‹Ð²Ð°ÐµÑ‚ ÑÐ¾ÑÑ‚Ð¾ÑÐ½Ð¸Ðµ Ð´Ð»Ñ Ð½Ð¾Ð²Ð¾Ð¹ ÐºÐ¾Ð¼Ð½Ð°Ñ‚Ñ‹"""
+	print("ðŸšª ÐÐ¾Ð²Ð°Ñ ÐºÐ¾Ð¼Ð½Ð°Ñ‚Ð° - ÑÐ±Ñ€Ð¾Ñ Ð·ÐµÐ»Ð¸Ð¹")
 	
-	# Сбрасываем использованные зелья
+	# Ð¡Ð±Ñ€Ð°ÑÑ‹Ð²Ð°ÐµÐ¼ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð½Ñ‹Ðµ Ð·ÐµÐ»ÑŒÑ
 	used_potions_this_room.clear()
 	
-	# Убираем все активные баффы от зелий
+	# Ð£Ð±Ð¸Ñ€Ð°ÐµÐ¼ Ð²ÑÐµ Ð°ÐºÑ‚Ð¸Ð²Ð½Ñ‹Ðµ Ð±Ð°Ñ„Ñ„Ñ‹ Ð¾Ñ‚ Ð·ÐµÐ»Ð¸Ð¹
 	active_potion_buffs.clear()
 	
-	print("✅ Зелья можно использовать снова")
+	print("âœ… Ð—ÐµÐ»ÑŒÑ Ð¼Ð¾Ð¶Ð½Ð¾ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÑŒ ÑÐ½Ð¾Ð²Ð°")
 
 
 func reset_on_death():
-	"""Сбрасывает баффы при смерти"""
-	print("💀 Смерть - сброс баффов от зелий")
+	"""Ð¡Ð±Ñ€Ð°ÑÑ‹Ð²Ð°ÐµÑ‚ Ð±Ð°Ñ„Ñ„Ñ‹ Ð¿Ñ€Ð¸ ÑÐ¼ÐµÑ€Ñ‚Ð¸"""
+	print("ðŸ’€ Ð¡Ð¼ÐµÑ€Ñ‚ÑŒ - ÑÐ±Ñ€Ð¾Ñ Ð±Ð°Ñ„Ñ„Ð¾Ð² Ð¾Ñ‚ Ð·ÐµÐ»Ð¸Ð¹")
 	
-	# Очищаем использованные зелья (можно использовать после возрождения)
+	# ÐžÑ‡Ð¸Ñ‰Ð°ÐµÐ¼ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð½Ñ‹Ðµ Ð·ÐµÐ»ÑŒÑ (Ð¼Ð¾Ð¶Ð½Ð¾ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÑŒ Ð¿Ð¾ÑÐ»Ðµ Ð²Ð¾Ð·Ñ€Ð¾Ð¶Ð´ÐµÐ½Ð¸Ñ)
 	used_potions_this_room.clear()
 	
-	# Очищаем активные баффы
+	# ÐžÑ‡Ð¸Ñ‰Ð°ÐµÐ¼ Ð°ÐºÑ‚Ð¸Ð²Ð½Ñ‹Ðµ Ð±Ð°Ñ„Ñ„Ñ‹
 	active_potion_buffs.clear()
 	
-	print("✅ Баффы от зелий сброшены")
+	print("âœ… Ð‘Ð°Ñ„Ñ„Ñ‹ Ð¾Ñ‚ Ð·ÐµÐ»Ð¸Ð¹ ÑÐ±Ñ€Ð¾ÑˆÐµÐ½Ñ‹")
 
 
 # ===========================================
-# НАСТРОЙКА
+# ÐÐÐ¡Ð¢Ð ÐžÐ™ÐšÐ
 # ===========================================
 
 func set_database(database: GameItemDatabase):
 	item_database = database
-	print("🎒 База данных установлена: %d предметов" % database.items.size())
+	print("ðŸŽ’ Ð‘Ð°Ð·Ð° Ð´Ð°Ð½Ð½Ñ‹Ñ… ÑƒÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð°: %d Ð¿Ñ€ÐµÐ´Ð¼ÐµÑ‚Ð¾Ð²" % database.items.size())
 
 
 func set_character_class(char_class: InventoryEnums.CharacterClass):
 	character_class = char_class
 	
-	# Применяем классовые бонусы только если ещё не применяли
+	# ÐŸÑ€Ð¸Ð¼ÐµÐ½ÑÐµÐ¼ ÐºÐ»Ð°ÑÑÐ¾Ð²Ñ‹Ðµ Ð±Ð¾Ð½ÑƒÑÑ‹ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ ÐµÑÐ»Ð¸ ÐµÑ‰Ñ‘ Ð½Ðµ Ð¿Ñ€Ð¸Ð¼ÐµÐ½ÑÐ»Ð¸
 	if not is_initialized:
 		match char_class:
 			InventoryEnums.CharacterClass.WARRIOR:
@@ -161,13 +161,13 @@ func set_character_class(char_class: InventoryEnums.CharacterClass):
 
 
 # ===========================================
-# УПРАВЛЕНИЕ СЛОТАМИ
+# Ð£ÐŸÐ ÐÐ’Ð›Ð•ÐÐ˜Ð• Ð¡Ð›ÐžÐ¢ÐÐœÐ˜
 # ===========================================
 
 func add_bonus_slots(amount: int):
 	bonus_slots += amount
 	current_slot_count = mini(BASE_INVENTORY_SLOTS + bonus_slots, MAX_INVENTORY_SLOTS)
-	print("🎒 Бонусные слоты: +%d (всего %d)" % [amount, current_slot_count])
+	print("ðŸŽ’ Ð‘Ð¾Ð½ÑƒÑÐ½Ñ‹Ðµ ÑÐ»Ð¾Ñ‚Ñ‹: +%d (Ð²ÑÐµÐ³Ð¾ %d)" % [amount, current_slot_count])
 	inventory_changed.emit()
 
 
@@ -192,45 +192,45 @@ func has_free_slots() -> bool:
 
 
 # ===========================================
-# СИСТЕМА ЗЕЛИЙ (1 РАЗ ЗА КОМНАТУ)
+# Ð¡Ð˜Ð¡Ð¢Ð•ÐœÐ Ð—Ð•Ð›Ð˜Ð™ (1 Ð ÐÐ— Ð—Ð ÐšÐžÐœÐÐÐ¢Ð£)
 # ===========================================
 
 func can_use_potion(item_id: int) -> bool:
-	"""Проверяет, можно ли использовать зелье"""
+	"""ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÑ‚, Ð¼Ð¾Ð¶Ð½Ð¾ Ð»Ð¸ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÑŒ Ð·ÐµÐ»ÑŒÐµ"""
 	return not item_id in used_potions_this_room
 
 
 func mark_potion_used(item_id: int):
-	"""Помечает зелье как использованное в этой комнате"""
+	"""ÐŸÐ¾Ð¼ÐµÑ‡Ð°ÐµÑ‚ Ð·ÐµÐ»ÑŒÐµ ÐºÐ°Ðº Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð½Ð¾Ðµ Ð² ÑÑ‚Ð¾Ð¹ ÐºÐ¾Ð¼Ð½Ð°Ñ‚Ðµ"""
 	if not item_id in used_potions_this_room:
 		used_potions_this_room.append(item_id)
-		print("🧪 Зелье ID %d помечено как использованное" % item_id)
+		print("ðŸ§ª Ð—ÐµÐ»ÑŒÐµ ID %d Ð¿Ð¾Ð¼ÐµÑ‡ÐµÐ½Ð¾ ÐºÐ°Ðº Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð½Ð¾Ðµ" % item_id)
 
 
 func is_potion_used(item_id: int) -> bool:
-	"""Проверяет, использовано ли зелье в этой комнате"""
+	"""ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÑ‚, Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð¾ Ð»Ð¸ Ð·ÐµÐ»ÑŒÐµ Ð² ÑÑ‚Ð¾Ð¹ ÐºÐ¾Ð¼Ð½Ð°Ñ‚Ðµ"""
 	return item_id in used_potions_this_room
 
 
 func add_active_buff(item_id: int, buff_data: Dictionary):
-	"""Добавляет активный бафф от зелья"""
+	"""Ð”Ð¾Ð±Ð°Ð²Ð»ÑÐµÑ‚ Ð°ÐºÑ‚Ð¸Ð²Ð½Ñ‹Ð¹ Ð±Ð°Ñ„Ñ„ Ð¾Ñ‚ Ð·ÐµÐ»ÑŒÑ"""
 	active_potion_buffs[item_id] = buff_data
-	print("✨ Добавлен бафф от зелья ID %d: %s" % [item_id, buff_data])
+	print("âœ¨ Ð”Ð¾Ð±Ð°Ð²Ð»ÐµÐ½ Ð±Ð°Ñ„Ñ„ Ð¾Ñ‚ Ð·ÐµÐ»ÑŒÑ ID %d: %s" % [item_id, buff_data])
 
 
 func remove_active_buff(item_id: int):
-	"""Удаляет активный бафф"""
+	"""Ð£Ð´Ð°Ð»ÑÐµÑ‚ Ð°ÐºÑ‚Ð¸Ð²Ð½Ñ‹Ð¹ Ð±Ð°Ñ„Ñ„"""
 	if item_id in active_potion_buffs:
 		active_potion_buffs.erase(item_id)
 
 
 func get_active_buffs() -> Dictionary:
-	"""Возвращает все активные баффы"""
+	"""Ð’Ð¾Ð·Ð²Ñ€Ð°Ñ‰Ð°ÐµÑ‚ Ð²ÑÐµ Ð°ÐºÑ‚Ð¸Ð²Ð½Ñ‹Ðµ Ð±Ð°Ñ„Ñ„Ñ‹"""
 	return active_potion_buffs.duplicate()
 
 
 func get_total_buff_value(stat_name: String) -> int:
-	"""Возвращает суммарное значение баффа по имени стата"""
+	"""Ð’Ð¾Ð·Ð²Ñ€Ð°Ñ‰Ð°ÐµÑ‚ ÑÑƒÐ¼Ð¼Ð°Ñ€Ð½Ð¾Ðµ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ Ð±Ð°Ñ„Ñ„Ð° Ð¿Ð¾ Ð¸Ð¼ÐµÐ½Ð¸ ÑÑ‚Ð°Ñ‚Ð°"""
 	var total = 0
 	for item_id in active_potion_buffs:
 		var buff = active_potion_buffs[item_id]
@@ -240,7 +240,7 @@ func get_total_buff_value(stat_name: String) -> int:
 
 
 # ===========================================
-# ДОБАВЛЕНИЕ ПРЕДМЕТОВ
+# Ð”ÐžÐ‘ÐÐ’Ð›Ð•ÐÐ˜Ð• ÐŸÐ Ð•Ð”ÐœÐ•Ð¢ÐžÐ’
 # ===========================================
 
 func add_item(item: InventoryItem) -> int:
@@ -249,7 +249,7 @@ func add_item(item: InventoryItem) -> int:
 	
 	var remaining = item.quantity
 	
-	# Сначала пытаемся добавить в существующие стаки
+	# Ð¡Ð½Ð°Ñ‡Ð°Ð»Ð° Ð¿Ñ‹Ñ‚Ð°ÐµÐ¼ÑÑ Ð´Ð¾Ð±Ð°Ð²Ð¸Ñ‚ÑŒ Ð² ÑÑƒÑ‰ÐµÑÑ‚Ð²ÑƒÑŽÑ‰Ð¸Ðµ ÑÑ‚Ð°ÐºÐ¸
 	if item.is_stackable():
 		for i in range(current_slot_count):
 			if inventory_slots[i] != null and inventory_slots[i].is_same_type(item):
@@ -260,7 +260,7 @@ func add_item(item: InventoryItem) -> int:
 						inventory_changed.emit()
 						return 0
 	
-	# Затем ищем пустой слот
+	# Ð—Ð°Ñ‚ÐµÐ¼ Ð¸Ñ‰ÐµÐ¼ Ð¿ÑƒÑÑ‚Ð¾Ð¹ ÑÐ»Ð¾Ñ‚
 	var empty_slot = _find_empty_slot()
 	if empty_slot >= 0:
 		if item.is_stackable():
@@ -276,7 +276,7 @@ func add_item(item: InventoryItem) -> int:
 
 func add_item_by_id(item_id: int, quantity: int = 1) -> int:
 	if item_database == null:
-		push_error("InventoryManager: база данных не установлена")
+		push_error("InventoryManager: Ð±Ð°Ð·Ð° Ð´Ð°Ð½Ð½Ñ‹Ñ… Ð½Ðµ ÑƒÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð°")
 		return quantity
 	
 	var item = InventoryItem.create_from_id(item_id, quantity, item_database)
@@ -288,12 +288,12 @@ func add_item_by_id(item_id: int, quantity: int = 1) -> int:
 
 func add_item_by_name(internal_name: String, quantity: int = 1) -> int:
 	if item_database == null:
-		push_error("InventoryManager: база данных не установлена")
+		push_error("InventoryManager: Ð±Ð°Ð·Ð° Ð´Ð°Ð½Ð½Ñ‹Ñ… Ð½Ðµ ÑƒÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð°")
 		return quantity
 	
 	var item_data = item_database.get_item_by_name(internal_name)
 	if item_data == null:
-		push_error("InventoryManager: предмет '%s' не найден" % internal_name)
+		push_error("InventoryManager: Ð¿Ñ€ÐµÐ´Ð¼ÐµÑ‚ '%s' Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½" % internal_name)
 		return quantity
 	
 	var item = InventoryItem.new(item_data, quantity)
@@ -308,7 +308,7 @@ func _find_empty_slot() -> int:
 
 
 # ===========================================
-# УДАЛЕНИЕ ПРЕДМЕТОВ
+# Ð£Ð”ÐÐ›Ð•ÐÐ˜Ð• ÐŸÐ Ð•Ð”ÐœÐ•Ð¢ÐžÐ’
 # ===========================================
 
 func remove_item_at(slot_index: int) -> InventoryItem:
@@ -362,7 +362,7 @@ func get_item_count(item_id: int) -> int:
 
 
 # ===========================================
-# ПЕРЕМЕЩЕНИЕ ПРЕДМЕТОВ
+# ÐŸÐ•Ð Ð•ÐœÐ•Ð©Ð•ÐÐ˜Ð• ÐŸÐ Ð•Ð”ÐœÐ•Ð¢ÐžÐ’
 # ===========================================
 
 func move_item(from_index: int, to_index: int) -> bool:
@@ -379,7 +379,7 @@ func move_item(from_index: int, to_index: int) -> bool:
 	
 	var to_item = inventory_slots[to_index]
 	
-	# Если целевой слот пуст - просто перемещаем
+	# Ð•ÑÐ»Ð¸ Ñ†ÐµÐ»ÐµÐ²Ð¾Ð¹ ÑÐ»Ð¾Ñ‚ Ð¿ÑƒÑÑ‚ - Ð¿Ñ€Ð¾ÑÑ‚Ð¾ Ð¿ÐµÑ€ÐµÐ¼ÐµÑ‰Ð°ÐµÐ¼
 	if to_item == null:
 		inventory_slots[to_index] = from_item
 		inventory_slots[from_index] = null
@@ -387,7 +387,7 @@ func move_item(from_index: int, to_index: int) -> bool:
 		inventory_changed.emit()
 		return true
 	
-	# Если одинаковые предметы - пытаемся объединить стаки
+	# Ð•ÑÐ»Ð¸ Ð¾Ð´Ð¸Ð½Ð°ÐºÐ¾Ð²Ñ‹Ðµ Ð¿Ñ€ÐµÐ´Ð¼ÐµÑ‚Ñ‹ - Ð¿Ñ‹Ñ‚Ð°ÐµÐ¼ÑÑ Ð¾Ð±ÑŠÐµÐ´Ð¸Ð½Ð¸Ñ‚ÑŒ ÑÑ‚Ð°ÐºÐ¸
 	if from_item.is_same_type(to_item) and to_item.is_stackable():
 		var overflow = to_item.add(from_item.quantity)
 		if overflow == 0:
@@ -397,7 +397,7 @@ func move_item(from_index: int, to_index: int) -> bool:
 		inventory_changed.emit()
 		return true
 	
-	# Иначе - меняем местами
+	# Ð˜Ð½Ð°Ñ‡Ðµ - Ð¼ÐµÐ½ÑÐµÐ¼ Ð¼ÐµÑÑ‚Ð°Ð¼Ð¸
 	inventory_slots[from_index] = to_item
 	inventory_slots[to_index] = from_item
 	item_moved.emit(from_item, from_index, to_index)
@@ -412,7 +412,7 @@ func get_item_at(index: int) -> InventoryItem:
 
 
 # ===========================================
-# ЭКИПИРОВКА
+# Ð­ÐšÐ˜ÐŸÐ˜Ð ÐžÐ’ÐšÐ
 # ===========================================
 
 func equip_item(inventory_index: int, slot: InventoryEnums.EquipSlot = InventoryEnums.EquipSlot.NONE) -> bool:
@@ -423,32 +423,42 @@ func equip_item(inventory_index: int, slot: InventoryEnums.EquipSlot = Inventory
 	if item == null or item.data == null:
 		return false
 	
-	# Проверяем, можно ли экипировать
+	# ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼, Ð¼Ð¾Ð¶Ð½Ð¾ Ð»Ð¸ ÑÐºÐ¸Ð¿Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ
 	if not item.is_equippable():
 		return false
 	
-	# Определяем слот
+	# ÐžÐ¿Ñ€ÐµÐ´ÐµÐ»ÑÐµÐ¼ ÑÐ»Ð¾Ñ‚
 	if slot == InventoryEnums.EquipSlot.NONE:
 		var valid_slots = item.get_valid_equip_slots()
 		if valid_slots.is_empty():
 			return false
-		slot = valid_slots[0]
+		# === ИСПРАВЛЕНИЕ: Для предметов с несколькими слотами (артефакты, кольца, серьги) ===
+		# Ищем ПЕРВЫЙ СВОБОДНЫЙ слот, а не всегда берём первый
+		slot = InventoryEnums.EquipSlot.NONE
+		for valid_slot in valid_slots:
+			if equipment_slots.get(valid_slot) == null:
+				slot = valid_slot
+				break
+		
+		# Если все слоты заняты - заменяем в первом
+		if slot == InventoryEnums.EquipSlot.NONE:
+			slot = valid_slots[0]
 	
-	# Проверяем, подходит ли слот
+	# ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼, Ð¿Ð¾Ð´Ñ…Ð¾Ð´Ð¸Ñ‚ Ð»Ð¸ ÑÐ»Ð¾Ñ‚
 	if not item.can_equip_in_slot(slot):
 		return false
 	
-	# Если в слоте уже есть предмет - снимаем его
+	# Ð•ÑÐ»Ð¸ Ð² ÑÐ»Ð¾Ñ‚Ðµ ÑƒÐ¶Ðµ ÐµÑÑ‚ÑŒ Ð¿Ñ€ÐµÐ´Ð¼ÐµÑ‚ - ÑÐ½Ð¸Ð¼Ð°ÐµÐ¼ ÐµÐ³Ð¾
 	var old_item = equipment_slots.get(slot)
 	if old_item != null:
-		# Ищем пустой слот в инвентаре
+		# Ð˜Ñ‰ÐµÐ¼ Ð¿ÑƒÑÑ‚Ð¾Ð¹ ÑÐ»Ð¾Ñ‚ Ð² Ð¸Ð½Ð²ÐµÐ½Ñ‚Ð°Ñ€Ðµ
 		var empty = _find_empty_slot()
 		if empty < 0:
-			return false  # Нет места
+			return false  # ÐÐµÑ‚ Ð¼ÐµÑÑ‚Ð°
 		inventory_slots[empty] = old_item
 		item_unequipped.emit(old_item, slot)
 	
-	# Экипируем новый предмет
+	# Ð­ÐºÐ¸Ð¿Ð¸Ñ€ÑƒÐµÐ¼ Ð½Ð¾Ð²Ñ‹Ð¹ Ð¿Ñ€ÐµÐ´Ð¼ÐµÑ‚
 	equipment_slots[slot] = item
 	inventory_slots[inventory_index] = null
 	
@@ -456,7 +466,7 @@ func equip_item(inventory_index: int, slot: InventoryEnums.EquipSlot = Inventory
 	equipment_changed.emit()
 	inventory_changed.emit()
 	
-	# ВАЖНО: Пересчитываем статы
+	# Ð’ÐÐ–ÐÐž: ÐŸÐµÑ€ÐµÑÑ‡Ð¸Ñ‚Ñ‹Ð²Ð°ÐµÐ¼ ÑÑ‚Ð°Ñ‚Ñ‹
 	_recalculate_stats()
 	
 	return true
@@ -470,7 +480,7 @@ func unequip_item(slot: InventoryEnums.EquipSlot) -> bool:
 	if item == null:
 		return false
 	
-	# Ищем пустой слот
+	# Ð˜Ñ‰ÐµÐ¼ Ð¿ÑƒÑÑ‚Ð¾Ð¹ ÑÐ»Ð¾Ñ‚
 	var empty = _find_empty_slot()
 	if empty < 0:
 		return false
@@ -482,7 +492,7 @@ func unequip_item(slot: InventoryEnums.EquipSlot) -> bool:
 	equipment_changed.emit()
 	inventory_changed.emit()
 	
-	# ВАЖНО: Пересчитываем статы
+	# Ð’ÐÐ–ÐÐž: ÐŸÐµÑ€ÐµÑÑ‡Ð¸Ñ‚Ñ‹Ð²Ð°ÐµÐ¼ ÑÑ‚Ð°Ñ‚Ñ‹
 	_recalculate_stats()
 	
 	return true
@@ -497,7 +507,7 @@ func is_slot_equipped(slot: InventoryEnums.EquipSlot) -> bool:
 
 
 # ===========================================
-# БЫСТРЫЕ СЛОТЫ (HOTBAR)
+# Ð‘Ð«Ð¡Ð¢Ð Ð«Ð• Ð¡Ð›ÐžÐ¢Ð« (HOTBAR)
 # ===========================================
 
 func set_hotbar_item(hotbar_index: int, inventory_index: int) -> bool:
@@ -555,7 +565,131 @@ func get_hotbar_item(hotbar_index: int) -> InventoryItem:
 
 
 # ===========================================
-# ИСПОЛЬЗОВАНИЕ ПРЕДМЕТОВ
+# ПЕРЕМЕЩЕНИЕ В ХОТБАР (новая механика ПКМ)
+# ===========================================
+
+func find_free_hotbar_slot() -> int:
+	"""Находит первый свободный слот хотбара. Возвращает -1 если все заняты"""
+	for i in range(HOTBAR_SLOTS):
+		if hotbar_slots[i] == null or hotbar_slots[i].is_empty():
+			return i
+	return -1
+
+
+func move_item_to_hotbar(inventory_index: int) -> int:
+	"""
+	ПЕРЕМЕЩАЕТ расходник из инвентаря в хотбар (удаляет из инвентаря!)
+	Возвращает индекс хотбара или -1 если не удалось
+	"""
+	if inventory_index < 0 or inventory_index >= current_slot_count:
+		return -1
+	
+	var item = inventory_slots[inventory_index]
+	if item == null or item.is_empty():
+		return -1
+	
+	# Только расходники можно класть в хотбар
+	if not item.is_usable():
+		print("⚠️ Только расходники можно перемещать в быстрые слоты")
+		return -1
+	
+	# Ищем свободный слот в хотбаре
+	var free_hotbar = find_free_hotbar_slot()
+	if free_hotbar < 0:
+		print("⚠️ Все быстрые слоты заняты")
+		return -1
+	
+	# ПЕРЕМЕЩАЕМ предмет (не копируем!)
+	hotbar_slots[free_hotbar] = item
+	inventory_slots[inventory_index] = null
+	
+	print("📦→⚡ Предмет перемещён в быстрый слот %d" % (free_hotbar + 1))
+	
+	hotbar_changed.emit(free_hotbar)
+	inventory_changed.emit()
+	
+	return free_hotbar
+
+
+func move_hotbar_to_inventory(hotbar_index: int) -> bool:
+	"""
+	ПЕРЕМЕЩАЕТ расходник из хотбара обратно в инвентарь
+	Возвращает true если успешно
+	"""
+	if hotbar_index < 0 or hotbar_index >= HOTBAR_SLOTS:
+		return false
+	
+	var item = hotbar_slots[hotbar_index]
+	if item == null or item.is_empty():
+		return false
+	
+	# Ищем свободный слот в инвентаре
+	var free_inv = _find_empty_slot()
+	if free_inv < 0:
+		print("⚠️ Инвентарь полон")
+		return false
+	
+	# ПЕРЕМЕЩАЕМ обратно в инвентарь
+	inventory_slots[free_inv] = item
+	hotbar_slots[hotbar_index] = null
+	
+	print("⚡→📦 Предмет возвращён в инвентарь (слот %d)" % free_inv)
+	
+	hotbar_changed.emit(hotbar_index)
+	inventory_changed.emit()
+	
+	return true
+
+
+func is_item_in_hotbar(item: InventoryItem) -> int:
+	"""Проверяет, находится ли предмет в хотбаре. Возвращает индекс или -1"""
+	for i in range(HOTBAR_SLOTS):
+		if hotbar_slots[i] == item:
+			return i
+	return -1
+
+
+func move_item_to_specific_hotbar_slot(inventory_index: int, hotbar_index: int) -> bool:
+	"""
+	ПЕРЕМЕЩАЕТ расходник из инвентаря в КОНКРЕТНЫЙ слот хотбара (для drag & drop)
+	Если слот занят - заменяет (старый предмет возвращается в инвентарь)
+	"""
+	if inventory_index < 0 or inventory_index >= current_slot_count:
+		return false
+	if hotbar_index < 0 or hotbar_index >= HOTBAR_SLOTS:
+		return false
+	
+	var item = inventory_slots[inventory_index]
+	if item == null or item.is_empty():
+		return false
+	
+	# Только расходники
+	if not item.is_usable():
+		return false
+	
+	# Если в целевом слоте уже есть предмет - возвращаем его в инвентарь
+	var old_item = hotbar_slots[hotbar_index]
+	if old_item != null and not old_item.is_empty():
+		# Ставим старый предмет на место нового
+		inventory_slots[inventory_index] = old_item
+	else:
+		# Слот был пуст - просто очищаем инвентарный слот
+		inventory_slots[inventory_index] = null
+	
+	# Ставим новый предмет в хотбар
+	hotbar_slots[hotbar_index] = item
+	
+	print("📦→⚡ Предмет перемещён в быстрый слот %d" % (hotbar_index + 1))
+	
+	hotbar_changed.emit(hotbar_index)
+	inventory_changed.emit()
+	
+	return true
+
+
+
+# ===========================================
+# Ð˜Ð¡ÐŸÐžÐ›Ð¬Ð—ÐžÐ’ÐÐÐ˜Ð• ÐŸÐ Ð•Ð”ÐœÐ•Ð¢ÐžÐ’
 # ===========================================
 
 func _use_item(item: InventoryItem) -> bool:
@@ -565,20 +699,20 @@ func _use_item(item: InventoryItem) -> bool:
 	if not item.is_usable():
 		return false
 	
-	# ПРОВЕРКА: Зелье уже использовано в этой комнате?
+	# ÐŸÐ ÐžÐ’Ð•Ð ÐšÐ: Ð—ÐµÐ»ÑŒÐµ ÑƒÐ¶Ðµ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð¾ Ð² ÑÑ‚Ð¾Ð¹ ÐºÐ¾Ð¼Ð½Ð°Ñ‚Ðµ?
 	var item_id = item.get_item_id()
 	if is_potion_used(item_id):
-		print("⚠️ Зелье уже использовано в этой комнате!")
+		print("âš ï¸ Ð—ÐµÐ»ÑŒÐµ ÑƒÐ¶Ðµ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð¾ Ð² ÑÑ‚Ð¾Ð¹ ÐºÐ¾Ð¼Ð½Ð°Ñ‚Ðµ!")
 		return false
 	
-	# Помечаем зелье как использованное
+	# ÐŸÐ¾Ð¼ÐµÑ‡Ð°ÐµÐ¼ Ð·ÐµÐ»ÑŒÐµ ÐºÐ°Ðº Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð½Ð¾Ðµ
 	mark_potion_used(item_id)
 	
-	# Применяем эффекты
+	# ÐŸÑ€Ð¸Ð¼ÐµÐ½ÑÐµÐ¼ ÑÑ„Ñ„ÐµÐºÑ‚Ñ‹
 	for effect in item.data.effects:
 		_apply_effect(effect)
 	
-	# Уменьшаем количество
+	# Ð£Ð¼ÐµÐ½ÑŒÑˆÐ°ÐµÐ¼ ÐºÐ¾Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾
 	item.remove(1)
 	
 	return true
@@ -589,15 +723,15 @@ func _apply_effect(effect: Dictionary):
 	var value = effect.get("value", 0.0)
 	var duration = effect.get("duration", 0.0)
 	
-	print("🧪 Применяем эффект: тип=%d, значение=%.1f, длительность=%.1f" % [effect_type, value, duration])
+	print("ðŸ§ª ÐŸÑ€Ð¸Ð¼ÐµÐ½ÑÐµÐ¼ ÑÑ„Ñ„ÐµÐºÑ‚: Ñ‚Ð¸Ð¿=%d, Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ=%.1f, Ð´Ð»Ð¸Ñ‚ÐµÐ»ÑŒÐ½Ð¾ÑÑ‚ÑŒ=%.1f" % [effect_type, value, duration])
 
 
 # ===========================================
-# РАСЧЁТ СТАТОВ ОТ ЭКИПИРОВКИ
+# Ð ÐÐ¡Ð§ÐÐ¢ Ð¡Ð¢ÐÐ¢ÐžÐ’ ÐžÐ¢ Ð­ÐšÐ˜ÐŸÐ˜Ð ÐžÐ’ÐšÐ˜
 # ===========================================
 
 func _recalculate_stats():
-	"""Пересчитывает статы от экипировки"""
+	"""ÐŸÐµÑ€ÐµÑÑ‡Ð¸Ñ‚Ñ‹Ð²Ð°ÐµÑ‚ ÑÑ‚Ð°Ñ‚Ñ‹ Ð¾Ñ‚ ÑÐºÐ¸Ð¿Ð¸Ñ€Ð¾Ð²ÐºÐ¸"""
 	var total_stats = {
 		"max_hp": 0,
 		"max_mana": 0,
@@ -628,12 +762,12 @@ func _recalculate_stats():
 	
 	total_stats["special_effects"] = special_effects
 	
-	print("📊 Статы от экипировки: ", total_stats)
+	print("ðŸ“Š Ð¡Ñ‚Ð°Ñ‚Ñ‹ Ð¾Ñ‚ ÑÐºÐ¸Ð¿Ð¸Ñ€Ð¾Ð²ÐºÐ¸: ", total_stats)
 	stats_updated.emit(total_stats)
 
 
 func get_equipment_stats() -> Dictionary:
-	"""Возвращает текущие бонусы от экипировки"""
+	"""Ð’Ð¾Ð·Ð²Ñ€Ð°Ñ‰Ð°ÐµÑ‚ Ñ‚ÐµÐºÑƒÑ‰Ð¸Ðµ Ð±Ð¾Ð½ÑƒÑÑ‹ Ð¾Ñ‚ ÑÐºÐ¸Ð¿Ð¸Ñ€Ð¾Ð²ÐºÐ¸"""
 	var total_stats = {
 		"max_hp": 0,
 		"max_mana": 0,
@@ -678,7 +812,7 @@ func get_special_effect_value(effect_type: InventoryEnums.EffectType) -> float:
 
 
 # ===========================================
-# СОХРАНЕНИЕ / ЗАГРУЗКА
+# Ð¡ÐžÐ¥Ð ÐÐÐ•ÐÐ˜Ð• / Ð—ÐÐ“Ð Ð£Ð—ÐšÐ
 # ===========================================
 
 func serialize() -> Dictionary:
@@ -719,7 +853,7 @@ func serialize() -> Dictionary:
 
 func deserialize(data: Dictionary):
 	if item_database == null:
-		push_error("InventoryManager: база данных не установлена для десериализации")
+		push_error("InventoryManager: Ð±Ð°Ð·Ð° Ð´Ð°Ð½Ð½Ñ‹Ñ… Ð½Ðµ ÑƒÑÑ‚Ð°Ð½Ð¾Ð²Ð»ÐµÐ½Ð° Ð´Ð»Ñ Ð´ÐµÑÐµÑ€Ð¸Ð°Ð»Ð¸Ð·Ð°Ñ†Ð¸Ð¸")
 		return
 	
 	_initialize_slots()
@@ -756,29 +890,29 @@ func deserialize(data: Dictionary):
 	equipment_changed.emit()
 	_recalculate_stats()
 	
-	print("🎒 Инвентарь загружен")
+	print("ðŸŽ’ Ð˜Ð½Ð²ÐµÐ½Ñ‚Ð°Ñ€ÑŒ Ð·Ð°Ð³Ñ€ÑƒÐ¶ÐµÐ½")
 
 
 # ===========================================
-# ОТЛАДКА
+# ÐžÐ¢Ð›ÐÐ”ÐšÐ
 # ===========================================
 
 func debug_print():
-	print("=== ИНВЕНТАРЬ (%d/%d) ===" % [get_used_slot_count(), current_slot_count])
+	print("=== Ð˜ÐÐ’Ð•ÐÐ¢ÐÐ Ð¬ (%d/%d) ===" % [get_used_slot_count(), current_slot_count])
 	for i in range(current_slot_count):
 		if inventory_slots[i] != null:
 			print("  [%d] %s" % [i, inventory_slots[i]])
 	
-	print("=== ЭКИПИРОВКА ===")
+	print("=== Ð­ÐšÐ˜ÐŸÐ˜Ð ÐžÐ’ÐšÐ ===")
 	for slot in equipment_slots:
 		if equipment_slots[slot] != null:
 			var slot_name = InventoryEnums.get_slot_name(slot)
 			print("  %s: %s" % [slot_name, equipment_slots[slot]])
 	
-	print("=== БЫСТРЫЕ СЛОТЫ ===")
+	print("=== Ð‘Ð«Ð¡Ð¢Ð Ð«Ð• Ð¡Ð›ÐžÐ¢Ð« ===")
 	for i in range(HOTBAR_SLOTS):
 		var item = hotbar_slots[i]
-		print("  [%d] %s" % [i + 1, item if item else "Пусто"])
+		print("  [%d] %s" % [i + 1, item if item else "ÐŸÑƒÑÑ‚Ð¾"])
 	
-	print("=== ИСПОЛЬЗОВАННЫЕ ЗЕЛЬЯ ===")
+	print("=== Ð˜Ð¡ÐŸÐžÐ›Ð¬Ð—ÐžÐ’ÐÐÐÐ«Ð• Ð—Ð•Ð›Ð¬Ð¯ ===")
 	print("  ", used_potions_this_room)

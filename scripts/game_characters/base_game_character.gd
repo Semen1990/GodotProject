@@ -38,6 +38,7 @@ var is_casting: bool = false
 var is_crouching: bool = false
 var is_hurt: bool = false
 var is_invincible: bool = false  # Неуязвимость после возрождения
+var is_inventory_open: bool = false  # Блокировка при открытом инвентаре
 
 # --- СИСТЕМА АТАКИ ---
 var attack_combo: int = 0
@@ -179,6 +180,13 @@ func fix_sprite_scale():
 # ===========================================
 
 func handle_movement(delta: float):
+	# --- Блокировка при открытом инвентаре ---
+	# Игрок не может двигаться и использовать способности,
+	# но враги продолжают действовать и могут наносить урон
+	if is_inventory_open:
+		velocity.x = move_toward(velocity.x, 0, friction * delta)
+		return
+	
 	# --- Получение ввода ---
 	var direction = Input.get_axis("move_left", "move_right")
 	var is_jumping = Input.is_action_just_pressed("jump")
@@ -422,7 +430,7 @@ func get_available_animations() -> Array:
 
 func attack():
 	"""Базовая атака - может быть переопределена в дочерних классах"""
-	if is_dead or is_attacking or is_blocking or is_casting or is_sliding or is_crouching:
+	if is_dead or is_attacking or is_blocking or is_casting or is_sliding or is_crouching or is_inventory_open:
 		return
 	
 	is_attacking = true
@@ -638,3 +646,25 @@ func block():
 func stop_blocking():
 	"""Прекращение блока - переопределяется в warrior_player.gd"""
 	pass
+
+
+# ===========================================
+# УПРАВЛЕНИЕ ИНВЕНТАРЁМ (блокировка игрока)
+# ===========================================
+
+func set_inventory_open(open: bool):
+	"""Устанавливает состояние инвентаря - блокирует/разблокирует игрока"""
+	is_inventory_open = open
+	
+	if open:
+		# При открытии инвентаря останавливаем движение
+		velocity.x = 0
+		# Прерываем атаку если она была
+		if is_attacking:
+			is_attacking = false
+		# Отменяем приседание
+		if is_crouching:
+			stop_crouch()
+		# Отменяем блок
+		if is_blocking:
+			stop_blocking()

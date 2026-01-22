@@ -31,13 +31,17 @@ var is_collected: bool = false
 func _ready():
 	print("🎁 Артефакт создан: ", artifact_id)
 	
-	# Проверяем через инвентарь, есть ли уже этот артефакт
+	initial_y = position.y
+	
+	# Откладываем проверку на 1 кадр для надёжности
+	# (Инвентарь очищается в death_menu ПЕРЕД загрузкой сцены)
+	await get_tree().process_frame
+	
+	# Проверяем, есть ли уже этот артефакт
 	if _check_already_collected():
 		print("⚠️ Артефакт уже в инвентаре, удаляем...")
 		queue_free()
 		return
-	
-	initial_y = position.y
 	
 	# Настраиваем визуал ИЗ ИНВЕНТАРНОЙ БАЗЫ ДАННЫХ
 	_setup_artifact_from_inventory()

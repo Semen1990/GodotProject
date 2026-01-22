@@ -25,10 +25,13 @@ enum ItemCategory {
 enum EquipmentType {
 	NONE,           ## Не экипировка
 	HELMET,         ## Шлем
-	ARMOR,          ## Доспех
+	ARMOR,          ## Доспех (нагрудник)
 	PANTS,          ## Штаны
 	BOOTS,          ## Сапоги
 	GLOVES,         ## Перчатки
+	SHOULDERS,      ## Наплечники (НОВОЕ)
+	BRACERS,        ## Наручи (НОВОЕ)
+	BELT,           ## Пояс (НОВОЕ)
 	SWORD,          ## Меч
 	AXE,            ## Топор
 	MACE,           ## Булава
@@ -40,6 +43,7 @@ enum EquipmentType {
 	ORB,            ## Орб
 	TOME,           ## Том/Книга
 	NECKLACE,       ## Ожерелье
+	AMULET,         ## Кулон (НОВОЕ)
 	EARRING,        ## Серьга
 	RING,           ## Кольцо
 }
@@ -66,37 +70,36 @@ enum EquipSlot {
 	
 	# Броня
 	HEAD = 1,           ## Голова
-	BODY = 2,           ## Туловище
+	BODY = 2,           ## Туловище (нагрудник)
 	LEGS = 3,           ## Штаны
 	FEET = 4,           ## Сапоги
 	HANDS = 5,          ## Перчатки
-	SHOULDERS = 6,      ## Наплечники (НОВОЕ)
+	SHOULDERS = 6,      ## Наплечники
+	BRACERS = 7,        ## Наручи (НОВОЕ)
+	BELT = 8,           ## Пояс (НОВОЕ)
 	
 	# Оружие
-	MAIN_HAND = 7,      ## Основная рука
-	OFF_HAND = 8,       ## Вторая рука
+	MAIN_HAND = 10,     ## Основная рука (оружие)
+	OFF_HAND = 11,      ## Вторая рука (щит/орб/книга)
 	
 	# Украшения
-	NECKLACE = 9,       ## Ожерелье
-	EARRING_1 = 10,     ## Серьга левая
-	EARRING_2 = 11,     ## Серьга правая
-	RING_1 = 12,        ## Кольцо 1
-	RING_2 = 13,        ## Кольцо 2
-	RING_3 = 14,        ## Кольцо 3
-	RING_4 = 15,        ## Кольцо 4
-	RING_5 = 16,        ## Кольцо 5
-	RING_6 = 17,        ## Кольцо 6
-	RING_7 = 18,        ## Кольцо 7
-	RING_8 = 19,        ## Кольцо 8
+	NECKLACE = 15,      ## Ожерелье
+	AMULET = 16,        ## Кулон (НОВОЕ)
+	EARRING_1 = 17,     ## Серьга левая
+	EARRING_2 = 18,     ## Серьга правая
+	RING_1 = 20,        ## Кольцо 1
+	RING_2 = 21,        ## Кольцо 2
+	RING_3 = 22,        ## Кольцо 3
+	RING_4 = 23,        ## Кольцо 4
 	
 	# Артефакты
-	ARTIFACT_1 = 20,    ## Слот артефакта 1
-	ARTIFACT_2 = 21,    ## Слот артефакта 2
-	ARTIFACT_3 = 22,    ## Слот артефакта 3
-	ARTIFACT_4 = 23,    ## Слот артефакта 4
+	ARTIFACT_1 = 30,    ## Слот артефакта 1
+	ARTIFACT_2 = 31,    ## Слот артефакта 2
+	ARTIFACT_3 = 32,    ## Слот артефакта 3
+	ARTIFACT_4 = 33,    ## Слот артефакта 4
 	
 	# Особые
-	RELIC = 24,         ## Реликвия (уникальный слот)
+	RELIC = 40,         ## Реликвия (уникальный слот)
 }
 
 
@@ -222,24 +225,23 @@ const RARITY_NAMES = {
 const SLOT_NAMES = {
 	EquipSlot.NONE: "Нет",
 	EquipSlot.HEAD: "Голова",
-	EquipSlot.BODY: "Туловище",
+	EquipSlot.BODY: "Нагрудник",
 	EquipSlot.LEGS: "Штаны",
 	EquipSlot.FEET: "Сапоги",
 	EquipSlot.HANDS: "Перчатки",
 	EquipSlot.SHOULDERS: "Наплечники",
-	EquipSlot.MAIN_HAND: "Основная рука",
-	EquipSlot.OFF_HAND: "Вторая рука",
+	EquipSlot.BRACERS: "Наручи",
+	EquipSlot.BELT: "Пояс",
+	EquipSlot.MAIN_HAND: "Оружие",
+	EquipSlot.OFF_HAND: "Щит/Орб",
 	EquipSlot.NECKLACE: "Ожерелье",
+	EquipSlot.AMULET: "Кулон",
 	EquipSlot.EARRING_1: "Серьга (Л)",
 	EquipSlot.EARRING_2: "Серьга (П)",
 	EquipSlot.RING_1: "Кольцо 1",
 	EquipSlot.RING_2: "Кольцо 2",
 	EquipSlot.RING_3: "Кольцо 3",
 	EquipSlot.RING_4: "Кольцо 4",
-	EquipSlot.RING_5: "Кольцо 5",
-	EquipSlot.RING_6: "Кольцо 6",
-	EquipSlot.RING_7: "Кольцо 7",
-	EquipSlot.RING_8: "Кольцо 8",
 	EquipSlot.ARTIFACT_1: "Артефакт 1",
 	EquipSlot.ARTIFACT_2: "Артефакт 2",
 	EquipSlot.ARTIFACT_3: "Артефакт 3",
@@ -265,7 +267,7 @@ static func get_slot_name(slot: EquipSlot) -> String:
 
 ## Проверяет, является ли слот слотом для колец
 static func is_ring_slot(slot: EquipSlot) -> bool:
-	return slot >= EquipSlot.RING_1 and slot <= EquipSlot.RING_8
+	return slot >= EquipSlot.RING_1 and slot <= EquipSlot.RING_4
 
 
 ## Проверяет, является ли слот слотом для артефактов
@@ -285,13 +287,15 @@ static func get_slots_in_group(group: SlotGroup) -> Array[EquipSlot]:
 	match group:
 		SlotGroup.ARMOR:
 			slots = [EquipSlot.HEAD, EquipSlot.BODY, EquipSlot.LEGS, 
-					 EquipSlot.FEET, EquipSlot.HANDS]
+					 EquipSlot.FEET, EquipSlot.HANDS, EquipSlot.SHOULDERS,
+					 EquipSlot.BRACERS, EquipSlot.BELT]
 		SlotGroup.WEAPONS:
 			slots = [EquipSlot.MAIN_HAND, EquipSlot.OFF_HAND]
 		SlotGroup.JEWELRY:
-			slots = [EquipSlot.NECKLACE, EquipSlot.EARRING_1, EquipSlot.EARRING_2]
-			for i in range(8):
-				slots.append(EquipSlot.RING_1 + i)
+			slots = [EquipSlot.NECKLACE, EquipSlot.AMULET, 
+					 EquipSlot.EARRING_1, EquipSlot.EARRING_2,
+					 EquipSlot.RING_1, EquipSlot.RING_2, 
+					 EquipSlot.RING_3, EquipSlot.RING_4]
 		SlotGroup.ARTIFACTS:
 			slots = [EquipSlot.ARTIFACT_1, EquipSlot.ARTIFACT_2, 
 					 EquipSlot.ARTIFACT_3, EquipSlot.ARTIFACT_4]
@@ -314,6 +318,12 @@ static func get_valid_slots_for_equipment(equip_type: EquipmentType) -> Array[Eq
 			return [EquipSlot.FEET]
 		EquipmentType.GLOVES:
 			return [EquipSlot.HANDS]
+		EquipmentType.SHOULDERS:
+			return [EquipSlot.SHOULDERS]
+		EquipmentType.BRACERS:
+			return [EquipSlot.BRACERS]
+		EquipmentType.BELT:
+			return [EquipSlot.BELT]
 		EquipmentType.SWORD, EquipmentType.AXE, EquipmentType.MACE, \
 		EquipmentType.DAGGER, EquipmentType.STAFF, EquipmentType.WAND, \
 		EquipmentType.BOW:
@@ -322,12 +332,12 @@ static func get_valid_slots_for_equipment(equip_type: EquipmentType) -> Array[Eq
 			return [EquipSlot.OFF_HAND]
 		EquipmentType.NECKLACE:
 			return [EquipSlot.NECKLACE]
+		EquipmentType.AMULET:
+			return [EquipSlot.AMULET]
 		EquipmentType.EARRING:
 			return [EquipSlot.EARRING_1, EquipSlot.EARRING_2]
 		EquipmentType.RING:
-			var rings: Array[EquipSlot] = []
-			for i in range(8):
-				rings.append(EquipSlot.RING_1 + i)
-			return rings
+			return [EquipSlot.RING_1, EquipSlot.RING_2, 
+					EquipSlot.RING_3, EquipSlot.RING_4]
 		_:
 			return []

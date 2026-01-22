@@ -79,6 +79,48 @@ const SLOT_SPACING = 4
 ## Количество колонок в сумке
 const GRID_COLUMNS = 5
 
+## ═══════════════════════════════════════════════════════════════════
+## ИКОНКИ СЛОТОВ (серые, для пустых слотов)
+## Чтобы заменить на картинки - см. инструкцию в конце файла
+## ═══════════════════════════════════════════════════════════════════
+const SLOT_ICONS = {
+	# Броня
+	InventoryEnums.EquipSlot.HEAD: "🪖",        # Голова/Шлем
+	InventoryEnums.EquipSlot.BODY: "👕",        # Нагрудник
+	InventoryEnums.EquipSlot.LEGS: "👖",        # Штаны
+	InventoryEnums.EquipSlot.FEET: "👢",        # Сапоги
+	InventoryEnums.EquipSlot.HANDS: "🧤",       # Перчатки
+	InventoryEnums.EquipSlot.SHOULDERS: "🦺",   # Наплечники
+	InventoryEnums.EquipSlot.BRACERS: "⌚",     # Наручи
+	InventoryEnums.EquipSlot.BELT: "〰️",        # Пояс
+	
+	# Оружие
+	InventoryEnums.EquipSlot.MAIN_HAND: "⚔️",   # Оружие
+	InventoryEnums.EquipSlot.OFF_HAND: "🛡️",   # Щит/Орб
+	
+	# Украшения
+	InventoryEnums.EquipSlot.NECKLACE: "📿",    # Ожерелье
+	InventoryEnums.EquipSlot.AMULET: "🔮",      # Кулон
+	InventoryEnums.EquipSlot.EARRING_1: "💎",   # Серьга Л
+	InventoryEnums.EquipSlot.EARRING_2: "💎",   # Серьга П
+	InventoryEnums.EquipSlot.RING_1: "💍",      # Кольцо
+	InventoryEnums.EquipSlot.RING_2: "💍",
+	InventoryEnums.EquipSlot.RING_3: "💍",
+	InventoryEnums.EquipSlot.RING_4: "💍",
+	
+	# Артефакты
+	InventoryEnums.EquipSlot.ARTIFACT_1: "✨",
+	InventoryEnums.EquipSlot.ARTIFACT_2: "✨",
+	InventoryEnums.EquipSlot.ARTIFACT_3: "✨",
+	InventoryEnums.EquipSlot.ARTIFACT_4: "✨",
+	
+	# Реликвия
+	InventoryEnums.EquipSlot.RELIC: "🏆",
+}
+
+## Иконка для слотов быстрого доступа (хотбар)
+const HOTBAR_ICON = "🧪"
+
 enum Tab {
 	ALL,
 	EQUIPMENT,
@@ -321,40 +363,69 @@ func _create_inventory_slot(index: int) -> InventorySlot:
 
 
 func _create_hotbar_slot(index: int) -> InventorySlot:
-	"""Создаёт быстрый слот"""
+	"""Создаёт быстрый слот с иконкой-подсказкой"""
 	var slot = InventorySlot.new()
 	slot.slot_index = index
 	slot.is_hotbar_slot = true
+	slot.hotbar_index = index  # Важно для обработки ПКМ
 	slot.custom_minimum_size = SLOT_SIZE
 	
 	slot.slot_clicked.connect(_on_hotbar_slot_clicked)
+	slot.slot_right_clicked.connect(_on_hotbar_slot_right_clicked)  # ПКМ
 	slot.slot_hovered.connect(_on_slot_hovered)
 	slot.slot_unhovered.connect(_on_slot_unhovered)
 	slot.item_dropped.connect(_on_hotbar_item_dropped)
 	
+	# Номер клавиши (в углу)
 	var key_label = Label.new()
+	key_label.name = "KeyLabel"
 	key_label.text = str(index + 1)
 	key_label.add_theme_font_size_override("font_size", 10)
 	key_label.add_theme_color_override("font_color", Color(1, 0.9, 0.5))
 	key_label.position = Vector2(2, 2)
+	key_label.z_index = 1  # Поверх иконки
 	slot.add_child(key_label)
+	
+	# Иконка-подсказка (зелье/свиток) - серая, по центру
+	var hint_label = Label.new()
+	hint_label.name = "HintIcon"
+	hint_label.text = HOTBAR_ICON  # 🧪
+	hint_label.add_theme_font_size_override("font_size", 20)
+	hint_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 0.5))
+	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hint_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.add_child(hint_label)
 	
 	return slot
 
 
 # ===========================================
-# СЕКЦИЯ ЭКИПИРОВКИ
+# СЕКЦИЯ ЭКИПИРОВКИ (НОВЫЙ ЛЕЙАУТ v7.0)
 # ===========================================
 
 func _create_equipment_section(parent: Control):
-	"""Создаёт секцию экипировки"""
+	"""
+	Создаёт секцию экипировки с новым лейаутом:
+	
+	Ряд 1:    [Серьга Л]  [Голова]   [Серьга П]
+	Ряд 2:    [Наплечн]  [Ожерелье]  [Кулон]
+	Ряд 3:    [Перчатки] [Нагрудник] [Наручи]
+	Ряд 4:    [Оружие]    [Пояс]     [Щит/Орб]
+	Ряд 5:    [Сапоги]   [Штаны]    [  пусто  ]
+	─────────────────────────────────────────
+	Ряд 6:    [Артеф 1] [Артеф 2] [Артеф 3] [Артеф 4]
+	Ряд 7:    [Кольцо1] [Кольцо2] [Кольцо3] [Кольцо4]
+	Ряд 8:           [  Реликвия  ]
+	"""
 	var equip_panel = Panel.new()
 	equip_panel.name = "EquipmentSection"
 	
 	# ═══════════════════════════════════════════════════════════════
-	# РАЗМЕР ПАНЕЛИ ЭКИПИРОВКИ
+	# РАЗМЕР ПАНЕЛИ ЭКИПИРОВКИ (увеличен для 4 слотов артефактов/колец)
 	# ═══════════════════════════════════════════════════════════════
-	equip_panel.custom_minimum_size = Vector2(260, 0)
+	equip_panel.custom_minimum_size = Vector2(220, 0)
 	
 	_style_panel(equip_panel, Color(0.08, 0.08, 0.1, 0.8))
 	parent.add_child(equip_panel)
@@ -372,7 +443,7 @@ func _create_equipment_section(parent: Control):
 	
 	var vbox = VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.add_theme_constant_override("separation", 6)
+	vbox.add_theme_constant_override("separation", 4)
 	scroll.add_child(vbox)
 	
 	# Заголовок
@@ -381,180 +452,229 @@ func _create_equipment_section(parent: Control):
 	equip_label.add_theme_font_size_override("font_size", 14)
 	vbox.add_child(equip_label)
 	
-	# Основные слоты экипировки
-	_create_equipment_grid(vbox)
-	
-	# Реликвия
-	_create_relic_row(vbox)
+	# === ОСНОВНАЯ СЕТКА ЭКИПИРОВКИ (5 рядов x 3 колонки) ===
+	_create_main_equipment_grid(vbox)
 	
 	# Разделитель
 	var sep1 = HSeparator.new()
 	vbox.add_child(sep1)
 	
-	# Артефакты
+	# === АРТЕФАКТЫ (4 слота) ===
 	var art_label = Label.new()
 	art_label.text = "✨ Артефакты"
 	art_label.add_theme_font_size_override("font_size", 12)
 	vbox.add_child(art_label)
-	_create_artifact_slots(vbox)
+	_create_artifact_row(vbox)
 	
-	# Кольца
+	# === КОЛЬЦА (4 слота) ===
 	var ring_label = Label.new()
 	ring_label.text = "💍 Кольца"
 	ring_label.add_theme_font_size_override("font_size", 12)
 	vbox.add_child(ring_label)
-	_create_ring_slots(vbox)
+	_create_ring_row(vbox)
 	
-	# Украшения
-	var jewelry_label = Label.new()
-	jewelry_label.text = "💎 Украшения"
-	jewelry_label.add_theme_font_size_override("font_size", 12)
-	vbox.add_child(jewelry_label)
-	_create_jewelry_slots(vbox)
+	# Разделитель
+	var sep2 = HSeparator.new()
+	vbox.add_child(sep2)
+	
+	# === РЕЛИКВИЯ (1 слот с надписью) ===
+	_create_relic_section(vbox)
 
 
-func _create_equipment_grid(parent: Control):
-	"""Создаёт сетку основной экипировки 3x5 (с наплечниками)"""
+func _create_main_equipment_grid(parent: Control):
+	"""
+	Создаёт основную сетку экипировки 3x5:
+	
+	[Серьга Л]  [Голова]   [Серьга П]
+	[Наплечн]  [Ожерелье]  [Кулон]
+	[Перчатки] [Нагрудник] [Наручи]
+	[Оружие]    [Пояс]     [Щит/Орб]
+	[Сапоги]   [Штаны]    [  пусто  ]
+	"""
 	var grid = GridContainer.new()
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 4)
 	grid.add_theme_constant_override("v_separation", 4)
 	parent.add_child(grid)
 	
-	# ═══════════════════════════════════════════════════════════════
-	# МАКЕТ ЭКИПИРОВКИ (3 колонки x 5 рядов)
-	# Чтобы добавить новый слот - добавь в этот массив
-	# ═══════════════════════════════════════════════════════════════
+	# Лейаут: [левый, центр, правый] для каждого ряда
 	var equip_layout = [
-		# Ряд 1: голова
-		{"slot": InventoryEnums.EquipSlot.NONE, "label": ""},
-		{"slot": InventoryEnums.EquipSlot.HEAD, "label": "🪖"},
-		{"slot": InventoryEnums.EquipSlot.NONE, "label": ""},
+		# Ряд 1: Серьги и голова
+		InventoryEnums.EquipSlot.EARRING_1,
+		InventoryEnums.EquipSlot.HEAD,
+		InventoryEnums.EquipSlot.EARRING_2,
 		
-		# Ряд 2: наплечники и тело
-		{"slot": InventoryEnums.EquipSlot.SHOULDERS, "label": "🦺"},  # НАПЛЕЧНИКИ
-		{"slot": InventoryEnums.EquipSlot.BODY, "label": "🛡️"},
-		{"slot": InventoryEnums.EquipSlot.NONE, "label": ""},
+		# Ряд 2: Наплечники, ожерелье, кулон
+		InventoryEnums.EquipSlot.SHOULDERS,
+		InventoryEnums.EquipSlot.NECKLACE,
+		InventoryEnums.EquipSlot.AMULET,
 		
-		# Ряд 3: оружие, руки, щит
-		{"slot": InventoryEnums.EquipSlot.MAIN_HAND, "label": "⚔️"},
-		{"slot": InventoryEnums.EquipSlot.HANDS, "label": "🧤"},
-		{"slot": InventoryEnums.EquipSlot.OFF_HAND, "label": "🛡️"},
+		# Ряд 3: Перчатки, нагрудник, наручи
+		InventoryEnums.EquipSlot.HANDS,
+		InventoryEnums.EquipSlot.BODY,
+		InventoryEnums.EquipSlot.BRACERS,
 		
-		# Ряд 4: ноги
-		{"slot": InventoryEnums.EquipSlot.NONE, "label": ""},
-		{"slot": InventoryEnums.EquipSlot.LEGS, "label": "👖"},
-		{"slot": InventoryEnums.EquipSlot.NONE, "label": ""},
+		# Ряд 4: Оружие, пояс, щит
+		InventoryEnums.EquipSlot.MAIN_HAND,
+		InventoryEnums.EquipSlot.BELT,
+		InventoryEnums.EquipSlot.OFF_HAND,
 		
-		# Ряд 5: ботинки
-		{"slot": InventoryEnums.EquipSlot.NONE, "label": ""},
-		{"slot": InventoryEnums.EquipSlot.FEET, "label": "👢"},
-		{"slot": InventoryEnums.EquipSlot.NONE, "label": ""},
+		# Ряд 5: Сапоги, штаны, пусто
+		InventoryEnums.EquipSlot.FEET,
+		InventoryEnums.EquipSlot.LEGS,
+		InventoryEnums.EquipSlot.NONE,  # Пустой слот
 	]
 	
-	for data in equip_layout:
-		if data.slot == InventoryEnums.EquipSlot.NONE:
+	for slot_type in equip_layout:
+		if slot_type == InventoryEnums.EquipSlot.NONE:
+			# Пустое место (spacer)
 			var spacer = Control.new()
 			spacer.custom_minimum_size = SLOT_SIZE
 			grid.add_child(spacer)
 		else:
-			var slot = _create_equip_slot(data.slot, data.label)
+			var slot = _create_equip_slot_with_icon(slot_type)
 			grid.add_child(slot)
 
 
-func _create_relic_row(parent: Control):
-	"""Создаёт ряд с реликвией"""
-	var hbox = HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 8)
-	parent.add_child(hbox)
-	
-	var relic_label = Label.new()
-	relic_label.text = "🏆 Реликвия:"
-	relic_label.add_theme_font_size_override("font_size", 11)
-	relic_label.add_theme_color_override("font_color", Color(0.8, 0.7, 0.5))
-	hbox.add_child(relic_label)
-	
-	var relic_slot = _create_equip_slot(InventoryEnums.EquipSlot.RELIC, "🏆")
-	relic_slot.custom_minimum_size = SMALL_SLOT_SIZE
-	hbox.add_child(relic_slot)
-
-
-func _create_artifact_slots(parent: Control):
-	"""Создаёт слоты артефактов"""
+func _create_artifact_row(parent: Control):
+	"""Создаёт ряд из 4 слотов артефактов"""
 	var hbox = HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 4)
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	parent.add_child(hbox)
 	
-	var artifact_slots_data = [
+	var artifact_slots = [
 		InventoryEnums.EquipSlot.ARTIFACT_1,
 		InventoryEnums.EquipSlot.ARTIFACT_2,
 		InventoryEnums.EquipSlot.ARTIFACT_3,
 		InventoryEnums.EquipSlot.ARTIFACT_4,
 	]
 	
-	for slot_type in artifact_slots_data:
-		var slot = _create_equip_slot(slot_type, "✨")
+	for slot_type in artifact_slots:
+		var slot = _create_equip_slot_with_icon(slot_type)
 		slot.custom_minimum_size = SMALL_SLOT_SIZE
 		hbox.add_child(slot)
 
 
-func _create_ring_slots(parent: Control):
-	"""Создаёт слоты колец"""
+func _create_ring_row(parent: Control):
+	"""Создаёт ряд из 4 слотов колец"""
 	var hbox = HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 4)
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	parent.add_child(hbox)
 	
-	var ring_slots_data = [
+	var ring_slots = [
 		InventoryEnums.EquipSlot.RING_1,
 		InventoryEnums.EquipSlot.RING_2,
 		InventoryEnums.EquipSlot.RING_3,
 		InventoryEnums.EquipSlot.RING_4,
 	]
 	
-	for slot_type in ring_slots_data:
-		var slot = _create_equip_slot(slot_type, "💍")
-		slot.custom_minimum_size = TINY_SLOT_SIZE
+	for slot_type in ring_slots:
+		var slot = _create_equip_slot_with_icon(slot_type)
+		slot.custom_minimum_size = SMALL_SLOT_SIZE
 		hbox.add_child(slot)
 
 
-func _create_jewelry_slots(parent: Control):
-	"""Создаёт слоты ожерелья и серёг"""
-	var hbox = HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 6)
-	parent.add_child(hbox)
+func _create_relic_section(parent: Control):
+	"""Создаёт секцию реликвии с надписью"""
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+	parent.add_child(vbox)
 	
-	# Серьга 1
-	var earring1 = _create_equip_slot(InventoryEnums.EquipSlot.EARRING_1, "💎")
-	earring1.custom_minimum_size = TINY_SLOT_SIZE
-	hbox.add_child(earring1)
+	# Надпись "Реликвия"
+	var label = Label.new()
+	label.text = "🏆 Реликвия"
+	label.add_theme_font_size_override("font_size", 12)
+	label.add_theme_color_override("font_color", Color(0.9, 0.8, 0.5))
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(label)
 	
-	# Ожерелье
-	var necklace = _create_equip_slot(InventoryEnums.EquipSlot.NECKLACE, "📿")
-	necklace.custom_minimum_size = SMALL_SLOT_SIZE
-	hbox.add_child(necklace)
+	# Центрирование слота
+	var center_box = HBoxContainer.new()
+	center_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_child(center_box)
 	
-	# Серьга 2
-	var earring2 = _create_equip_slot(InventoryEnums.EquipSlot.EARRING_2, "💎")
-	earring2.custom_minimum_size = TINY_SLOT_SIZE
-	hbox.add_child(earring2)
+	# Слот реликвии (чуть больше обычного)
+	var slot = _create_equip_slot_with_icon(InventoryEnums.EquipSlot.RELIC)
+	slot.custom_minimum_size = Vector2(52, 52)
+	center_box.add_child(slot)
 
 
-func _create_equip_slot(slot_type: InventoryEnums.EquipSlot, label_text: String) -> InventorySlot:
-	"""Создаёт один слот экипировки"""
+func _create_equip_slot_with_icon(slot_type: InventoryEnums.EquipSlot) -> InventorySlot:
+	"""
+	Создаёт слот экипировки с иконкой-подсказкой.
+	Иконка отображается серым цветом когда слот пустой.
+	"""
 	var slot = InventorySlot.new()
 	slot.slot_type = slot_type
 	slot.is_equipment_slot = true
 	slot.custom_minimum_size = SLOT_SIZE
 	
+	# Подключаем сигналы
 	slot.slot_clicked.connect(_on_equip_slot_clicked)
 	slot.slot_right_clicked.connect(_on_equip_slot_right_clicked)
 	slot.slot_hovered.connect(_on_slot_hovered)
 	slot.slot_unhovered.connect(_on_slot_unhovered)
 	slot.item_dropped.connect(_on_equip_item_dropped)
 	
+	# Сохраняем в словарь
 	equipment_slots[slot_type] = slot
 	
+	# Добавляем иконку-подсказку (серую)
+	_add_slot_hint_icon(slot, slot_type)
+	
 	return slot
+
+
+func _add_slot_hint_icon(slot: InventorySlot, slot_type: InventoryEnums.EquipSlot):
+	"""
+	Добавляет иконку-подсказку на пустой слот.
+	Иконка серая/белая и исчезает когда в слоте есть предмет.
+	
+	ИНСТРУКЦИЯ ПО ЗАМЕНЕ НА КАРТИНКИ:
+	1. Создайте папку res://assets/ui/slot_icons/
+	2. Положите туда PNG иконки (например: head.png, body.png, weapon.png)
+	3. Раскомментируйте код с TextureRect ниже
+	4. Закомментируйте код с Label (эмодзи)
+	"""
+	var icon_text = SLOT_ICONS.get(slot_type, "")
+	if icon_text.is_empty():
+		return
+	
+	# === ВАРИАНТ 1: ЭМОДЗИ (текущий) ===
+	var hint_label = Label.new()
+	hint_label.name = "HintIcon"
+	hint_label.text = icon_text
+	hint_label.add_theme_font_size_override("font_size", 20)
+	hint_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 0.6))  # Серый
+	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hint_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.add_child(hint_label)
+	
+	# === ВАРИАНТ 2: КАРТИНКИ (раскомментируйте когда будут спрайты) ===
+	# var icon_paths = {
+	#     InventoryEnums.EquipSlot.HEAD: "res://assets/ui/slot_icons/head.png",
+	#     InventoryEnums.EquipSlot.BODY: "res://assets/ui/slot_icons/body.png",
+	#     # ... добавьте остальные пути
+	# }
+	# 
+	# if icon_paths.has(slot_type):
+	#     var hint_icon = TextureRect.new()
+	#     hint_icon.name = "HintIcon"
+	#     hint_icon.texture = load(icon_paths[slot_type])
+	#     hint_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	#     hint_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	#     hint_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
+	#     hint_icon.offset_left = 8
+	#     hint_icon.offset_top = 8
+	#     hint_icon.offset_right = -8
+	#     hint_icon.offset_bottom = -8
+	#     hint_icon.modulate = Color(0.5, 0.5, 0.5, 0.6)  # Серый
+	#     hint_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	#     slot.add_child(hint_icon)
 
 
 # ===========================================
@@ -779,6 +899,13 @@ func show_inventory():
 	is_open = true
 	visible = true
 	
+	# === БЛОКИРУЕМ ИГРОКА ===
+	if Global and Global.current_player:
+		if Global.current_player.has_method("set_inventory_open"):
+			Global.current_player.set_inventory_open(true)
+		elif "is_inventory_open" in Global.current_player:
+			Global.current_player.is_inventory_open = true
+	
 	_refresh_inventory()
 	_refresh_equipment()
 	_refresh_hotbar()
@@ -795,6 +922,13 @@ func hide_inventory():
 	is_open = false
 	visible = false
 	tooltip_panel.visible = false
+	
+	# === РАЗБЛОКИРУЕМ ИГРОКА ===
+	if Global and Global.current_player:
+		if Global.current_player.has_method("set_inventory_open"):
+			Global.current_player.set_inventory_open(false)
+		elif "is_inventory_open" in Global.current_player:
+			Global.current_player.is_inventory_open = false
 	
 	inventory_closed.emit()
 
@@ -940,7 +1074,8 @@ func _refresh_inventory():
 			var show = false
 			match current_tab:
 				Tab.EQUIPMENT:
-					show = item.is_equippable()
+					# Экипировка БЕЗ артефактов (артефакты в отдельной вкладке)
+					show = item.is_equippable() and not item.is_artifact()
 				Tab.ARTIFACTS:
 					show = item.is_artifact()
 				Tab.CONSUMABLES:
@@ -990,24 +1125,18 @@ func _on_inventory_slot_right_clicked(slot: InventorySlot):
 	
 	var item = slot.current_item
 	
+	# === РАСХОДНИКИ: ПКМ = переместить в хотбар (НЕ использовать!) ===
 	if item.is_usable():
-		var item_id = item.get_item_id()
-		
-		if Inventory and Inventory.is_potion_used(item_id):
-			print("⚠️ Зелье уже использовано!")
-			return
-		
-		item_used.emit(item)
-		item.remove(1)
-		
-		if item.is_empty():
-			Inventory.remove_item_at(slot.slot_index)
-		
-		_refresh_inventory()
-		_refresh_hotbar()
-		_update_stats_display()
+		if Inventory:
+			var result = Inventory.move_item_to_hotbar(slot.slot_index)
+			if result >= 0:
+				_refresh_inventory()
+				_refresh_hotbar()
+			# Если не удалось переместить - ничего не делаем
+		return
 	
-	elif item.is_equippable() or item.is_artifact():
+	# === ЭКИПИРОВКА/АРТЕФАКТЫ: ПКМ = экипировать ===
+	if item.is_equippable() or item.is_artifact():
 		if Inventory.equip_item(slot.slot_index):
 			_refresh_inventory()
 			_refresh_equipment()
@@ -1030,12 +1159,49 @@ func _on_hotbar_slot_clicked(slot: InventorySlot, _button: int):
 	pass
 
 
+func _on_hotbar_slot_right_clicked(slot: InventorySlot):
+	"""ПКМ по слоту хотбара - возвращает расходник в инвентарь"""
+	if not slot.current_item:
+		return
+	
+	if Inventory:
+		if Inventory.move_hotbar_to_inventory(slot.hotbar_index):
+			_refresh_inventory()
+			_refresh_hotbar()
+
+
 # ===========================================
 # DRAG & DROP
 # ===========================================
 
 func _on_inventory_item_dropped(from_slot: InventorySlot, to_slot: InventorySlot):
-	if Inventory:
+	if not Inventory:
+		return
+	
+	# Перетаскивание из хотбара в инвентарь
+	if from_slot.is_hotbar_slot and not to_slot.is_hotbar_slot:
+		# Если целевой слот пуст - просто перемещаем
+		if to_slot.current_item == null:
+			var item = Inventory.hotbar_slots[from_slot.hotbar_index]
+			if item:
+				Inventory.inventory_slots[to_slot.slot_index] = item
+				Inventory.hotbar_slots[from_slot.hotbar_index] = null
+				Inventory.hotbar_changed.emit(from_slot.hotbar_index)
+				Inventory.inventory_changed.emit()
+		# Если занят расходником - меняем местами
+		elif to_slot.current_item.is_usable():
+			var hotbar_item = Inventory.hotbar_slots[from_slot.hotbar_index]
+			var inv_item = Inventory.inventory_slots[to_slot.slot_index]
+			Inventory.inventory_slots[to_slot.slot_index] = hotbar_item
+			Inventory.hotbar_slots[from_slot.hotbar_index] = inv_item
+			Inventory.hotbar_changed.emit(from_slot.hotbar_index)
+			Inventory.inventory_changed.emit()
+		_refresh_inventory()
+		_refresh_hotbar()
+		return
+	
+	# Обычное перемещение внутри инвентаря
+	if from_slot.current_item:
 		Inventory.move_item(from_slot.slot_index, to_slot.slot_index)
 		_refresh_inventory()
 
@@ -1059,8 +1225,23 @@ func _on_hotbar_item_dropped(from_slot: InventorySlot, to_slot: InventorySlot):
 	if not from_slot.current_item or not Inventory:
 		return
 	
-	if from_slot.current_item.is_usable():
-		Inventory.set_hotbar_item(to_slot.slot_index, from_slot.slot_index)
+	# Только расходники можно класть в хотбар
+	if not from_slot.current_item.is_usable():
+		return
+	
+	# Перетаскивание из инвентаря в хотбар
+	if not from_slot.is_hotbar_slot and to_slot.is_hotbar_slot:
+		Inventory.move_item_to_specific_hotbar_slot(from_slot.slot_index, to_slot.hotbar_index)
+		_refresh_inventory()
+		_refresh_hotbar()
+	
+	# Перетаскивание из хотбара в хотбар (обмен местами)
+	elif from_slot.is_hotbar_slot and to_slot.is_hotbar_slot:
+		var temp = Inventory.hotbar_slots[from_slot.hotbar_index]
+		Inventory.hotbar_slots[from_slot.hotbar_index] = Inventory.hotbar_slots[to_slot.hotbar_index]
+		Inventory.hotbar_slots[to_slot.hotbar_index] = temp
+		Inventory.hotbar_changed.emit(from_slot.hotbar_index)
+		Inventory.hotbar_changed.emit(to_slot.hotbar_index)
 		_refresh_hotbar()
 
 
@@ -1097,3 +1278,46 @@ func _process(_delta):
 	
 	if is_open:
 		_update_stats_display()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ИНСТРУКЦИЯ: КАК ЗАМЕНИТЬ ЭМОДЗИ НА КАРТИНКИ
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Шаг 1: Создайте папку для иконок
+#        res://assets/ui/slot_icons/
+#
+# Шаг 2: Подготовьте PNG иконки (рекомендуемый размер 32x32 или 48x48):
+#        - head.png       (шлем)
+#        - body.png       (нагрудник)
+#        - legs.png       (штаны)
+#        - feet.png       (сапоги)
+#        - hands.png      (перчатки)
+#        - shoulders.png  (наплечники)
+#        - bracers.png    (наручи)
+#        - belt.png       (пояс)
+#        - weapon.png     (оружие)
+#        - offhand.png    (щит/орб)
+#        - necklace.png   (ожерелье)
+#        - amulet.png     (кулон)
+#        - earring.png    (серьга)
+#        - ring.png       (кольцо)
+#        - artifact.png   (артефакт)
+#        - relic.png      (реликвия)
+#        - potion.png     (зелье - для хотбара)
+#
+# Шаг 3: Замените константу SLOT_ICONS в начале файла на пути к картинкам:
+#
+#        const SLOT_ICON_PATHS = {
+#            InventoryEnums.EquipSlot.HEAD: "res://assets/ui/slot_icons/head.png",
+#            InventoryEnums.EquipSlot.BODY: "res://assets/ui/slot_icons/body.png",
+#            # ... и так далее для всех слотов
+#        }
+#
+# Шаг 4: В функции _add_slot_hint_icon() замените Label на TextureRect:
+#        Раскомментируйте блок "ВАРИАНТ 2: КАРТИНКИ" и закомментируйте "ВАРИАНТ 1: ЭМОДЗИ"
+#
+# Шаг 5: Для хотбара - измените константу HOTBAR_ICON на путь к картинке
+#        и обновите функцию _create_hotbar_slot() аналогично
+#
+# ═══════════════════════════════════════════════════════════════════════════════

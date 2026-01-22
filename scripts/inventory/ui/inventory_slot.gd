@@ -216,6 +216,10 @@ func set_locked(locked: bool):
 
 func _update_visual():
 	"""Обновляет визуальное отображение слота"""
+	
+	# Получаем иконку-подсказку (эмодзи или картинку)
+	var hint_icon = get_node_or_null("HintIcon")
+	
 	if current_item and current_item.data:
 		# Есть предмет
 		icon_texture.texture = current_item.get_icon()
@@ -233,6 +237,10 @@ func _update_visual():
 		
 		# Скрываем иконку типа слота
 		slot_type_icon.visible = false
+		
+		# Скрываем иконку-подсказку
+		if hint_icon:
+			hint_icon.visible = false
 	else:
 		# Пустой слот
 		icon_texture.texture = null
@@ -243,6 +251,10 @@ func _update_visual():
 		# Показываем иконку типа слота (для экипировки)
 		if is_equipment_slot:
 			slot_type_icon.visible = true
+		
+		# Показываем иконку-подсказку
+		if hint_icon:
+			hint_icon.visible = true
 	
 	# Обновляем фон
 	_update_background()

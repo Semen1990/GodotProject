@@ -83,6 +83,10 @@ func _on_menu_pressed():
 	# ВАЖНО: Сначала снимаем паузу
 	get_tree().paused = false
 	
+	# === Очищаем инвентарь при выходе в меню ===
+	if Inventory:
+		Inventory.clear_all()
+	
 	# ВАЖНО: Полный сброс данных через Global
 	Global.reset_all_for_new_game()
 	

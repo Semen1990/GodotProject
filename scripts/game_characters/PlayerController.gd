@@ -25,6 +25,11 @@ func _input(event):
 	if character.is_dead:
 		return
 	
+	# === БЛОКИРОВКА ПРИ ОТКРЫТОМ ИНВЕНТАРЕ ===
+	# Не обрабатываем боевые действия когда открыт инвентарь
+	if character.is_inventory_open:
+		return
+	
 	# === АТАКА (ЛКМ или настроенная кнопка) ===
 	if event.is_action_pressed("attack"):
 		if character.has_method("attack"):

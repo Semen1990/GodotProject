@@ -267,6 +267,12 @@ func _on_equipment_stats_changed(stats: Dictionary):
 	
 	print("")
 	print("📊 === БОНУСЫ ОТ ЭКИПИРОВКИ ===")
+	print("  [DEBUG] current_health до: %d" % current_player.current_health)
+	print("  [DEBUG] max_health до: %d" % current_player.max_health)
+	print("  [DEBUG] base_player_max_health: %d" % base_player_max_health)
+	
+	var old_bonus_hp = equipment_bonus_hp
+	var old_bonus_mana = equipment_bonus_mana
 	
 	equipment_bonus_hp = stats.get("max_hp", 0)
 	equipment_bonus_mana = stats.get("max_mana", 0)
@@ -291,15 +297,21 @@ func _on_equipment_stats_changed(stats: Dictionary):
 	# === СРАЗУ ОБНОВЛЯЕМ UI БРОНИ ===
 	_update_armor_ui()
 	
-	# === ПРИМЕНЯЕМ БОНУС HP ===
-	if equipment_bonus_hp != 0 and "max_health" in current_player:
-		var old_max = current_player.max_health
-		current_player.max_health = base_player_max_health + equipment_bonus_hp
+	# === ПРИМЕНЯЕМ БОНУС HP (ВСЕГДА пересчитываем!) ===
+	if "max_health" in current_player:
+		var new_max_health = base_player_max_health + equipment_bonus_hp
+		var old_max_health = current_player.max_health
+		current_player.max_health = new_max_health
 		
-		# Если увеличили макс HP - добавляем текущее
-		if current_player.max_health > old_max:
-			current_player.current_health += (current_player.max_health - old_max)
-			current_player.current_health = mini(current_player.current_health, current_player.max_health)
+		# Корректируем текущее здоровье
+		if new_max_health > old_max_health:
+			# Увеличили макс HP - добавляем разницу к текущему
+			current_player.current_health += (new_max_health - old_max_health)
+		elif new_max_health < old_max_health:
+			# Уменьшили макс HP - ограничиваем текущее
+			current_player.current_health = mini(current_player.current_health, new_max_health)
+		
+		current_player.current_health = maxi(1, current_player.current_health)  # Минимум 1 HP
 		
 		# СРАЗУ обновляем UI
 		if game_ui:
@@ -307,16 +319,21 @@ func _on_equipment_stats_changed(stats: Dictionary):
 				game_ui.update_max_health(current_player.max_health)
 			game_ui.update_health(current_player.current_health)
 		
-		print("  Итого макс HP: %d" % current_player.max_health)
+		print("  [DEBUG] current_health после: %d" % current_player.current_health)
+		print("  Итого макс HP: %d (было: %d)" % [current_player.max_health, old_max_health])
 	
-	# === ПРИМЕНЯЕМ БОНУС МАНЫ ===
-	if equipment_bonus_mana != 0 and "max_mana" in current_player:
-		var old_max = current_player.max_mana
-		current_player.max_mana = base_player_max_mana + equipment_bonus_mana
+	# === ПРИМЕНЯЕМ БОНУС МАНЫ (ВСЕГДА пересчитываем!) ===
+	if "max_mana" in current_player:
+		var new_max_mana = base_player_max_mana + equipment_bonus_mana
+		var old_max_mana = current_player.max_mana
+		current_player.max_mana = new_max_mana
 		
-		if current_player.max_mana > old_max:
-			current_player.current_mana += (current_player.max_mana - old_max)
-			current_player.current_mana = mini(current_player.current_mana, current_player.max_mana)
+		if new_max_mana > old_max_mana:
+			current_player.current_mana += (new_max_mana - old_max_mana)
+		elif new_max_mana < old_max_mana:
+			current_player.current_mana = mini(current_player.current_mana, new_max_mana)
+		
+		current_player.current_mana = maxi(0, current_player.current_mana)
 		
 		# СРАЗУ обновляем UI
 		if game_ui:
