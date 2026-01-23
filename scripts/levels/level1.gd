@@ -239,6 +239,9 @@ func _apply_potion_effect(effect: Dictionary):
 			var damage_bonus = int(value)
 			potion_bonus_damage += damage_bonus
 			print("⚔️ +%d урона" % damage_bonus)
+			
+			# ВАЖНО: Пересчитываем урон персонажа
+			_recalculate_player_damage()
 
 
 func _show_heal_effect():
@@ -365,6 +368,21 @@ func _update_armor_ui():
 		game_ui.update_armor(current_player.armor)
 
 
+func _recalculate_player_damage():
+	"""Пересчитывает урон персонажа (база + экипировка + зелье)"""
+	if not current_player:
+		return
+	
+	var total_damage = base_player_damage + equipment_bonus_damage + potion_bonus_damage
+	if "current_damage" in current_player:
+		current_player.current_damage = total_damage
+		print("⚔️ Урон пересчитан: %d (база %d + экип %d + зелье %d)" % [total_damage, base_player_damage, equipment_bonus_damage, potion_bonus_damage])
+	
+	# Обновляем UI инвентаря, чтобы показать новый урон
+	if inventory_ui and inventory_ui.has_method("update_stats"):
+		inventory_ui.update_stats()
+
+
 func _on_equipment_changed():
 	"""Обработчик изменения экипировки"""
 	_check_artifact_abilities()
@@ -429,6 +447,9 @@ func on_room_changed():
 	if current_player and current_player.has_method("reset_potion_bonuses"):
 		current_player.reset_potion_bonuses()
 	
+	# Пересчитываем урон после сброса
+	_recalculate_player_damage()
+	
 	if Inventory:
 		Inventory.reset_for_new_room()
 
@@ -442,6 +463,9 @@ func _on_player_died():
 	if current_player and current_player.has_method("reset_potion_bonuses"):
 		current_player.reset_potion_bonuses()
 	
+	# Пересчитываем урон после сброса
+	_recalculate_player_damage()
+	
 	if Inventory:
 		Inventory.reset_on_death()
 
@@ -451,6 +475,9 @@ func _on_player_revived():
 	
 	# Перо Феникса использовано - убираем из экипировки
 	_consume_revival_artifact()
+	
+	# Пересчитываем урон (зелья сброшены при смерти)
+	_recalculate_player_damage()
 
 
 func _consume_revival_artifact():

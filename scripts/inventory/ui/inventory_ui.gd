@@ -969,6 +969,11 @@ func _update_character_display():
 				character_sprite.play(anims[0])
 
 
+func update_stats():
+	"""Публичный метод для обновления отображения статистики"""
+	_update_stats_display()
+
+
 func _update_stats_display():
 	var player = null
 	if Global and Global.current_player:
