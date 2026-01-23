@@ -511,7 +511,7 @@ metadata/_edit_group_ = true
 texture_filter = 1
 scale = Vector2(4, 4)
 sprite_frames = SubResource("SpriteFrames_ksllg")
-animation = &"taking damage"
+animation = &"spellcast"
 autoplay = "idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

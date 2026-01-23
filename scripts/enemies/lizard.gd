@@ -1,16 +1,19 @@
 extends CharacterBody2D
 
 # ===========================================
-# LIZARD - ВРАГ (ФИНАЛЬНАЯ ВЕРСИЯ v2.0)
+# LIZARD - ВРАГ С СИСТЕМОЙ СОХРАНЕНИЯ СОСТОЯНИЯ
 # ===========================================
 
 signal died()
 signal health_changed(new_health)
 
+# Тип врага для статистики
+@export_enum("simple", "elite", "boss") var enemy_type: String = "simple"
+
 @export var max_health: int = 6
 @export var current_health: int = 6
-@export var damage: int = 2
-@export var move_speed: float = 80.0
+@export var damage: int = 5
+@export var move_speed: float = 100.0
 @export var chase_speed: float = 120.0
 @export var attack_range: float = 120.0
 @export var detection_range: float = 150.0
@@ -39,6 +42,10 @@ var gravity: int = ProjectSettings.get_setting("physics/2d/default_gravity")
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var detection_area: Area2D = $DetectionArea
 
+# Флаг смерти врага (для сохранения состояния)
+var is_alive: bool = true
+var is_active: bool = true
+
 func _ready():
 	print("🦎 Lizard создан! HP:", max_health, " DMG:", damage)
 	start_position = global_position
@@ -53,8 +60,18 @@ func _ready():
 		animated_sprite.frame_changed.connect(_on_frame_changed)
 	
 	_change_state(State.IDLE)
+	
+	# Проверяем, не был ли враг уже убит (например, при возрождении игрока)
+	if not is_alive:
+		_set_dead_state()
+		return
 
 func _physics_process(delta):
+	# Если враг мертв или неактивен - не обрабатываем физику
+	if not is_alive or not is_active:
+		velocity = Vector2.ZERO
+		return
+	
 	# Гравитация
 	if not is_on_floor():
 		velocity.y += gravity * delta
@@ -84,11 +101,80 @@ func _physics_process(delta):
 	move_and_slide()
 
 # ===========================================
+# СОХРАНЕНИЕ И ЗАГРУЗКА СОСТОЯНИЯ
+# ===========================================
+
+func save_state() -> Dictionary:
+	"""Сохраняет текущее состояние врага"""
+	return {
+		"is_alive": is_alive,
+		"current_health": current_health,
+		"global_position": global_position,
+		"current_state": current_state,
+		"patrol_direction": patrol_direction,
+		"target": null,  # Не сохраняем цель, так как она может измениться
+		"start_position": start_position
+	}
+
+func load_state(state: Dictionary):
+	"""Загружает сохраненное состояние врага"""
+	is_alive = state.get("is_alive", true)
+	current_health = state.get("current_health", max_health)
+	
+	# Если враг мертв - устанавливаем мертвое состояние
+	if not is_alive:
+		_set_dead_state()
+		return
+	
+	# Если враг жив - восстанавливаем состояние
+	is_active = true
+	
+	# Восстанавливаем здоровье
+	health_changed.emit(current_health)
+	
+	# Восстанавливаем позицию
+	var saved_position = state.get("global_position")
+	if saved_position:
+		global_position = saved_position
+	
+	# Восстанавливаем стартовую позицию
+	var saved_start_position = state.get("start_position")
+	if saved_start_position:
+		start_position = saved_start_position
+	
+	# Восстанавливаем направление патрулирования
+	patrol_direction = state.get("patrol_direction", 1)
+	
+	# Восстанавливаем состояние
+	var saved_state = state.get("current_state", State.IDLE)
+	_change_state(saved_state)
+	
+	print("🦎 Состояние ящерицы загружено: HP=", current_health, "/", max_health, " состояние=", State.keys()[current_state])
+
+func _set_dead_state():
+	"""Устанавливает мертвое состояние врага (после загрузки)"""
+	is_alive = false
+	is_active = false
+	current_state = State.DEAD
+	
+	# Отключаем видимость
+	visible = false
+	
+	# Отключаем коллизии
+	if collision_shape:
+		collision_shape.set_deferred("disabled", true)
+	if detection_area:
+		detection_area.set_deferred("monitoring", false)
+		detection_area.set_deferred("monitorable", false)
+	
+	print("🦎 Ящерица загружена как мертвая")
+
+# ===========================================
 # СОСТОЯНИЯ
 # ===========================================
 
 func _change_state(new_state: State):
-	if current_state == State.DEAD:
+	if current_state == State.DEAD and not is_alive:
 		return
 	if current_state == new_state:
 		return
@@ -190,9 +276,8 @@ func _process_chase():
 		velocity.x = 0
 		return
 	
-	# ИСПРАВЛЕНИЕ: Не подходим слишком близко к игроку (чтобы не зажимать)
+	# Не подходим слишком близко к игроку (чтобы не зажимать)
 	if dist <= MIN_DISTANCE_TO_PLAYER:
-		# Отходим немного назад
 		velocity.x = -sign(dir_x) * move_speed * 0.5
 		return
 	
@@ -209,6 +294,10 @@ func _face_target():
 # ===========================================
 
 func _on_detection_entered(body):
+	# Если враг мертв - не реагируем на игрока
+	if not is_alive:
+		return
+	
 	if body.is_in_group("player"):
 		if body.get("is_dead") == true:
 			return
@@ -217,6 +306,10 @@ func _on_detection_entered(body):
 		_change_state(State.CHASE)
 
 func _on_detection_exited(body):
+	# Если враг мертв - не реагируем
+	if not is_alive:
+		return
+	
 	if body == target:
 		print("🦎 Потерял игрока")
 		target = null
@@ -268,13 +361,39 @@ func _on_animation_finished():
 				_change_state(State.PATROL)
 		
 		State.DEAD:
-			# Плавное исчезновение после анимации смерти
-			var tw = create_tween()
-			tw.tween_property(animated_sprite, "modulate:a", 0.0, 1.0)
-			tw.tween_callback(queue_free)
+			# После анимации смерти скрываем врага, НЕ удаляем
+			_on_death_completed()
+
+func _on_death_completed():
+	"""Выполняется после завершения анимации смерти"""
+	is_alive = false
+	is_active = false
+	
+	# Плавное исчезновение
+	var tw = create_tween()
+	tw.tween_property(animated_sprite, "modulate:a", 0.0, 1.0)
+	tw.tween_callback(_hide_enemy)
+	
+	print("🦎 Ящерица мертва, скрываем...")
+
+func _hide_enemy():
+	"""Скрывает врага после смерти"""
+	visible = false
+	
+	# Полностью отключаем коллизии и мониторинг
+	if collision_shape:
+		collision_shape.disabled = true
+	if detection_area:
+		detection_area.monitoring = false
+		detection_area.monitorable = false
+	
+	# Останавливаем обработку
+	set_physics_process(false)
+	
+	print("🦎 Ящерица скрыта (не удалена)")
 
 # ===========================================
-# УРОН
+# УРОН И СМЕРТЬ
 # ===========================================
 
 func _deal_damage():
@@ -291,15 +410,21 @@ func _deal_damage():
 	if dist <= attack_range + 30:
 		if target.has_method("take_damage"):
 			print("🦎 >>> УРОН:", damage, " <<<")
-			target.take_damage(damage, "physical")
+			# Передаём источник урона для статистики
+			target.take_damage(damage, "physical", "Ящерица с копьём")
 
 func take_damage(amount: int, _type: String = "physical"):
-	if current_state == State.DEAD:
+	# Если враг уже мертв - не получаем урон
+	if not is_alive or current_state == State.DEAD:
 		return
 	
 	current_health = max(0, current_health - amount)
 	health_changed.emit(current_health)
 	print("🦎 HP:", current_health, "/", max_health)
+	
+	# Обновляем статистику урона
+	if Global and Global.has_method("add_damage_dealt"):
+		Global.add_damage_dealt(amount)
 	
 	# Красная вспышка ВСЕГДА (даже при смерти)
 	_show_damage_flash()
@@ -321,5 +446,35 @@ func _show_damage_flash():
 
 func _die():
 	print("💀 Lizard погиб!")
+	
+	# Обновляем статистику убийств
+	if Global and Global.has_method("add_enemy_killed"):
+		Global.add_enemy_killed(enemy_type)
+	
+	# Устанавливаем состояние смерти
+	is_alive = false
+	
 	_change_state(State.DEAD)
 	died.emit()
+
+# ===========================================
+# АКТИВАЦИЯ/ДЕАКТИВАЦИЯ (для оптимизации)
+# ===========================================
+
+func activate():
+	"""Активирует врага (если он жив)"""
+	if is_alive:
+		is_active = true
+		set_physics_process(true)
+		visible = true
+
+func deactivate():
+	"""Деактивирует врага"""
+	is_active = false
+	set_physics_process(false)
+	
+	# Останавливаем анимацию
+	if animated_sprite:
+		animated_sprite.stop()
+	
+	print("🦎 Ящерица деактивирована")

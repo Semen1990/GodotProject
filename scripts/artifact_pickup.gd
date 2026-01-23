@@ -1,139 +1,211 @@
-# artifact_pickup.gd
 extends Area2D
 
+# ===========================================
+# ARTIFACT PICKUP - ИНТЕГРАЦИЯ С ИНВЕНТАРЁМ v2
+# ===========================================
+#
+# ИСПРАВЛЕНО:
+# - Иконки загружаются из инвентарной базы данных
+# - Артефакты добавляются в инвентарь (не в Global)
+
 @export var artifact_id: String = "hermes_wings"
-@export var float_amplitude: float = 8.0
+@export var float_height: float = 10.0
 @export var float_speed: float = 2.0
 
-var initial_position: Vector2
+# Маппинг artifact_id → ID в инвентарной базе
+const ARTIFACT_ID_MAP = {
+	"hermes_wings": 201,
+	"phoenix_feather": 202,
+	"vampire_ring": 203,
+	"berserker_amulet": 204,
+}
 
-# Ноды
-var icon_sprite: Sprite2D
-var name_label: Label
+var initial_y: float
+var time: float = 0.0
+var is_collected: bool = false
+
+@onready var sprite: Sprite2D = $Sprite2D
+@onready var collision: CollisionShape2D = $CollisionShape2D
+@onready var label: Label = $Label
 
 func _ready():
-	print("✨ Артефакт создан: ", artifact_id)
-	initial_position = position
+	print("🎁 Артефакт создан: ", artifact_id)
 	
-	# Удаляем старые дочерние элементы
-	for child in get_children():
-		if child is Label or child is Sprite2D:
-			child.queue_free()
+	initial_y = position.y
 	
+	# Откладываем проверку на 1 кадр для надёжности
+	# (Инвентарь очищается в death_menu ПЕРЕД загрузкой сцены)
 	await get_tree().process_frame
 	
-	# Создаём визуал
-	_create_icon()
-	_create_name_label()
-	_ensure_collision()
-	
-	# Подключаем сигналы
-	if not body_entered.is_connected(_on_body_entered):
-		body_entered.connect(_on_body_entered)
-	
-	# Анимация парения
-	_start_float_animation()
-
-func _create_icon():
-	"""Создаёт иконку артефакта"""
-	icon_sprite = Sprite2D.new()
-	icon_sprite.name = "ArtifactIcon"
-	
-	# Создаём текстуру - ромб
-	var image = Image.create(32, 32, false, Image.FORMAT_RGBA8)
-	var rarity_color = _get_rarity_color()
-	
-	for x in range(32):
-		for y in range(32):
-			var center_x = 16
-			var center_y = 16
-			var dist = abs(x - center_x) + abs(y - center_y)
-			
-			if dist <= 12:
-				image.set_pixel(x, y, rarity_color)
-			elif dist <= 14:
-				image.set_pixel(x, y, rarity_color.darkened(0.3))
-			else:
-				image.set_pixel(x, y, Color(0, 0, 0, 0))
-	
-	var texture = ImageTexture.create_from_image(image)
-	icon_sprite.texture = texture
-	icon_sprite.scale = Vector2(1.5, 1.5)
-	
-	add_child(icon_sprite)
-	
-	# Эффект пульсации
-	var tween = create_tween()
-	tween.set_loops()
-	tween.tween_property(icon_sprite, "scale", Vector2(1.7, 1.7), 0.5)
-	tween.tween_property(icon_sprite, "scale", Vector2(1.5, 1.5), 0.5)
-
-func _create_name_label():
-	"""Создаёт название артефакта"""
-	if not Global.artifacts_database.has(artifact_id):
+	# Проверяем, есть ли уже этот артефакт
+	if _check_already_collected():
+		print("⚠️ Артефакт уже в инвентаре, удаляем...")
+		queue_free()
 		return
 	
-	var artifact_data = Global.artifacts_database[artifact_id]
+	# Настраиваем визуал ИЗ ИНВЕНТАРНОЙ БАЗЫ ДАННЫХ
+	_setup_artifact_from_inventory()
 	
-	name_label = Label.new()
-	name_label.name = "NameLabel"
-	name_label.text = artifact_data["name"]
-	name_label.add_theme_font_size_override("font_size", 12)
-	name_label.add_theme_color_override("font_color", _get_rarity_color())
-	name_label.position = Vector2(-50, -45)
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.custom_minimum_size = Vector2(100, 20)
-	
-	add_child(name_label)
+	body_entered.connect(_on_body_entered)
 
-func _get_rarity_color() -> Color:
-	"""Возвращает цвет по редкости"""
-	if not Global.artifacts_database.has(artifact_id):
-		return Color.WHITE
-	
-	var rarity = Global.artifacts_database[artifact_id].get("rarity", "common")
-	
-	match rarity:
-		"common":
-			return Color(0.7, 0.7, 0.7, 1.0)
-		"rare":
-			return Color(0.3, 0.6, 1.0, 1.0)
-		"epic":
-			return Color(0.8, 0.3, 0.9, 1.0)
-		"legendary":
-			return Color(1.0, 0.85, 0.0, 1.0)
-		_:
-			return Color.WHITE
 
-func _ensure_collision():
-	"""Создаёт коллизию если её нет"""
-	var has_collision = false
-	for child in get_children():
-		if child is CollisionShape2D:
-			has_collision = true
-			break
+func _check_already_collected() -> bool:
+	"""Проверяет, есть ли артефакт в инвентаре"""
+	if not Inventory or not Inventory.item_database:
+		return false
 	
-	if not has_collision:
-		var collision = CollisionShape2D.new()
-		var shape = CircleShape2D.new()
-		shape.radius = 25
-		collision.shape = shape
-		add_child(collision)
+	var inv_id = ARTIFACT_ID_MAP.get(artifact_id, -1)
+	if inv_id < 0:
+		return false
+	
+	# Проверяем в инвентаре
+	if Inventory.has_item(inv_id):
+		return true
+	
+	# Проверяем в экипировке
+	for slot in [
+		InventoryEnums.EquipSlot.ARTIFACT_1,
+		InventoryEnums.EquipSlot.ARTIFACT_2,
+		InventoryEnums.EquipSlot.ARTIFACT_3,
+		InventoryEnums.EquipSlot.ARTIFACT_4,
+	]:
+		var equipped = Inventory.get_equipped_item(slot)
+		if equipped and equipped.get_item_id() == inv_id:
+			return true
+	
+	return false
 
-func _start_float_animation():
-	"""Анимация парения"""
-	var tween = create_tween()
-	tween.set_loops()
-	tween.tween_property(self, "position:y", initial_position.y - float_amplitude, float_speed / 2).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_property(self, "position:y", initial_position.y + float_amplitude, float_speed / 2).set_ease(Tween.EASE_IN_OUT)
+
+func _setup_artifact_from_inventory():
+	"""Настраивает визуал из инвентарной базы данных"""
+	if not Inventory or not Inventory.item_database:
+		print("⚠️ Инвентарь не доступен, используем запасной визуал")
+		_set_fallback_visuals()
+		return
+	
+	var inv_id = ARTIFACT_ID_MAP.get(artifact_id, -1)
+	if inv_id < 0:
+		print("⚠️ Артефакт '%s' не найден в маппинге" % artifact_id)
+		_set_fallback_visuals()
+		return
+	
+	var item_data = Inventory.item_database.get_item_by_id(inv_id)
+	if not item_data:
+		print("⚠️ Предмет ID %d не найден в базе" % inv_id)
+		_set_fallback_visuals()
+		return
+	
+	# === ИКОНКА ИЗ БАЗЫ ДАННЫХ ===
+	if item_data.icon:
+		sprite.texture = item_data.icon
+		print("✅ Иконка загружена из инвентарной базы: ", item_data.display_name)
+	else:
+		_create_color_sprite_by_rarity(item_data.rarity)
+	
+	# === НАЗВАНИЕ ИЗ БАЗЫ ДАННЫХ ===
+	if label:
+		label.text = item_data.display_name
+		
+		# Цвет по редкости
+		label.modulate = InventoryEnums.get_rarity_color(item_data.rarity)
+
+
+func _create_color_sprite_by_rarity(rarity: InventoryEnums.ItemRarity):
+	"""Создаёт цветной спрайт по редкости"""
+	var color = InventoryEnums.get_rarity_color(rarity)
+	
+	var image = Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	image.fill(color)
+	var texture = ImageTexture.create_from_image(image)
+	sprite.texture = texture
+
+
+func _set_fallback_visuals():
+	"""Запасные визуальные эффекты"""
+	print("🛠️ Используем запасной визуал")
+	
+	var hash_color = _string_to_color(artifact_id)
+	var image = Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	image.fill(hash_color)
+	var texture = ImageTexture.create_from_image(image)
+	sprite.texture = texture
+	
+	if label:
+		label.text = artifact_id.capitalize().replace("_", " ")
+		label.modulate = Color.WHITE
+
+
+func _string_to_color(text: String) -> Color:
+	var hash = text.hash()
+	var r = float((hash >> 16) & 0xFF) / 255.0
+	var g = float((hash >> 8) & 0xFF) / 255.0
+	var b = float(hash & 0xFF) / 255.0
+	return Color(r, g, b)
+
+
+func _process(delta):
+	if not is_collected:
+		time += delta * float_speed
+		position.y = initial_y + sin(time) * float_height
+
 
 func _on_body_entered(body):
-	"""Когда игрок касается артефакта"""
-	if not body.is_in_group("player") and not body.has_method("apply_artifacts"):
+	"""Обработка столкновения с игроком"""
+	if is_collected:
 		return
 	
-	print("✨ Игрок подобрал артефакт: ", artifact_id)
+	if not (body.is_in_group("player") or body.has_method("take_damage")):
+		return
 	
-	if Global.collect_artifact(artifact_id):
-		# Удаляем артефакт БЕЗ эффектов (чтобы не оставался квадратик)
-		queue_free()
+	print("🎁 Игрок подбирает артефакт: ", artifact_id)
+	
+	# Добавляем в ИНВЕНТАРЬ
+	var success = _add_to_inventory()
+	
+	if success:
+		print("✅ Артефакт добавлен в инвентарь!")
+		_collect_artifact_effect()
+	else:
+		print("❌ Не удалось добавить артефакт")
+		# Fallback - используем старую систему Global
+		if Global and Global.has_method("collect_artifact"):
+			Global.collect_artifact(artifact_id)
+		_collect_artifact_effect()
+
+
+func _add_to_inventory() -> bool:
+	"""Добавляет артефакт в инвентарь"""
+	if not Inventory:
+		return false
+	
+	var inv_id = ARTIFACT_ID_MAP.get(artifact_id, -1)
+	if inv_id < 0:
+		print("⚠️ Артефакт '%s' не найден в маппинге" % artifact_id)
+		return false
+	
+	# Проверяем уникальность
+	if _check_already_collected():
+		print("⚠️ Артефакт уже есть!")
+		return false
+	
+	# Добавляем в инвентарь
+	var remaining = Inventory.add_item_by_id(inv_id, 1)
+	
+	return remaining == 0
+
+
+func _collect_artifact_effect():
+	"""Визуальный эффект при подборе"""
+	is_collected = true
+	
+	if collision:
+		collision.set_deferred("disabled", true)
+	
+	var tween = create_tween()
+	tween.tween_property(sprite, "scale", sprite.scale * 1.5, 0.3)
+	tween.parallel().tween_property(sprite, "modulate:a", 0, 0.3)
+	if label:
+		tween.parallel().tween_property(label, "modulate:a", 0, 0.3)
+	tween.tween_callback(queue_free)
+	
+	print("✨ Артефакт подобран!")

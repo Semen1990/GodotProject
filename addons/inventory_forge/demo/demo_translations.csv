@@ -1,0 +1,13 @@
+keys,en,it
+DEMO_HEALTH_POTION_NAME,Health Potion,Pozione Vita
+DEMO_HEALTH_POTION_DESC,Restores 50 HP instantly.,Ripristina 50 HP istantaneamente.
+DEMO_IRON_SWORD_NAME,Iron Sword,Spada di Ferro
+DEMO_IRON_SWORD_DESC,A sturdy iron sword. +10 ATK,Una robusta spada di ferro. +10 ATK
+DEMO_MAGIC_SCROLL_NAME,Magic Scroll,Pergamena Magica
+DEMO_MAGIC_SCROLL_DESC,Increases ATK by 20 for 30 seconds.,Aumenta ATK di 20 per 30 secondi.
+DEMO_QUEST_KEY_NAME,Ancient Key,Chiave Antica
+DEMO_QUEST_KEY_DESC,A mysterious key for the main quest.,Una chiave misteriosa per la quest principale.
+DEMO_LEATHER_ARMOR_NAME,Leather Armor,Armatura di Cuoio
+DEMO_LEATHER_ARMOR_DESC,Basic armor. +15 DEF. Requires Level 5,Armatura base. +15 DEF. Richiede Livello 5
+DEMO_RARE_GEM_NAME,Rare Gem,Gemma Rara
+DEMO_RARE_GEM_DESC,A precious gem used for crafting.,Una gemma preziosa usata per il crafting.
