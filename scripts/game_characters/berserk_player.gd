@@ -28,6 +28,9 @@ func _ready():
 	current_mana = 0
 	armor = 0
 	
+	# Базовый урон
+	current_damage = BASE_DAMAGE
+	
 	# === ФИЗИКА ===
 	jump_velocity = -400
 	base_speed = 220
@@ -133,26 +136,26 @@ func _execute_attack():
 
 func _calculate_damage() -> int:
 	"""Рассчитывает урон в зависимости от стадии комбо"""
-	var damage = BASE_DAMAGE
+	var damage = current_damage
 	
 	match combo_stage:
 		1:
 			# Первая атака: базовый урон
-			damage = BASE_DAMAGE
+			damage = current_damage
 			print("  → Обычная атака")
 		
 		2:
 			# Вторая атака: 50% шанс x2
-			damage = BASE_DAMAGE
+			damage = current_damage
 			if randf() < 0.5:
-				damage = BASE_DAMAGE * 2
+				damage = current_damage * 2
 				print("  → ⚡ КРИТИЧЕСКИЙ УДАР x2!")
 			else:
 				print("  → Обычная атака")
 		
 		3:
 			# Третья атака: всегда критический + бонус
-			damage = (BASE_DAMAGE * 2) + 2
+			damage = (current_damage * 2) + 2
 			print("  → 💥 ФИНИШЕР! Критический урон x2 + 2!")
 	
 	return damage

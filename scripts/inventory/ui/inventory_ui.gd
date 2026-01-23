@@ -992,7 +992,9 @@ func _update_stats_display():
 	
 	if stats_labels.has("attack"):
 		var attack = 2
-		if "BASE_DAMAGE" in player:
+		if "current_damage" in player:
+			attack = player.current_damage
+		elif "BASE_DAMAGE" in player:
 			attack = player.BASE_DAMAGE
 		elif "base_damage" in player:
 			attack = player.base_damage

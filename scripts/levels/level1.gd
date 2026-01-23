@@ -349,6 +349,12 @@ func _on_equipment_stats_changed(stats: Dictionary):
 		current_player.current_speed = base_player_speed + speed_bonus
 		print("  Итого скорость: %d" % current_player.current_speed)
 	
+	# === ПРИМЕНЯЕМ БОНУС УРОНА ===
+	var total_damage = base_player_damage + equipment_bonus_damage + potion_bonus_damage
+	if "current_damage" in current_player:
+		current_player.current_damage = total_damage
+	print("  Итого урон: %d (база %d + экип %d + зелье %d)" % [total_damage, base_player_damage, equipment_bonus_damage, potion_bonus_damage])
+	
 	print("📊 === БОНУСЫ ПРИМЕНЕНЫ ===")
 	print("")
 
@@ -557,7 +563,15 @@ func _save_base_stats():
 	if "current_speed" in current_player:
 		base_player_speed = current_player.current_speed
 	
-	print("📊 Базовые статы сохранены")
+	# Сохраняем базовый урон
+	if "BASE_DAMAGE" in current_player:
+		base_player_damage = current_player.BASE_DAMAGE
+	elif "current_damage" in current_player:
+		base_player_damage = current_player.current_damage
+	else:
+		base_player_damage = 2  # Дефолт
+	
+	print("📊 Базовые статы сохранены (урон: %d)" % base_player_damage)
 
 
 func _disable_old_artifact_system():

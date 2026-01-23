@@ -24,6 +24,7 @@ var current_health: int = 100
 var max_mana: int = 100
 var current_mana: int = 100
 var armor: int = 0
+var current_damage: int = 2  # Текущий урон (база + бонусы от экипировки)
 var base_speed: int = 200
 var current_speed: int = 200
 

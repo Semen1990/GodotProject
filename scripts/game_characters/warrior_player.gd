@@ -47,6 +47,9 @@ func _ready():
 	armor = warrior_base_armor
 	base_armor = warrior_base_armor  # Для совместимости
 	
+	# Базовый урон
+	current_damage = BASE_DAMAGE
+	
 	# Скорость и прыжок
 	base_speed = 180
 	current_speed = 180
@@ -230,11 +233,11 @@ func _deal_damage_to_enemies():
 	for result in space.intersect_shape(query):
 		var body = result["collider"]
 		if body != self and body.has_method("take_damage"):
-			body.take_damage(BASE_DAMAGE, "physical")
-			print("🎯 Попадание! Урон:", BASE_DAMAGE)
+			body.take_damage(current_damage, "physical")
+			print("🎯 Попадание! Урон:", current_damage)
 			
 			if Global and Global.has_method("add_damage_dealt"):
-				Global.add_damage_dealt(BASE_DAMAGE)
+				Global.add_damage_dealt(current_damage)
 
 # ===========================================
 # ПОЛУЧЕНИЕ УРОНА
