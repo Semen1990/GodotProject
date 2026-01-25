@@ -592,4 +592,13 @@ script = ExtResource("7_2r1tl")
 script = ExtResource("8_8a7m2")
 
 [node name="Chest" parent="." instance=ExtResource("8_plydf")]
-position = Vector2(1394, 843)
+position = Vector2(744, 843)
+artifact_contents = ["hermes_wings", "phoenix_feather"]
+
+[node name="ChestEquipment" parent="." instance=ExtResource("8_plydf")]
+texture_filter = 1
+position = Vector2(216, 843)
+content_type = 1
+item_contents = [1, 2, 3, 4, 101, 102, 103, 104, 105]
+item_counts = [5, 5, 3, 2, 1, 1, 1, 1, 1]
+eject_spread = 40.0

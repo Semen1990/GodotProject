@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://ca65ny24d3vpv"]
 
-[ext_resource type="Script" uid="uid://c0y2cqfgpq40l" path="res://scripts/artifact_pickup.gd" id="1_37fbc"]
+[ext_resource type="Script" uid="uid://c0y2cqfgpq40l" path="res://scripts/objects/artifact_pickup.gd" id="1_37fbc"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_gobwt"]
 radius = 25.0
@@ -23,3 +23,11 @@ offset_right = 19.0
 offset_bottom = -33.0
 
 [node name="GPUParticles2D" type="GPUParticles2D" parent="."]
+
+[node name="HintLabel" type="Label" parent="."]
+visible = false
+offset_left = -30.0
+offset_top = -70.0
+offset_right = 41.0
+offset_bottom = -47.0
+text = "Нажми F"

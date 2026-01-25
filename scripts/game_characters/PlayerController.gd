@@ -1,14 +1,19 @@
 extends Node
 
 # ===========================================
-# PLAYER CONTROLLER - УЛУЧШЕННАЯ ВЕРСИЯ
+# PLAYER CONTROLLER - ИСПРАВЛЕННАЯ ВЕРСИЯ
 # ===========================================
-# Обрабатывает ввод игрока и передает команды персонажу
+# Обрабатывает ввод игрока
+#
+# УПРАВЛЕНИЕ:
+# - ЛКМ/attack: Атака
+# - E (special_ability): Спецспособность класса (блок у воина, лечение у паладина...)
+# - F (interact): Взаимодействие (сундуки, предметы) - обрабатывается в других скриптах
 
 @export var character: CharacterBody2D
 
+
 func _ready():
-	# Автоматическое определение персонажа
 	if character == null:
 		character = get_parent()
 	
@@ -17,58 +22,38 @@ func _ready():
 	else:
 		print("❌ PlayerController: персонаж не найден!")
 
+
 func _input(event):
-	# Проверка что персонаж существует и жив
 	if character == null:
 		return
 	
 	if character.is_dead:
 		return
 	
-	# === БЛОКИРОВКА ПРИ ОТКРЫТОМ ИНВЕНТАРЕ ===
-	# Не обрабатываем боевые действия когда открыт инвентарь
+	# Блокировка при открытом инвентаре
 	if character.is_inventory_open:
 		return
 	
-	# === АТАКА (ЛКМ или настроенная кнопка) ===
+	# === АТАКА (ЛКМ) ===
 	if event.is_action_pressed("attack"):
 		if character.has_method("attack"):
 			character.attack()
 	
 	# === СПЕЦИАЛЬНАЯ СПОСОБНОСТЬ (E) ===
-	# Каждый класс имеет свою способность:
-	# - Воин: Блок щитом
-	# - Паладин: Исцеление
-	# - Разбойник: Подкат (если двигается)
-	# - Берсерк: (можно добавить)
 	if event.is_action_pressed("special_ability"):
 		if character.has_method("use_special_ability"):
 			character.use_special_ability()
 	
-	# === БЛОК ЩИТОМ (F или ПКМ) - только для воина ===
-	# Удерживание кнопки
-	if event.is_action_pressed("shield_defence"):
-		if character.has_method("block"):
-			character.block()
-	
-	# Отпускание кнопки блока
-	if event.is_action_released("shield_defence"):
-		if character.has_method("stop_blocking"):
-			character.stop_blocking()
-	
-	# === ЛЕЧЕНИЕ (H или отдельная кнопка) - для паладина ===
-	if event.is_action_pressed("heal"):
+	# === ЛЕЧЕНИЕ (H) - для паладина ===
+	if InputMap.has_action("heal") and event.is_action_pressed("heal"):
 		if character.has_method("heal"):
 			character.heal()
 	
-	# === ПОДКАТ (SHIFT или отдельная кнопка) - для разбойника ===
-	if event.is_action_pressed("slide"):
+	# === ПОДКАТ (SHIFT) - для разбойника ===
+	if InputMap.has_action("slide") and event.is_action_pressed("slide"):
 		if character.has_method("slide"):
 			character.slide()
-	
-	# === ПРИСЕДАНИЕ (S или CTRL) ===
-	# Обрабатывается в base_game_character.gd через Input.is_action_pressed
+
 
 func _process(_delta):
-	# Дополнительная обработка если нужна
 	pass
