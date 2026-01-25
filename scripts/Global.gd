@@ -1,7 +1,7 @@
 extends Node
 
 # ===========================================
-# GLOBAL.GD - ПОЛНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ v3.2
+# GLOBAL.GD - ВЕРСИЯ v4.0 С СИСТЕМОЙ КЛЮЧЕЙ
 # ===========================================
 
 # Выбранный персонаж
@@ -88,6 +88,21 @@ var fallback_character_data = {
 
 # Собранные артефакты игрока
 var collected_artifacts: Array = []
+
+# ===========================================
+# СИСТЕМА КЛЮЧЕЙ (НОВОЕ!)
+# ===========================================
+
+# Собранные ключи (хранит номера цветов из KeyPickup.KeyColor)
+var collected_keys: Array = []
+
+# Точка спавна при переходе между уровнями
+var spawn_point: String = ""
+
+# Открытые двери (для сохранения состояния)
+var opened_doors: Array = []
+
+# ===========================================
 
 # База данных всех артефактов
 var artifacts_database = {
@@ -228,7 +243,7 @@ var run_started: bool = false
 # ===========================================
 
 func _ready():
-	print("🌍 Global.gd loaded!")
+	print("🌍 Global.gd v4.0 loaded!")
 	load_character_data()
 	load_settings()
 
@@ -381,6 +396,8 @@ func debug_print_state():
 		print("Character data keys: ", character_data.keys())
 	print("Character scenes: ", character_player_scenes)
 	print("Collected artifacts: ", collected_artifacts)
+	print("Collected keys: ", collected_keys)
+	print("Spawn point: ", spawn_point)
 	print("Run statistics: ", run_statistics)
 	print("==========================")
 
@@ -549,6 +566,60 @@ func reset_artifacts():
 	print("🔄 Артефакты сброшены")
 
 # ===========================================
+# СИСТЕМА КЛЮЧЕЙ (НОВОЕ!)
+# ===========================================
+
+func has_key(key_color: int) -> bool:
+	"""Проверяет есть ли ключ определённого цвета"""
+	return collected_keys.has(key_color)
+
+
+func add_key(key_color: int):
+	"""Добавляет ключ"""
+	if not collected_keys.has(key_color):
+		collected_keys.append(key_color)
+		add_key_collected()  # Статистика
+		print("🔑 Ключ добавлен: цвет %d" % key_color)
+	else:
+		print("🔑 Ключ уже есть: цвет %d" % key_color)
+
+
+func remove_key(key_color: int):
+	"""Удаляет ключ (если ключ одноразовый)"""
+	if collected_keys.has(key_color):
+		collected_keys.erase(key_color)
+		print("🔑 Ключ использован: цвет %d" % key_color)
+
+
+func get_keys_count() -> int:
+	"""Возвращает количество собранных ключей"""
+	return collected_keys.size()
+
+
+func get_all_keys() -> Array:
+	"""Возвращает массив всех собранных ключей"""
+	return collected_keys.duplicate()
+
+
+func reset_keys():
+	"""Сбрасывает все собранные ключи"""
+	collected_keys.clear()
+	spawn_point = ""
+	opened_doors.clear()
+	print("🔑 Ключи сброшены")
+
+
+func mark_door_opened(door_id: String):
+	"""Помечает дверь как открытую"""
+	if not opened_doors.has(door_id):
+		opened_doors.append(door_id)
+
+
+func is_door_opened(door_id: String) -> bool:
+	"""Проверяет открыта ли дверь"""
+	return opened_doors.has(door_id)
+
+# ===========================================
 # УПРАВЛЕНИЕ ЗАБЕГОМ
 # ===========================================
 
@@ -583,6 +654,7 @@ func full_reset():
 	"""Полный сброс при выходе в главное меню"""
 	reset_run_statistics()
 	reset_artifacts()
+	reset_keys()  # <-- ДОБАВЛЕНО!
 	unregister_player()
 	unregister_game_ui()
 	print("🔄 Полный сброс игры выполнен")
@@ -596,7 +668,7 @@ func reset_all_for_new_game():
 # ===========================================
 
 func add_key_collected():
-	"""Добавляет собранный ключ"""
+	"""Добавляет собранный ключ в статистику"""
 	run_statistics["keys_collected"] += 1
 	print("🔑 Ключей: ", run_statistics["keys_collected"])
 

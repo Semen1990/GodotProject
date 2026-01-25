@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://jfgqord38fwh"]
+[gd_scene load_steps=14 format=3 uid="uid://jfgqord38fwh"]
 
 [ext_resource type="Texture2D" uid="uid://bllirlnx660jk" path="res://assets/background/Lucid_Origin_pixel_art_game_background_sidescrolling_view_cast_2 (14).jpg" id="1_4tcl0"]
 [ext_resource type="Script" uid="uid://qh00mxbtl2vr" path="res://scripts/levels/level1.gd" id="1_dd0lh"]
@@ -8,6 +8,9 @@
 [ext_resource type="PackedScene" uid="uid://bdg7rk1sn2jln" path="res://scenes/enemies/Lizard.tscn" id="7_8a7m2"]
 [ext_resource type="Script" uid="uid://cc2q04j7j5qr6" path="res://scripts/inventory/ui/death_menu.gd" id="8_8a7m2"]
 [ext_resource type="PackedScene" uid="uid://33pqmbc78n27" path="res://scenes/objects/chest.tscn" id="8_plydf"]
+[ext_resource type="PackedScene" path="res://scenes/objects/key_pickup.tscn" id="9_nkeig"]
+[ext_resource type="PackedScene" path="res://scenes/objects/door.tscn" id="10_nfihu"]
+[ext_resource type="PackedScene" path="res://scenes/objects/spawn_point.tscn" id="11_lgguw"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dd0lh"]
 texture = ExtResource("2_dd0lh")
@@ -583,7 +586,7 @@ layer_0/tile_data = PackedInt32Array(3604489, 524288, 0, 3670025, 524288, 1, 360
 [node name="SimplePauseMenu" parent="." instance=ExtResource("5_dywbp")]
 
 [node name="Lizard" parent="." instance=ExtResource("7_8a7m2")]
-position = Vector2(1696, 833)
+position = Vector2(1556, 831)
 
 [node name="GameUI" type="CanvasLayer" parent="."]
 script = ExtResource("7_2r1tl")
@@ -593,12 +596,25 @@ script = ExtResource("8_8a7m2")
 
 [node name="Chest" parent="." instance=ExtResource("8_plydf")]
 position = Vector2(744, 843)
-artifact_contents = ["hermes_wings", "phoenix_feather"]
+artifact_contents = Array[String](["hermes_wings", "phoenix_feather"])
 
 [node name="ChestEquipment" parent="." instance=ExtResource("8_plydf")]
 texture_filter = 1
 position = Vector2(216, 843)
 content_type = 1
-item_contents = [1, 2, 3, 4, 101, 102, 103, 104, 105]
-item_counts = [5, 5, 3, 2, 1, 1, 1, 1, 1]
+item_contents = Array[int]([1, 2, 3, 4, 101, 102, 103, 104, 105])
+item_counts = Array[int]([5, 5, 3, 2, 1, 1, 1, 1, 1])
 eject_spread = 40.0
+
+[node name="KeyPickup" parent="." instance=ExtResource("9_nkeig")]
+position = Vector2(572, 849)
+
+[node name="Door" parent="." instance=ExtResource("10_nfihu")]
+position = Vector2(1757, 879)
+target_scene = "res://scenes/levels/level2.tscn"
+spawn_point_name = "FromLevel1"
+
+[node name="SpawnPoint" parent="." instance=ExtResource("11_lgguw")]
+position = Vector2(1749, 876)
+spawn_point_id = "FromLevel2"
+is_default = true
