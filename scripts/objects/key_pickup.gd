@@ -2,18 +2,17 @@ extends Area2D
 class_name KeyPickup
 
 # ===========================================
-# КЛЮЧ - ПОДБИРАЕМЫЙ ПРЕДМЕТ
+# КЛЮЧ - ПОДБИРАЕМЫЙ ПРЕДМЕТ v2
 # ===========================================
 # Путь: res://scripts/objects/key_pickup.gd
 
-# === ЦВЕТА КЛЮЧЕЙ (порядок в спрайтлисте сверху вниз) ===
 enum KeyColor {
-	GOLD,      # 0 - Золотой
-	SILVER,    # 1 - Серебряный  
-	ORANGE,    # 2 - Оранжевый
-	BLUE,      # 3 - Голубой
-	GREEN,     # 4 - Зелёный
-	RED        # 5 - Красный
+	GOLD,      # 0
+	SILVER,    # 1
+	ORANGE,    # 2
+	BLUE,      # 3
+	GREEN,     # 4
+	RED        # 5
 }
 
 const KEY_NAMES = {
@@ -36,7 +35,8 @@ const KEY_COLORS_RGB = {
 
 # === НАСТРОЙКИ ===
 @export var key_color: KeyColor = KeyColor.GOLD
-@export var float_height: float = 6.0
+@export var sprite_scale: float = 1.0
+@export var float_height: float = 4.0
 @export var float_speed: float = 2.5
 
 # === УЗЛЫ ===
@@ -65,16 +65,13 @@ func _ready():
 
 
 func _setup_sprite():
-	"""Загружает нужный ключ из спрайтлиста"""
 	if not sprite:
 		return
 	
-	# Пробуем загрузить спрайтлист
 	var paths = [
 		"res://assets/items/keys.png",
 		"res://assets/sprites/keys.png",
 		"res://assets/keys.png",
-		"res://sprites/keys.png",
 	]
 	
 	var texture: Texture2D = null
@@ -87,35 +84,27 @@ func _setup_sprite():
 		_create_fallback_sprite()
 		return
 	
-	# Вычисляем размер одного ключа (6 ключей по вертикали)
-	var sheet_height = texture.get_height()
-	var key_height = sheet_height / 6
+	var key_height = texture.get_height() / 6
 	var key_width = texture.get_width()
 	
-	# Создаём AtlasTexture
 	var atlas = AtlasTexture.new()
 	atlas.atlas = texture
 	atlas.region = Rect2(0, key_color * key_height, key_width, key_height)
 	
 	sprite.texture = atlas
-	sprite.scale = Vector2(2.0, 2.0)
+	sprite.scale = Vector2(sprite_scale, sprite_scale)
 
 
 func _create_fallback_sprite():
-	"""Создаёт простой цветной спрайт"""
 	if not sprite:
 		return
 	
 	var color = KEY_COLORS_RGB[key_color]
 	var image = Image.create(32, 16, false, Image.FORMAT_RGBA8)
-	
-	# Простой прямоугольник
-	for x in range(32):
-		for y in range(16):
-			image.set_pixel(x, y, color)
+	image.fill(color)
 	
 	sprite.texture = ImageTexture.create_from_image(image)
-	sprite.scale = Vector2(2.0, 2.0)
+	sprite.scale = Vector2(sprite_scale, sprite_scale)
 
 
 func _setup_label():
@@ -132,8 +121,8 @@ func _ensure_hint_label():
 		hint_label.name = "HintLabel"
 		hint_label.text = "Нажми F"
 		hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		hint_label.position = Vector2(-35, -50)
-		hint_label.add_theme_font_size_override("font_size", 14)
+		hint_label.position = Vector2(-35, -40)
+		hint_label.add_theme_font_size_override("font_size", 12)
 		hint_label.add_theme_color_override("font_color", Color(1, 1, 0.7))
 		add_child(hint_label)
 	
@@ -198,10 +187,10 @@ func _play_collect_effect():
 	tween.set_parallel(true)
 	
 	if sprite:
-		tween.tween_property(sprite, "scale", sprite.scale * 1.5, 0.3)
-		tween.tween_property(sprite, "modulate:a", 0.0, 0.3)
+		tween.tween_property(sprite, "scale", sprite.scale * 1.3, 0.25)
+		tween.tween_property(sprite, "modulate:a", 0.0, 0.25)
 	
 	if label:
-		tween.tween_property(label, "modulate:a", 0.0, 0.3)
+		tween.tween_property(label, "modulate:a", 0.0, 0.25)
 	
 	tween.chain().tween_callback(queue_free)

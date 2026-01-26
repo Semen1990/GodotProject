@@ -1,9 +1,191 @@
-[gd_scene load_steps=3 format=3 uid="uid://cdoor_v3"]
+[gd_scene load_steps=29 format=3 uid="uid://7j4r1w6ko53b"]
 
-[ext_resource type="Script" path="res://scripts/objects/door.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://2evtoojyc084" path="res://scripts/objects/door.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://d2e623nie2jbw" path="res://assets/objects/_Demon_Door.png" id="2_uw3m6"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xm0wp"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(0, 0, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_aji8h"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(25, 0, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w0irj"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(50, 0, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vedx6"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(75, 0, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hfw7n"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(100, 0, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ymeik"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(125, 0, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qifey"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(150, 0, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bpdii"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(175, 0, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_iar7v"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(200, 0, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_uw3m6"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(200, 50, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_as15n"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(175, 50, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e2wo6"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(150, 50, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_k7a3e"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(125, 50, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yx662"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(100, 50, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nn4q7"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(75, 50, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fcf5b"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(50, 50, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qcxdb"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(25, 50, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_el2wh"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(0, 50, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1stkf"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(125, 75, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5lq2g"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(100, 75, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bwxon"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(75, 75, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s0jfr"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(50, 75, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_omhol"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(25, 75, 25, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nm0ra"]
+atlas = ExtResource("2_uw3m6")
+region = Rect2(0, 75, 25, 25)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_as15n"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xm0wp")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_aji8h")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w0irj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vedx6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hfw7n")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ymeik")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qifey")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bpdii")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_iar7v")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_uw3m6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_as15n")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e2wo6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_k7a3e")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yx662")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nn4q7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fcf5b")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qcxdb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_el2wh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1stkf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5lq2g")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bwxon")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s0jfr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_omhol")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nm0ra")
+}],
+"loop": false,
+"name": &"open",
+"speed": 10.0
+}]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
-size = Vector2(80, 100)
+size = Vector2(110, 170.5)
 
 [node name="Door" type="Area2D"]
 collision_layer = 0
@@ -11,18 +193,22 @@ collision_mask = 3
 script = ExtResource("1_script")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(0, -50)
-scale = Vector2(1.5, 1.5)
+position = Vector2(1.0000019, -30)
+scale = Vector2(7.6799994, 11.424999)
+sprite_frames = SubResource("SpriteFrames_as15n")
+animation = &"open"
+frame = 14
+frame_progress = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, -50)
+position = Vector2(-3, -82.75)
 shape = SubResource("RectangleShape2D_1")
 
 [node name="ColorIndicator" type="ColorRect" parent="."]
-offset_left = -25.0
-offset_top = -110.0
-offset_right = 25.0
-offset_bottom = -100.0
+offset_left = -20.0
+offset_top = -180.0
+offset_right = 30.0
+offset_bottom = -170.0
 
 [node name="HintLabel" type="Label" parent="."]
 visible = false

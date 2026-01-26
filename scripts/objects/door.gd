@@ -2,11 +2,10 @@ extends Area2D
 class_name Door
 
 # ===========================================
-# ДВЕРЬ - ПЕРЕХОД МЕЖДУ УРОВНЯМИ
+# ДВЕРЬ - ПЕРЕХОД МЕЖДУ УРОВНЯМИ v3
 # ===========================================
 # Путь: res://scripts/objects/door.gd
 
-# === ЦВЕТ ДВЕРИ ===
 enum DoorColor {
 	GOLD,      # 0
 	SILVER,    # 1
@@ -53,69 +52,16 @@ var player_in_range: bool = false
 
 
 func _ready():
-	print("🚪 Дверь создана: %s" % COLOR_NAMES[door_color])
+	print("🚪 Дверь создана: %s (target: %s)" % [COLOR_NAMES[door_color], target_scene])
 	
 	is_open = is_initially_open
 	
-	_setup_animations()
 	_ensure_hint_label()
 	_ensure_color_indicator()
 	_update_door_state()
 	
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
-
-
-func _setup_animations():
-	"""Настраивает анимации из спрайтлиста"""
-	if not animated_sprite:
-		return
-	
-	# Ищем спрайтлист двери
-	var paths = [
-		"res://assets/objects/_Demon_Door.png",
-		"res://assets/sprites/_Demon_Door.png",
-		"res://assets/_Demon_Door.png",
-	]
-	
-	var texture: Texture2D = null
-	for path in paths:
-		if ResourceLoader.exists(path):
-			texture = load(path)
-			break
-	
-	if not texture:
-		print("⚠️ Спрайтлист двери не найден!")
-		return
-	
-	# Размеры: 10 кадров по горизонтали, 7 рядов
-	var frame_w = texture.get_width() / 10
-	var frame_h = texture.get_height() / 7
-	
-	var frames = SpriteFrames.new()
-	
-	# idle - закрытая дверь (ряд 0)
-	frames.add_animation("idle")
-	frames.set_animation_speed("idle", 6)
-	frames.set_animation_loop("idle", true)
-	for i in range(6):
-		var atlas = AtlasTexture.new()
-		atlas.atlas = texture
-		atlas.region = Rect2(i * frame_w, 0, frame_w, frame_h)
-		frames.add_frame("idle", atlas)
-	
-	# open - открытая дверь (ряд 1)
-	frames.add_animation("open")
-	frames.set_animation_speed("open", 6)
-	frames.set_animation_loop("open", true)
-	for i in range(6):
-		var atlas = AtlasTexture.new()
-		atlas.atlas = texture
-		atlas.region = Rect2(i * frame_w, frame_h, frame_w, frame_h)
-		frames.add_frame("open", atlas)
-	
-	animated_sprite.sprite_frames = frames
-	animated_sprite.play("idle" if not is_open else "open")
 
 
 func _ensure_hint_label():
@@ -125,7 +71,7 @@ func _ensure_hint_label():
 		hint_label = Label.new()
 		hint_label.name = "HintLabel"
 		hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		hint_label.position = Vector2(-80, -130)
+		hint_label.position = Vector2(-80, -100)
 		hint_label.add_theme_font_size_override("font_size", 14)
 		hint_label.add_theme_color_override("font_color", Color(1, 1, 0.9))
 		add_child(hint_label)
@@ -139,8 +85,8 @@ func _ensure_color_indicator():
 	if not color_indicator:
 		color_indicator = ColorRect.new()
 		color_indicator.name = "ColorIndicator"
-		color_indicator.size = Vector2(50, 10)
-		color_indicator.position = Vector2(-25, -110)
+		color_indicator.size = Vector2(40, 8)
+		color_indicator.position = Vector2(-20, -85)
 		add_child(color_indicator)
 	
 	color_indicator.color = DOOR_COLORS_RGB[door_color]
@@ -148,7 +94,9 @@ func _ensure_color_indicator():
 
 func _update_door_state():
 	if animated_sprite and animated_sprite.sprite_frames:
-		animated_sprite.play("open" if is_open else "idle")
+		var anim = "open" if is_open else "idle"
+		if animated_sprite.sprite_frames.has_animation(anim):
+			animated_sprite.play(anim)
 	
 	if color_indicator:
 		color_indicator.color = DOOR_COLORS_RGB[door_color]
@@ -247,24 +195,23 @@ func _open_door():
 
 func _enter_door():
 	if target_scene.is_empty():
-		print("⚠️ Целевая сцена не указана!")
+		print("⚠️ Целевая сцена не указана в Inspector!")
+		print("   Установи Target Scene в настройках двери")
 		return
 	
 	print("🚪 Переход: %s" % target_scene)
+	print("   spawn_point: %s" % spawn_point_name)
 	
+	# Сохраняем spawn_point ПЕРЕД переходом
 	if Global and not spawn_point_name.is_empty():
 		Global.spawn_point = spawn_point_name
+		print("   ✅ Global.spawn_point = '%s'" % Global.spawn_point)
 	
-	# Затемнение
-	var tween = create_tween()
-	tween.tween_property(get_tree().root, "modulate", Color.BLACK, 0.3)
-	tween.tween_callback(_change_scene)
-
-
-func _change_scene():
-	get_tree().root.modulate = Color.WHITE
-	
-	if ResourceLoader.exists(target_scene):
-		get_tree().change_scene_to_file(target_scene)
-	else:
+	# Проверяем существование сцены
+	if not ResourceLoader.exists(target_scene):
 		print("❌ Сцена не найдена: %s" % target_scene)
+		print("   Проверь путь в Target Scene!")
+		return
+	
+	# Переход БЕЗ затемнения (чтобы избежать ошибки)
+	get_tree().change_scene_to_file(target_scene)
