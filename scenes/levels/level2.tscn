@@ -1,14 +1,14 @@
-[gd_scene load_steps=12 format=3 uid="uid://dm55frn3x1abg"]
+[gd_scene format=3 uid="uid://dm55frn3x1abg"]
 
-[ext_resource type="Script" uid="uid://n1rd6dgyh6j8" path="res://scripts/levels/level2.gd" id="1_b0vvs"]
+[ext_resource type="Script" uid="uid://n1rd6dgyh6j8" path="res://levels/level2.gd" id="1_b0vvs"]
 [ext_resource type="Texture2D" uid="uid://b3y7eh6h24uf1" path="res://assets/background/Level2.jpg" id="1_k0mew"]
 [ext_resource type="Texture2D" uid="uid://uli5g1dehqg3" path="res://assets/tools/oak_woods_tileset.png" id="2_b0vvs"]
 [ext_resource type="PackedScene" uid="uid://bu33u1kbmym50" path="res://scenes/Ui/death_menu.tscn" id="3_oyk6k"]
 [ext_resource type="Script" uid="uid://cc2q04j7j5qr6" path="res://scripts/inventory/ui/death_menu.gd" id="4_gycjm"]
 [ext_resource type="PackedScene" uid="uid://6lwt8fuq8uah" path="res://scenes/Ui/game_ui.tscn" id="5_8i1lk"]
 [ext_resource type="PackedScene" uid="uid://ceck3rjiaby11" path="res://scenes/Ui/simple_pause_menu.tscn" id="6_hgky1"]
-[ext_resource type="PackedScene" path="res://scenes/objects/spawn_point.tscn" id="7_b4tpv"]
-[ext_resource type="PackedScene" uid="uid://7j4r1w6ko53b" path="res://scenes/objects/door.tscn" id="8_hkuam"]
+[ext_resource type="PackedScene" path="res://prefabs/objects/spawn_point.tscn" id="7_b4tpv"]
+[ext_resource type="PackedScene" uid="uid://7j4r1w6ko53b" path="res://prefabs/objects/door.tscn" id="8_hkuam"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_brxtv"]
 texture = ExtResource("2_b0vvs")
@@ -441,40 +441,36 @@ texture = ExtResource("2_b0vvs")
 physics_layer_0/collision_layer = 1
 sources/1 = SubResource("TileSetAtlasSource_brxtv")
 
-[node name="Level2" type="Node2D"]
+[node name="Level2" type="Node2D" unique_id=240270994]
 script = ExtResource("1_b0vvs")
 
-[node name="Background" type="Node2D" parent="."]
+[node name="Background" type="Node2D" parent="." unique_id=399954942]
 
-[node name="Sprite2D" type="Sprite2D" parent="Background"]
+[node name="Sprite2D" type="Sprite2D" parent="Background" unique_id=1535946176]
 position = Vector2(981, 547)
 scale = Vector2(1.4244186, 1.4791667)
 texture = ExtResource("1_k0mew")
 
-[node name="PlayerSpawn" type="Marker2D" parent="."]
+[node name="PlayerSpawn" type="Marker2D" parent="." unique_id=1540094443]
+position = Vector2(205, 623.885)
 
-[node name="TileMap" type="TileMap" parent="."]
+[node name="TileMap" type="TileMap" parent="." unique_id=544336699]
 tile_set = SubResource("TileSet_tv7cl")
 format = 2
 layer_0/tile_data = PackedInt32Array(3801115, 131073, 0, 3801116, 196609, 0, 3801117, 262145, 0, 3801118, 327681, 0, 3801119, 262145, 0, 3801120, 1, 0, 3801121, 65537, 0, 3801122, 131073, 0, 3801123, 196609, 0, 3801124, 262145, 0, 3801125, 327681, 0, 3801126, 1, 0, 3801127, 65537, 0, 3801128, 131073, 0, 3801129, 196609, 0, 3801130, 262145, 0, 3801131, 327681, 0, 3801132, 1, 0, 3801133, 65537, 0, 3801134, 131073, 0, 3801135, 196609, 0, 3801136, 262145, 0, 3801137, 327681, 0, 3801138, 1, 0, 3801139, 65537, 0, 3801140, 131073, 0, 3801141, 196609, 0, 3801142, 262145, 0, 3801143, 327681, 0, 3801144, 1, 0, 3801145, 65537, 0, 3801146, 131073, 0, 3801147, 196609, 0, 3801148, 262145, 0, 3801149, 327681, 0, 3801150, 1, 0, 3801151, 65537, 0, 3801152, 131073, 0, 3801153, 196609, 0, 3801154, 262145, 0, 3801155, 327681, 0, 3801156, 1, 0, 3801157, 65537, 0, 3801158, 131073, 0, 3801159, 196609, 0, 3801160, 262145, 0, 3801161, 327681, 0, 3801162, 1, 0, 3801163, 65537, 0, 3801164, 131073, 0, 3801165, 196609, 0, 3801166, 262145, 0, 3801167, 327681, 0, 3801168, 1, 0, 3801169, 65537, 0, 3801170, 131073, 0, 3801171, 196609, 0, 3801172, 262145, 0, 3801173, 327681, 0, 3801113, 1, 0, 3801114, 65537, 0, 3145810, 1, 0, 3145811, 65537, 0, 3145812, 131073, 0, 3145813, 196609, 0, 3145814, 262145, 0, 3145815, 327681, 0, 3145816, 1, 0, 3145817, 65537, 0, 3145818, 131073, 0, 3145819, 196609, 0, 3145820, 262145, 0, 3145821, 327681, 0, 3145822, 1, 0, 3145823, 65537, 0, 3145824, 131073, 0, 3145825, 196609, 0, 3145826, 262145, 0, 3145827, 327681, 0, 3145828, 1, 0, 3145829, 65537, 0, 3145830, 131073, 0, 3145831, 196609, 0, 3145832, 262145, 0, 3145833, 327681, 0, 3145834, 1, 0, 3145835, 65537, 0, 3145836, 131073, 0, 3145837, 196609, 0, 3145838, 262145, 0, 3145839, 327681, 0, 3145840, 1, 0, 3145841, 65537, 0, 3145842, 131073, 0, 3145843, 196609, 0, 3145844, 262145, 0, 3145845, 327681, 0, 3539010, 1, 0, 3539011, 65537, 0, 3539012, 131073, 0, 3539013, 196609, 0, 3539014, 262145, 0, 3539015, 327681, 0, 3276875, 1, 0, 3276876, 65537, 0, 3276877, 131073, 0, 3276878, 196609, 0, 3276879, 262145, 0, 3276880, 327681, 0, 3276830, 1, 0, 3276831, 65537, 0, 3276832, 131073, 0, 3276833, 196609, 0, 3276834, 262145, 0, 3276835, 327681, 0, 3538984, 1, 0, 3538985, 65537, 0, 3538986, 131073, 0, 3538987, 196609, 0, 3538988, 262145, 0, 3538989, 327681, 0, 3145733, 65537, 0, 3145734, 131073, 0, 3145735, 196609, 0, 3145736, 262145, 0, 3145737, 65537, 0, 3145738, 131073, 0, 3145739, 196609, 0, 3145740, 262145, 0, 3145741, 65537, 0, 3145742, 131073, 0, 3145743, 196609, 0, 3145744, 262145, 0, 3145745, 65537, 0, 3145746, 131073, 0, 3145747, 196609, 0, 3145748, 262145, 0, 3145749, 65537, 0, 3145750, 131073, 0, 3145751, 196609, 0, 3145752, 262145, 0, 3145753, 65537, 0, 3145754, 131073, 0, 3145755, 196609, 0, 3145756, 262145, 0)
 
-[node name="DeathMenu" parent="." groups=["death_menu"] instance=ExtResource("3_oyk6k")]
-visible = false
+[node name="DeathMenu" parent="." unique_id=2080965026 groups=["death_menu"] instance=ExtResource("3_oyk6k")]
 script = ExtResource("4_gycjm")
 
-[node name="GameUI" parent="." instance=ExtResource("5_8i1lk")]
-visible = false
+[node name="GameUI" parent="." unique_id=735445740 instance=ExtResource("5_8i1lk")]
 
-[node name="SimplePauseMenu" parent="." instance=ExtResource("6_hgky1")]
-visible = false
+[node name="SimplePauseMenu" parent="." unique_id=1460008930 instance=ExtResource("6_hgky1")]
 
-[node name="SpawnPoint" parent="." instance=ExtResource("7_b4tpv")]
-position = Vector2(224, 660)
+[node name="SpawnPoint" parent="." unique_id=1917843740 instance=ExtResource("7_b4tpv")]
+position = Vector2(205, 623.885)
 spawn_point_id = "FromLevel1"
 
-[node name="Door" parent="." instance=ExtResource("8_hkuam")]
-position = Vector2(209, 765)
+[node name="Door" parent="." unique_id=1799376009 instance=ExtResource("8_hkuam")]
+position = Vector2(191, 760)
 target_scene = "res://scenes/levels/level1.tscn"
-spawn_point_name = "FromLevel2"
 is_initially_open = true
-use_key = false

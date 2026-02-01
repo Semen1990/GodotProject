@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://ca65ny24d3vpv"]
+[gd_scene format=3 uid="uid://ca65ny24d3vpv"]
 
 [ext_resource type="Script" uid="uid://c0y2cqfgpq40l" path="res://scripts/objects/artifact_pickup.gd" id="1_37fbc"]
 

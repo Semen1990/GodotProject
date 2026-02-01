@@ -8,17 +8,22 @@
 
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
 
 config/name="Castle рабочая версия"
 run/main_scene="res://scenes/Ui/main_menu.tscn"
-config/features=PackedStringArray("4.5", "Forward Plus")
+config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
-Global="*res://scripts/Global.gd"
-Inventory="*res://scripts/inventory/core/inventory_manager.gd"
+Global="*res://autoload/Global.gd"
+Inventory="*res://autoload/inventory_manager.gd"
+GameState="*uid://bkwffsy6gkii8"
 
 [display]
 
