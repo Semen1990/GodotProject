@@ -2,20 +2,20 @@ extends Area2D
 class_name KeyPickup
 
 # ===========================================
-# KEY PICKUP v4.0 - ВИДИМЫЙ КЛЮЧ, ПОДБОР ПО F
+# KEY PICKUP v5.0 - АВТООПРЕДЕЛЕНИЕ РАЗМЕРОВ
 # ===========================================
-# Использует спрайт-лист res://assets/items/keys.png
-# Подбирается ТОЛЬКО по клавише F (не автоматически!)
+# Спрайт-лист: res://assets/items/keys.png
+# 6 ключей вертикально, автоматически определяет размеры
 
 signal collected(key_color: int)
 
 enum KeyColor { 
 	GOLD = 0,    # Золотой
 	SILVER = 1,  # Серебряный  
-	RED = 2,     # Красный
+	RED = 2,     # Красный/Оранжевый
 	BLUE = 3,    # Синий
 	GREEN = 4,   # Зелёный
-	PURPLE = 5   # Фиолетовый
+	PURPLE = 5   # Розовый/Фиолетовый
 }
 
 const COLOR_NAMES = {
@@ -27,22 +27,11 @@ const COLOR_NAMES = {
 	KeyColor.PURPLE: "Фиолетовый",
 }
 
-# Регионы в спрайт-листе keys.png (64x384)
-# Ключи расположены ВЕРТИКАЛЬНО (в столбец), каждый ~64x64
-# Порядок сверху вниз: Gold, Silver, Orange/Red, Blue, Green, Pink/Purple
-const KEY_REGIONS = {
-	KeyColor.GOLD: Rect2(0, 0, 64, 64),       # 1-й сверху - золотой
-	KeyColor.SILVER: Rect2(0, 64, 64, 64),    # 2-й - серебряный
-	KeyColor.RED: Rect2(0, 128, 64, 64),      # 3-й - оранжевый/красный
-	KeyColor.BLUE: Rect2(0, 192, 64, 64),     # 4-й - синий
-	KeyColor.GREEN: Rect2(0, 256, 64, 64),    # 5-й - зелёный
-	KeyColor.PURPLE: Rect2(0, 320, 64, 64),   # 6-й - розовый/фиолетовый
-}
-
 @export var key_color: KeyColor = KeyColor.GOLD
 @export var float_height: float = 4.0
 @export var float_speed: float = 2.5
 @export var auto_collect: bool = false  # ПО УМОЛЧАНИЮ ВЫКЛЮЧЕН!
+@export var sprite_scale: float = 0.4   # Масштаб спрайта (ключи большие)
 
 var sprite: Sprite2D = null
 var hint_label: Label = null
@@ -65,6 +54,14 @@ func _ready():
 		queue_free()
 		return
 	
+	# Настраиваем collision - ВАЖНО: видим игрока на layer 2!
+	collision_layer = 0
+	collision_mask = 0
+	set_collision_layer_value(4, true)  # Layer 4 (items)
+	set_collision_mask_value(2, true)   # Mask 2 (player)
+	monitoring = true
+	monitorable = true
+	
 	# Подключаем сигналы
 	if not body_entered.is_connected(_on_body_entered):
 		body_entered.connect(_on_body_entered)
@@ -74,11 +71,24 @@ func _ready():
 	# Настраиваем спрайт
 	_setup_sprite()
 	
-	if hint_label:
-		hint_label.visible = false
-		hint_label.text = "[F] Подобрать"
+	# Настраиваем подсказку
+	_setup_hint()
 	
 	print("🔑 Ключ '%s': %s (sprite=%s)" % [name, COLOR_NAMES[key_color], "✅" if sprite and sprite.texture else "❌"])
+
+
+func _setup_hint():
+	"""Настраивает подсказку [F] Подобрать"""
+	if not hint_label:
+		hint_label = Label.new()
+		hint_label.name = "HintLabel"
+		add_child(hint_label)
+	
+	hint_label.text = "[F] Подобрать"
+	hint_label.position = Vector2(-45, -50)
+	hint_label.visible = false
+	hint_label.add_theme_font_size_override("font_size", 12)
+	hint_label.add_theme_color_override("font_color", Color.WHITE)
 
 
 func _setup_sprite():
@@ -88,23 +98,50 @@ func _setup_sprite():
 		sprite = Sprite2D.new()
 		sprite.name = "Sprite2D"
 		add_child(sprite)
+		move_child(sprite, 0)  # Спрайт первым
 	
-	# Загружаем спрайт-лист
+	# Путь к спрайт-листу
 	var keys_texture_path = "res://assets/items/keys.png"
-	if ResourceLoader.exists(keys_texture_path):
-		var full_texture = load(keys_texture_path) as Texture2D
-		
-		if full_texture:
-			# Создаём AtlasTexture для вырезания нужного ключа
-			var atlas = AtlasTexture.new()
-			atlas.atlas = full_texture
-			atlas.region = KEY_REGIONS.get(key_color, Rect2(0, 0, 40, 40))
-			sprite.texture = atlas
-			print("🔑 Текстура загружена: %s" % COLOR_NAMES[key_color])
-	else:
-		print("⚠️ Спрайт-лист ключей не найден: %s" % keys_texture_path)
-		# Fallback - цветной квадрат
+	
+	if not ResourceLoader.exists(keys_texture_path):
+		print("⚠️ Спрайт-лист не найден: %s" % keys_texture_path)
 		_create_fallback_sprite()
+		return
+	
+	var full_texture = load(keys_texture_path) as Texture2D
+	
+	if not full_texture:
+		print("⚠️ Не удалось загрузить текстуру")
+		_create_fallback_sprite()
+		return
+	
+	# Получаем размеры текстуры
+	var tex_size = full_texture.get_size()
+	print("🔑 Текстура keys.png: %dx%d" % [int(tex_size.x), int(tex_size.y)])
+	
+	# Вычисляем размер одного ключа (6 ключей вертикально)
+	var key_height = tex_size.y / 6.0
+	var key_width = tex_size.x
+	
+	# Создаём AtlasTexture для вырезания нужного ключа
+	var atlas = AtlasTexture.new()
+	atlas.atlas = full_texture
+	
+	# Вычисляем регион для выбранного цвета
+	var color_index = int(key_color)
+	var region_y = key_height * color_index
+	atlas.region = Rect2(0, region_y, key_width, key_height)
+	
+	# Применяем текстуру
+	sprite.texture = atlas
+	sprite.scale = Vector2(sprite_scale, sprite_scale)
+	
+	print("🔑 Текстура загружена: %s (y=%d, h=%d, scale=%.1f)" % [
+		COLOR_NAMES[key_color], 
+		int(region_y), 
+		int(key_height),
+		sprite_scale
+	])
 
 
 func _create_fallback_sprite():
@@ -112,18 +149,37 @@ func _create_fallback_sprite():
 	var colors = {
 		KeyColor.GOLD: Color(1.0, 0.85, 0.0),
 		KeyColor.SILVER: Color(0.75, 0.75, 0.8),
-		KeyColor.RED: Color(1.0, 0.2, 0.2),
-		KeyColor.BLUE: Color(0.2, 0.5, 1.0),
-		KeyColor.GREEN: Color(0.2, 0.8, 0.2),
-		KeyColor.PURPLE: Color(0.7, 0.2, 0.9),
+		KeyColor.RED: Color(1.0, 0.4, 0.2),
+		KeyColor.BLUE: Color(0.3, 0.6, 1.0),
+		KeyColor.GREEN: Color(0.3, 0.9, 0.3),
+		KeyColor.PURPLE: Color(0.9, 0.3, 0.6),
 	}
 	
-	var image = Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	# Создаём изображение ключа (простая форма)
+	var size = 32
+	var image = Image.create(size, size, false, Image.FORMAT_RGBA8)
 	var color = colors.get(key_color, Color.YELLOW)
-	image.fill(color)
+	
+	# Рисуем простой ключ
+	for x in range(size):
+		for y in range(size):
+			# Ручка ключа (круг)
+			var cx = size * 0.7
+			var cy = size * 0.3
+			var dist = sqrt(pow(x - cx, 2) + pow(y - cy, 2))
+			if dist < size * 0.25 and dist > size * 0.15:
+				image.set_pixel(x, y, color)
+			# Стержень ключа
+			elif x > size * 0.2 and x < size * 0.5 and y > size * 0.25 and y < size * 0.35:
+				image.set_pixel(x, y, color)
+			# Зубцы
+			elif x < size * 0.3 and y > size * 0.35 and y < size * 0.5:
+				image.set_pixel(x, y, color)
 	
 	var texture = ImageTexture.create_from_image(image)
 	sprite.texture = texture
+	sprite.scale = Vector2(1.5, 1.5)
+	print("🔑 Fallback спрайт: %s" % COLOR_NAMES[key_color])
 
 
 func _process(delta):
@@ -134,11 +190,9 @@ func _process(delta):
 	time += delta * float_speed
 	position.y = initial_y + sin(time) * float_height
 	
-	# Подбор
-	if player_in_range:
-		if auto_collect:
-			_collect()
-		elif Input.is_action_just_pressed("interact"):
+	# Подбор по F
+	if player_in_range and not auto_collect:
+		if Input.is_action_just_pressed("interact"):
 			_collect()
 
 
