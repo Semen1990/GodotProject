@@ -1,12 +1,14 @@
 extends Node2D
 
 # ===========================================
-# LEVEL 1 - ВЕРСИЯ v6.0 С СОХРАНЕНИЕМ СОСТОЯНИЯ
+# LEVEL 1 - ВЕРСИЯ v8.0 - ВСЕ ИСПРАВЛЕНИЯ
 # ===========================================
-#
-# ИСПРАВЛЕНО:
-# 1. При ВОЗВРАТЕ с level2 НЕ сбрасывает инвентарь/артефакты
-# 2. Удаляет уже подобранные объекты и убитых врагов
+# 
+# ИЗМЕНЕНИЯ:
+# 1. Артефакты НЕ активируются автоматически
+# 2. Сундуки спавнят предметы на землю
+# 3. Перо Феникса работает ТОЛЬКО из слота артефакта
+# 4. HP сохраняется между уровнями
 
 @onready var player_spawn = $PlayerSpawn
 @onready var game_ui = $GameUI
@@ -14,59 +16,50 @@ extends Node2D
 var current_player = null
 var last_armor_value: int = 0
 
-# UI Инвентаря
 var inventory_ui: InventoryUI = null
 var hotbar_ui: HotbarUI = null
 
-# === БАЗОВЫЕ СТАТЫ ПЕРСОНАЖА ===
+# === БАЗОВЫЕ СТАТЫ ===
 var base_player_armor: int = 0
 var base_player_max_health: int = 0
 var base_player_max_mana: int = 0
 var base_player_speed: int = 0
 var base_player_damage: int = 0
 
-# === БОНУСЫ ОТ ЭКИПИРОВКИ ===
+# === БОНУСЫ ===
 var equipment_bonus_armor: int = 0
 var equipment_bonus_hp: int = 0
 var equipment_bonus_mana: int = 0
 var equipment_bonus_speed: int = 0
 var equipment_bonus_damage: int = 0
 
-# === БОНУСЫ ОТ ЗЕЛИЙ ===
 var potion_bonus_armor: int = 0
 var potion_bonus_damage: int = 0
 
 
 func _ready():
 	print("")
-	print("🎮 ========== LEVEL 1 LOADED ==========")
+	print("🎮 ========== LEVEL 1 v8.0 ==========")
 	print("   run_started: %s" % Global.run_started)
 	print("   spawn_point: '%s'" % Global.spawn_point)
 	
-	# ===========================================
-	# ГЛАВНАЯ ЛОГИКА: НОВАЯ ИГРА ИЛИ ВОЗВРАТ?
-	# ===========================================
-	if Global.run_started:
-		# Забег уже идёт → это ВОЗВРАТ с другого уровня
-		print("🔄 ВОЗВРАТ - НЕ сбрасываем инвентарь!")
-		# Удаляем уже собранные объекты
-		call_deferred("_remove_collected_objects")
-	else:
-		# Забег НЕ начат → НОВАЯ ИГРА
-		print("🆕 НОВАЯ ИГРА - сбрасываем всё!")
+	var is_new_game = not Global.run_started
+	
+	if is_new_game:
+		print("🆕 НОВАЯ ИГРА")
 		if Inventory:
 			Inventory.clear_all()
-			print("🗑️ Инвентарь очищен")
 		Global.start_run()
+	else:
+		print("🔄 ВОЗВРАТ")
+		call_deferred("_remove_collected_objects")
 	
 	_initialize_inventory()
 	_create_inventory_ui()
 	
 	await get_tree().process_frame
 	
-	spawn_selected_character()
-	
-	# Настраиваем сундуки
+	spawn_selected_character(is_new_game)
 	_setup_chests()
 	
 	if Global and game_ui:
@@ -76,32 +69,24 @@ func _ready():
 	print("")
 
 
-# ===========================================
-# УДАЛЕНИЕ СОБРАННЫХ ОБЪЕКТОВ (ПРИ ВОЗВРАТЕ)
-# ===========================================
-
 func _remove_collected_objects():
-	"""Удаляет уже подобранные объекты и убитых врагов"""
 	await get_tree().process_frame
 	
-	print("📂 Проверяем собранные объекты...")
+	print("📂 Удаляем собранные объекты...")
 	
 	for child in get_children():
 		var child_name = child.name
 		
-		# Подобранные объекты (ключи, артефакты)
 		if Global.is_pickup_collected(child_name):
-			print("   🗑️ Удаляем pickup: %s" % child_name)
+			print("   🗑️ %s" % child_name)
 			child.queue_free()
 			continue
 		
-		# Убитые враги
 		if Global.is_enemy_killed(child_name):
-			print("   💀 Враг мёртв: %s" % child_name)
+			print("   💀 %s" % child_name)
 			child.queue_free()
 			continue
 		
-		# Открытые двери
 		if Global.is_door_opened(child_name):
 			if "is_open" in child:
 				child.is_open = true
@@ -109,27 +94,62 @@ func _remove_collected_objects():
 				child._update_visual()
 
 
-func save_state_before_exit():
+func save_before_transition():
 	"""Вызывается дверью перед переходом"""
-	print("💾 Сохраняем HP перед переходом...")
-	Global.save_player_stats()
+	if not current_player:
+		return
+	
+	Global.saved_player_health = current_player.current_health
+	if "current_mana" in current_player:
+		Global.saved_player_mana = current_player.current_mana
+	else:
+		Global.saved_player_mana = -1
+	
+	print("💾 ═══════════════════════════════")
+	print("💾 СОХРАНЕНО: HP=%d Mana=%d" % [Global.saved_player_health, Global.saved_player_mana])
+	print("💾 ═══════════════════════════════")
+
+
+func _restore_player_stats():
+	if not current_player:
+		return
+	
+	print("💾 Восстанавливаем статы...")
+	print("💾 Saved HP: %d" % Global.saved_player_health)
+	
+	if Global.saved_player_health > 0:
+		current_player.current_health = Global.saved_player_health
+		print("💾 HP: %d" % current_player.current_health)
+		
+		if current_player.has_signal("health_changed"):
+			current_player.health_changed.emit(current_player.current_health)
+	
+	if Global.saved_player_mana >= 0 and "current_mana" in current_player:
+		current_player.current_mana = Global.saved_player_mana
+		print("💾 Mana: %d" % current_player.current_mana)
+		
+		if current_player.has_signal("mana_changed"):
+			current_player.mana_changed.emit(current_player.current_mana)
+	
+	setup_player_ui()
+	Global.clear_saved_stats()
 
 
 # ===========================================
-# ИНИЦИАЛИЗАЦИЯ ИНВЕНТАРЯ
+# ИНВЕНТАРЬ
 # ===========================================
 
 func _initialize_inventory():
 	print("=== 🎒 ИНИЦИАЛИЗАЦИЯ ИНВЕНТАРЯ ===")
 	
 	if not Inventory:
-		push_error("❌ Inventory Autoload не найден!")
+		push_error("❌ Inventory не найден!")
 		return
 	
 	var db_path = "res://data/items/demo_database.tres"
 	
 	if not ResourceLoader.exists(db_path):
-		push_warning("⚠️ База данных не найдена: %s" % db_path)
+		push_warning("⚠️ База данных не найдена")
 		return
 	
 	var item_db = load(db_path) as GameItemDatabase
@@ -141,7 +161,6 @@ func _initialize_inventory():
 		var char_class = _get_character_class()
 		Inventory.set_character_class(char_class)
 		
-		# Подключаем сигналы
 		if not Inventory.stats_updated.is_connected(_on_equipment_stats_changed):
 			Inventory.stats_updated.connect(_on_equipment_stats_changed)
 		if not Inventory.equipment_changed.is_connected(_on_equipment_changed):
@@ -164,10 +183,6 @@ func _get_character_class() -> InventoryEnums.CharacterClass:
 			return InventoryEnums.CharacterClass.WARRIOR
 
 
-# ===========================================
-# СОЗДАНИЕ UI ИНВЕНТАРЯ
-# ===========================================
-
 func _create_inventory_ui():
 	inventory_ui = InventoryUI.new()
 	inventory_ui.name = "InventoryUI"
@@ -175,7 +190,6 @@ func _create_inventory_ui():
 	inventory_ui.visible = false
 	
 	inventory_ui.item_used.connect(_on_inventory_item_used)
-	
 	print("✅ InventoryUI создан")
 	
 	hotbar_ui = HotbarUI.new()
@@ -184,7 +198,6 @@ func _create_inventory_ui():
 	
 	if hotbar_ui.has_signal("hotbar_slot_used"):
 		hotbar_ui.hotbar_slot_used.connect(_on_hotbar_slot_used)
-	
 	print("✅ HotbarUI создан")
 
 
@@ -220,7 +233,7 @@ func _on_hotbar_slot_used(index: int):
 	var item_id = item.get_item_id()
 	
 	if Inventory.is_potion_used(item_id):
-		print("⚠️ Зелье '%s' уже использовано!" % item.get_display_name())
+		print("⚠️ Зелье уже использовано!")
 		return
 	
 	print("🧪 Быстрый слот %d: %s" % [index + 1, item.get_display_name()])
@@ -239,46 +252,35 @@ func _apply_potion_effect(effect: Dictionary):
 	
 	match effect_type:
 		InventoryEnums.EffectType.INSTANT_HEAL_HP:
-			var heal_amount = int(value)
+			var heal = int(value)
 			var old_hp = current_player.current_health
-			current_player.current_health = mini(old_hp + heal_amount, current_player.max_health)
-			
-			print("💚 +%d HP (%d → %d)" % [current_player.current_health - old_hp, old_hp, current_player.current_health])
+			current_player.current_health = mini(old_hp + heal, current_player.max_health)
+			print("💚 +%d HP" % (current_player.current_health - old_hp))
 			
 			if current_player.has_signal("health_changed"):
 				current_player.health_changed.emit(current_player.current_health)
 			_show_heal_effect()
 		
 		InventoryEnums.EffectType.INSTANT_HEAL_MANA:
-			var mana_amount = int(value)
+			var mana = int(value)
 			var old_mana = current_player.current_mana
-			current_player.current_mana = mini(old_mana + mana_amount, current_player.max_mana)
-			
+			current_player.current_mana = mini(old_mana + mana, current_player.max_mana)
 			print("💙 +%d маны" % (current_player.current_mana - old_mana))
 			
 			if current_player.has_signal("mana_changed"):
 				current_player.mana_changed.emit(current_player.current_mana)
 		
 		InventoryEnums.EffectType.BUFF_ARMOR:
-			var armor_bonus = int(value)
-			potion_bonus_armor += armor_bonus
-			
-			if current_player.has_method("add_potion_armor"):
-				current_player.add_potion_armor(armor_bonus)
-			else:
-				current_player.armor += armor_bonus
-			
-			# СРАЗУ обновляем UI
+			var armor = int(value)
+			potion_bonus_armor += armor
+			current_player.armor += armor
 			_update_armor_ui()
-			
-			print("🛡️ +%d брони" % armor_bonus)
+			print("🛡️ +%d брони" % armor)
 		
 		InventoryEnums.EffectType.BUFF_DAMAGE:
-			var damage_bonus = int(value)
-			potion_bonus_damage += damage_bonus
-			print("⚔️ +%d урона" % damage_bonus)
-			
-			# ВАЖНО: Пересчитываем урон персонажа
+			var damage = int(value)
+			potion_bonus_damage += damage
+			print("⚔️ +%d урона" % damage)
 			_recalculate_player_damage()
 
 
@@ -298,16 +300,12 @@ func _show_heal_effect():
 
 
 # ===========================================
-# ЭКИПИРОВКА - МГНОВЕННОЕ ОБНОВЛЕНИЕ UI
+# ЭКИПИРОВКА
 # ===========================================
 
 func _on_equipment_stats_changed(stats: Dictionary):
-	"""Применяем бонусы от экипировки - СРАЗУ обновляем UI"""
 	if not current_player:
 		return
-	
-	var old_bonus_hp = equipment_bonus_hp
-	var old_bonus_mana = equipment_bonus_mana
 	
 	equipment_bonus_hp = stats.get("max_hp", 0)
 	equipment_bonus_mana = stats.get("max_mana", 0)
@@ -315,12 +313,11 @@ func _on_equipment_stats_changed(stats: Dictionary):
 	equipment_bonus_speed = stats.get("speed_percent", 0)
 	equipment_bonus_damage = stats.get("damage", 0)
 	
-	# === HP ===
+	# HP
 	var new_max_hp = base_player_max_health + equipment_bonus_hp
 	if current_player.max_health != new_max_hp:
 		var hp_diff = new_max_hp - current_player.max_health
 		current_player.max_health = new_max_hp
-		
 		if hp_diff > 0:
 			current_player.current_health += hp_diff
 		current_player.current_health = mini(current_player.current_health, current_player.max_health)
@@ -329,12 +326,11 @@ func _on_equipment_stats_changed(stats: Dictionary):
 			game_ui.update_max_health(current_player.max_health)
 			game_ui.update_health(current_player.current_health)
 	
-	# === MANA ===
+	# Mana
 	var new_max_mana = base_player_max_mana + equipment_bonus_mana
 	if "max_mana" in current_player and current_player.max_mana != new_max_mana:
 		var mana_diff = new_max_mana - current_player.max_mana
 		current_player.max_mana = new_max_mana
-		
 		if mana_diff > 0:
 			current_player.current_mana += mana_diff
 		current_player.current_mana = mini(current_player.current_mana, current_player.max_mana)
@@ -343,19 +339,21 @@ func _on_equipment_stats_changed(stats: Dictionary):
 			game_ui.update_max_mana(current_player.max_mana)
 			game_ui.update_mana(current_player.current_mana)
 	
-	# === БРОНЯ ===
+	# Armor
 	current_player.armor = base_player_armor + equipment_bonus_armor + potion_bonus_armor
 	_update_armor_ui()
 	
-	# === УРОН ===
+	# Damage
 	_recalculate_player_damage()
 	
-	# === АРТЕФАКТ ВОЗРОЖДЕНИЯ ===
+	# Артефакт возрождения - ТОЛЬКО ИЗ СЛОТА!
 	_update_revival_artifact_status()
 
 
-func _on_equipment_changed(slot: int, old_item, new_item):
-	pass
+func _on_equipment_changed(slot = null, old_item = null, new_item = null):
+	# Проверяем артефакты при любом изменении экипировки
+	_update_revival_artifact_status()
+	_update_double_jump_artifact()
 
 
 func _update_armor_ui():
@@ -367,18 +365,19 @@ func _recalculate_player_damage():
 	if not current_player:
 		return
 	
-	var total_damage = base_player_damage + equipment_bonus_damage + potion_bonus_damage
-	
+	var total = base_player_damage + equipment_bonus_damage + potion_bonus_damage
 	if "current_damage" in current_player:
-		current_player.current_damage = total_damage
+		current_player.current_damage = total
 
 
 func _update_revival_artifact_status():
-	"""Проверяет, экипировано ли Перо Феникса"""
+	"""Перо Феникса работает ТОЛЬКО если экипировано в слот артефакта!"""
 	if not Inventory:
 		return
 	
 	var has_phoenix = false
+	
+	# Проверяем ТОЛЬКО слоты артефактов
 	for slot in [
 		InventoryEnums.EquipSlot.ARTIFACT_1,
 		InventoryEnums.EquipSlot.ARTIFACT_2,
@@ -386,16 +385,43 @@ func _update_revival_artifact_status():
 		InventoryEnums.EquipSlot.ARTIFACT_4,
 	]:
 		var item = Inventory.get_equipped_item(slot)
-		if item and item.get_item_id() == 202:  # ID Пера Феникса
+		if item and item.get_item_id() == 202:  # Phoenix Feather
 			has_phoenix = true
 			break
 	
 	if has_phoenix:
 		Global.set_revival_artifact("phoenix_feather")
+		print("✨ Артефакт возрождения АКТИВЕН (в слоте)")
 	else:
-		# Убираем артефакт возрождения только если это был phoenix_feather
 		if Global.revival_artifact_id == "phoenix_feather":
 			Global.revival_artifact_id = ""
+			print("❌ Артефакт возрождения НЕ активен")
+
+
+func _update_double_jump_artifact():
+	"""Крылья Гермеса работают ТОЛЬКО если экипированы"""
+	if not Inventory or not current_player:
+		return
+	
+	var has_wings = false
+	
+	for slot in [
+		InventoryEnums.EquipSlot.ARTIFACT_1,
+		InventoryEnums.EquipSlot.ARTIFACT_2,
+		InventoryEnums.EquipSlot.ARTIFACT_3,
+		InventoryEnums.EquipSlot.ARTIFACT_4,
+	]:
+		var item = Inventory.get_equipped_item(slot)
+		if item and item.get_item_id() == 201:  # Hermes Wings
+			has_wings = true
+			break
+	
+	if "enable_double_jump" in current_player:
+		current_player.enable_double_jump = has_wings
+		if has_wings:
+			print("✨ Двойной прыжок АКТИВЕН")
+		else:
+			print("❌ Двойной прыжок НЕ активен")
 
 
 # ===========================================
@@ -419,20 +445,15 @@ func _on_player_died():
 
 func _on_player_revived():
 	print("✨ Игрок возродился")
-	
-	# Перо Феникса использовано - убираем из экипировки
 	_consume_revival_artifact()
-	
-	# Пересчитываем урон (зелья сброшены при смерти)
 	_recalculate_player_damage()
 
 
 func _consume_revival_artifact():
-	"""Удаляет использованный артефакт возрождения"""
+	"""Удаляет использованное Перо Феникса из слота"""
 	if not Inventory:
 		return
 	
-	# Ищем Перо Феникса в экипировке
 	for slot in [
 		InventoryEnums.EquipSlot.ARTIFACT_1,
 		InventoryEnums.EquipSlot.ARTIFACT_2,
@@ -440,32 +461,27 @@ func _consume_revival_artifact():
 		InventoryEnums.EquipSlot.ARTIFACT_4,
 	]:
 		var item = Inventory.get_equipped_item(slot)
-		if item and item.get_item_id() == 202:  # ID Пера Феникса
-			# Снимаем и удаляем
+		if item and item.get_item_id() == 202:
 			Inventory.unequip_item(slot)
 			Inventory.remove_item_by_id(202, 1)
-			print("🔥 Перо Феникса использовано и удалено!")
-			
-			# Обновляем статус
+			print("🔥 Перо Феникса ИСПОЛЬЗОВАНО и удалено!")
 			_update_revival_artifact_status()
 			break
 
 
 # ===========================================
-# НАСТРОЙКА СУНДУКОВ
+# НАСТРОЙКА СУНДУКОВ - НОВАЯ СИСТЕМА!
 # ===========================================
 
 func _setup_chests():
-	"""Находит и настраивает все сундуки на уровне"""
+	"""Настраивает сундуки - теперь они спавнят предметы НА ЗЕМЛЮ"""
 	print("")
 	print("=== 📦 НАСТРОЙКА СУНДУКОВ ===")
 	
 	var chest_count = 0
 	
-	# Ищем все узлы типа Chest
 	for child in get_children():
 		if child is Chest:
-			# Проверяем, был ли сундук открыт ранее
 			if Global.is_pickup_collected(child.name):
 				print("   📦 %s - уже открыт, удаляем" % child.name)
 				child.queue_free()
@@ -475,31 +491,30 @@ func _setup_chests():
 			_configure_chest(child, chest_count)
 	
 	if chest_count == 0:
-		print("⚠️ Сундуки не найдены на уровне!")
+		print("⚠️ Сундуки не найдены!")
 	else:
-		print("✅ Настроено сундуков: ", chest_count)
+		print("✅ Настроено: %d" % chest_count)
 	print("")
 
 
 func _configure_chest(chest: Chest, index: int):
-	"""Настраивает конкретный сундук"""
+	"""Настраивает сундук - предметы будут спавниться на земле!"""
 	match index:
 		1:
-			# Первый сундук - АРТЕФАКТЫ
+			# Сундук с АРТЕФАКТАМИ
 			chest.setup_artifacts(["hermes_wings", "phoenix_feather"])
-			print("   📦 Сундук #1: Артефакты (Крылья Гермеса, Перо Феникса)")
+			print("   📦 Сундук #1: Артефакты (падают на землю)")
 		
 		2:
-			# Второй сундук - ЭКИПИРОВКА И ЗЕЛЬЯ
+			# Сундук с ПРЕДМЕТАМИ
 			chest.setup_items(
-				[1, 2, 3, 4, 101, 102, 103, 104, 105],  # ID предметов
-				[5, 5, 3, 2, 1, 1, 1, 1, 1]  # Количества
+				[1, 2, 3, 4, 101, 102, 103, 104, 105],
+				[2, 2, 1, 1, 1, 1, 1, 1, 1]
 			)
-			print("   📦 Сундук #2: Экипировка и зелья")
+			print("   📦 Сундук #2: Экипировка и зелья (падают на землю)")
 		
 		_:
-			# Дополнительные сундуки - случайный лут
-			chest.setup_items([1, 2], [3, 3])
+			chest.setup_items([1, 2], [2, 2])
 			print("   📦 Сундук #%d: Случайный лут" % index)
 
 
@@ -507,23 +522,34 @@ func _configure_chest(chest: Chest, index: int):
 # СПАВН ПЕРСОНАЖА
 # ===========================================
 
-func spawn_selected_character():
+func spawn_selected_character(is_new_game: bool = true):
 	if not Global.selected_character:
 		Global.selected_character = "warrior"
 	
 	print("🔄 Spawning: ", Global.selected_character)
 	
-	var character_scene_path = Global.character_player_scenes.get(Global.selected_character)
+	var scene_path = Global.character_player_scenes.get(Global.selected_character)
 	
-	if character_scene_path and ResourceLoader.exists(character_scene_path):
-		var character_scene = load(character_scene_path)
-		current_player = character_scene.instantiate()
+	if scene_path and ResourceLoader.exists(scene_path):
+		var scene = load(scene_path)
+		current_player = scene.instantiate()
 		
-		if player_spawn:
-			current_player.global_position = player_spawn.global_position
-		else:
-			current_player.global_position = Vector2(100, 100)
+		# Позиция спавна
+		var spawn_pos = player_spawn.global_position if player_spawn else Vector2(100, 100)
+		var spawn_source = "PlayerSpawn"
 		
+		if Global.spawn_point != "":
+			print("🔍 Ищем SpawnPoint: '%s'" % Global.spawn_point)
+			var spawn_node = get_node_or_null(Global.spawn_point)
+			if spawn_node:
+				spawn_pos = spawn_node.global_position
+				spawn_source = Global.spawn_point
+				print("✅ SpawnPoint найден: %s" % spawn_pos)
+			Global.spawn_point = ""
+		
+		print("📍 Итоговый спавн: %s [%s]" % [spawn_pos, spawn_source])
+		
+		current_player.global_position = spawn_pos
 		add_child(current_player)
 		print("✅ Player spawned")
 		
@@ -533,13 +559,22 @@ func spawn_selected_character():
 		setup_player_ui()
 		setup_player_camera()
 		
-		# Подключаем сигналы
 		if current_player.has_signal("died"):
 			current_player.died.connect(_on_player_died)
 		if current_player.has_signal("revived"):
 			current_player.revived.connect(_on_player_revived)
 		
-		_disable_old_artifact_system()
+		# ОТКЛЮЧАЕМ старую систему артефактов!
+		if "enable_double_jump" in current_player:
+			current_player.enable_double_jump = false
+		
+		# Восстанавливаем HP при возврате
+		if not is_new_game:
+			call_deferred("_restore_player_stats")
+		
+		# Проверяем экипированные артефакты
+		call_deferred("_update_revival_artifact_status")
+		call_deferred("_update_double_jump_artifact")
 	else:
 		print("❌ Character scene not found")
 		create_fallback_player()
@@ -558,24 +593,18 @@ func _save_base_stats():
 	if "current_speed" in current_player:
 		base_player_speed = current_player.current_speed
 	
-	# Сохраняем базовый урон
 	if "BASE_DAMAGE" in current_player:
 		base_player_damage = current_player.BASE_DAMAGE
 	elif "current_damage" in current_player:
 		base_player_damage = current_player.current_damage
 	else:
-		base_player_damage = 2  # Дефолт
+		base_player_damage = 2
 	
 	print("📊 Базовые статы сохранены (урон: %d)" % base_player_damage)
 
 
-func _disable_old_artifact_system():
-	if current_player and "enable_double_jump" in current_player:
-		current_player.enable_double_jump = false
-
-
 # ===========================================
-# НАСТРОЙКА UI
+# UI
 # ===========================================
 
 func setup_player_ui():
@@ -585,9 +614,9 @@ func setup_player_ui():
 	var stats = {
 		"health": current_player.current_health,
 		"max_health": current_player.max_health,
-		"mana": current_player.current_mana,
-		"max_mana": current_player.max_mana,
-		"armor": current_player.armor
+		"mana": current_player.current_mana if "current_mana" in current_player else 0,
+		"max_mana": current_player.max_mana if "max_mana" in current_player else 0,
+		"armor": current_player.armor if "armor" in current_player else 0
 	}
 	
 	game_ui.setup_character_ui(stats)
@@ -600,11 +629,11 @@ func setup_player_ui():
 		if not current_player.mana_changed.is_connected(_on_player_mana_changed):
 			current_player.mana_changed.connect(_on_player_mana_changed)
 	
-	var armor_timer = Timer.new()
-	armor_timer.wait_time = 0.1
-	armor_timer.timeout.connect(_check_armor_changed)
-	add_child(armor_timer)
-	armor_timer.start()
+	var timer = Timer.new()
+	timer.wait_time = 0.1
+	timer.timeout.connect(_check_armor_changed)
+	add_child(timer)
+	timer.start()
 
 
 func _check_armor_changed():

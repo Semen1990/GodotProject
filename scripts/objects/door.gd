@@ -2,202 +2,251 @@ extends Area2D
 class_name Door
 
 # ===========================================
-# DOOR - ДВЕРЬ (ПРЕФАБ)
+# DOOR v4.0 - ПЕРЕХОД МЕЖДУ УРОВНЯМИ
 # ===========================================
-# Путь: res://scripts/objects/Door.gd
-#
-# Использует GameState для:
-# - Проверки ключей
-# - Регистрации открытия
-# - Сохранения состояния при переходе
+# Использует Global для ключей и сохранения HP
+# Вызывает level.save_before_transition() перед переходом
 
-enum DoorColor { GOLD = 0, SILVER = 1, ORANGE = 2, BLUE = 3, GREEN = 4, RED = 5 }
+signal door_opened
+signal door_used
+
+enum KeyColor { 
+	GOLD = 0,
+	SILVER = 1,
+	RED = 2,
+	BLUE = 3,
+	GREEN = 4,
+	PURPLE = 5,
+	NONE = -1
+}
 
 const COLOR_NAMES = {
-	DoorColor.GOLD: "золотой",
-	DoorColor.SILVER: "серебряный",
-	DoorColor.ORANGE: "оранжевый",
-	DoorColor.BLUE: "синий",
-	DoorColor.GREEN: "зелёный",
-	DoorColor.RED: "красный",
+	KeyColor.GOLD: "золотой",
+	KeyColor.SILVER: "серебряный",
+	KeyColor.RED: "красный",
+	KeyColor.BLUE: "синий",
+	KeyColor.GREEN: "зелёный",
+	KeyColor.PURPLE: "фиолетовый",
+	KeyColor.NONE: "нет",
 }
 
-const COLOR_RGB = {
-	DoorColor.GOLD: Color(0.95, 0.8, 0.3),
-	DoorColor.SILVER: Color(0.75, 0.75, 0.85),
-	DoorColor.ORANGE: Color(1.0, 0.5, 0.1),
-	DoorColor.BLUE: Color(0.3, 0.5, 0.95),
-	DoorColor.GREEN: Color(0.3, 0.85, 0.3),
-	DoorColor.RED: Color(0.95, 0.25, 0.25),
-}
-
-@export var door_color: DoorColor = DoorColor.GOLD
 @export var target_scene: String = ""
-@export var spawn_point_id: String = ""       # ID точки спавна на целевом уровне
+@export var spawn_point_id: String = "SpawnPoint"
+@export var required_key: KeyColor = KeyColor.GOLD
 @export var requires_key: bool = true
 @export var consumes_key: bool = true
 @export var is_initially_open: bool = false
 
-@onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
-@onready var collision_shape: CollisionShape2D = $CollisionShape2D
+var animated_sprite: AnimatedSprite2D = null
+var color_indicator = null  # Может быть ColorRect, Sprite2D или Node2D
+var hint_label: Label = null
 
 var is_open: bool = false
 var player_in_range: bool = false
-var hint_label: Label = null
 
 
 func _ready():
+	animated_sprite = get_node_or_null("AnimatedSprite2D")
+	color_indicator = get_node_or_null("ColorIndicator")
+	hint_label = get_node_or_null("HintLabel")
+	
 	is_open = is_initially_open
 	
-	# Проверяем сохранённое состояние
-	if GameState and GameState.is_door_opened(name):
+	# Проверяем была ли дверь открыта
+	if Global and Global.is_door_opened(name):
 		is_open = true
 	
-	_setup_hint()
+	if not requires_key:
+		is_open = true
+	
+	# Подключаем сигналы
+	if not body_entered.is_connected(_on_body_entered):
+		body_entered.connect(_on_body_entered)
+	if not body_exited.is_connected(_on_body_exited):
+		body_exited.connect(_on_body_exited)
+	
 	_update_visual()
+	_setup_hint()
 	
-	body_entered.connect(_on_body_entered)
-	body_exited.connect(_on_body_exited)
-	
-	print("🚪 Дверь '%s': цвет=%s, требует_ключ=%s, открыта=%s" % [
-		name, COLOR_NAMES[door_color], requires_key, is_open
-	])
+	var key_name = COLOR_NAMES.get(required_key, "нет") if requires_key else "не требуется"
+	print("🚪 Дверь '%s': %s, target=%s, spawn=%s" % [name, key_name, target_scene, spawn_point_id])
 
 
 func _setup_hint():
-	hint_label = get_node_or_null("HintLabel")
+	if hint_label:
+		hint_label.visible = false
+		_update_hint_text()
+
+
+func _update_hint_text():
 	if not hint_label:
-		hint_label = Label.new()
-		hint_label.name = "HintLabel"
-		hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		hint_label.position = Vector2(-70, -90)
-		hint_label.add_theme_font_size_override("font_size", 14)
-		add_child(hint_label)
-	hint_label.visible = false
+		return
+	
+	if is_open:
+		hint_label.text = "[F] Войти"
+	elif requires_key:
+		var key_name = COLOR_NAMES.get(required_key, "ключ")
+		hint_label.text = "[F] Открыть (%s ключ)" % key_name
+	else:
+		hint_label.text = "[F] Открыть"
 
 
 func _update_visual():
-	# Анимация
-	if animated_sprite and animated_sprite.sprite_frames:
-		var anim = "open" if is_open else "idle"
-		if animated_sprite.sprite_frames.has_animation(anim):
-			animated_sprite.play(anim)
+	if animated_sprite:
+		if is_open:
+			if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("open"):
+				animated_sprite.play("open")
+			elif animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("opened"):
+				animated_sprite.play("opened")
+		else:
+			if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("closed"):
+				animated_sprite.play("closed")
+			elif animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("idle"):
+				animated_sprite.play("idle")
 	
-	# Цветовой индикатор (если есть)
-	var indicator = get_node_or_null("ColorIndicator")
-	if indicator:
-		indicator.color = COLOR_RGB[door_color]
-		indicator.color.a = 0.5 if is_open else 1.0
+	# Цвет индикатора
+	if color_indicator:
+		var colors = {
+			KeyColor.GOLD: Color(1.0, 0.85, 0.0),
+			KeyColor.SILVER: Color(0.75, 0.75, 0.85),
+			KeyColor.RED: Color(1.0, 0.25, 0.25),
+			KeyColor.BLUE: Color(0.3, 0.5, 1.0),
+			KeyColor.GREEN: Color(0.3, 0.85, 0.3),
+			KeyColor.PURPLE: Color(0.75, 0.3, 0.9),
+		}
+		var target_color = colors.get(required_key, Color.WHITE)
+		
+		if color_indicator is ColorRect:
+			color_indicator.color = target_color
+		elif color_indicator is Sprite2D:
+			color_indicator.modulate = target_color
+		else:
+			color_indicator.modulate = target_color
 
 
 func _process(_delta):
-	if player_in_range and Input.is_action_just_pressed("interact"):
-		_interact()
+	if player_in_range:
+		if Input.is_action_just_pressed("interact"):
+			_try_use_door()
 
 
 func _on_body_entered(body: Node2D):
 	if _is_player(body):
 		player_in_range = true
-		_update_hint()
-		hint_label.visible = true
+		if hint_label:
+			hint_label.visible = true
+			_update_hint_text()
 
 
 func _on_body_exited(body: Node2D):
 	if _is_player(body):
 		player_in_range = false
-		hint_label.visible = false
+		if hint_label:
+			hint_label.visible = false
 
 
 func _is_player(body: Node2D) -> bool:
 	return body.is_in_group("player") or body.has_method("take_damage")
 
 
-func _update_hint():
-	if not hint_label:
+func _try_use_door():
+	if is_open:
+		_use_door()
 		return
 	
-	if is_open:
-		hint_label.text = "[F] Войти"
-		hint_label.add_theme_color_override("font_color", Color(0.7, 1, 0.7))
-	elif not requires_key:
-		hint_label.text = "[F] Открыть"
-		hint_label.add_theme_color_override("font_color", Color.YELLOW)
-	elif _has_key():
-		hint_label.text = "[F] Открыть (%s)" % COLOR_NAMES[door_color]
-		hint_label.add_theme_color_override("font_color", Color(0.7, 1, 0.7))
+	# Нужен ключ
+	if requires_key:
+		var key_color = int(required_key)
+		
+		if Global.has_key(key_color):
+			# Есть ключ - открываем
+			if consumes_key:
+				Global.remove_key(key_color)
+				print("🔑 Использован: %s" % COLOR_NAMES[required_key])
+			
+			_open_door()
+		else:
+			# Нет ключа
+			print("🚪 Нужен %s ключ!" % COLOR_NAMES[required_key])
+			_show_locked_feedback()
 	else:
-		hint_label.text = "Нужен %s ключ" % COLOR_NAMES[door_color]
-		hint_label.add_theme_color_override("font_color", Color(1, 0.4, 0.4))
+		_open_door()
 
 
-func _has_key() -> bool:
-	if GameState:
-		return GameState.has_key(int(door_color))
-	return false
-
-
-func _interact():
-	if is_open:
-		_enter_door()
-	else:
-		_try_open()
-
-
-func _try_open():
-	if not requires_key:
-		_open()
-		return
-	
-	if _has_key():
-		if consumes_key and GameState:
-			GameState.remove_key(int(door_color))
-		_open()
-	else:
-		_shake()
-		print("🚪 Нужен %s ключ!" % COLOR_NAMES[door_color])
-
-
-func _open():
+func _open_door():
 	is_open = true
 	
-	# Регистрируем в GameState
-	if GameState:
-		GameState.register_door_opened(name)
+	if Global:
+		Global.mark_door_opened(name)
 	
 	_update_visual()
-	_update_hint()
-	print("🚪 Дверь '%s' открыта" % name)
+	_update_hint_text()
+	
+	door_opened.emit()
+	print("🚪 ✅ '%s' открыта" % name)
+	
+	# НЕ переходим автоматически!
+	# Игрок должен нажать F ещё раз чтобы войти
 
 
-func _shake():
-	if animated_sprite:
-		var tween = create_tween()
-		var pos = animated_sprite.position.x
-		tween.tween_property(animated_sprite, "position:x", pos + 4, 0.05)
-		tween.tween_property(animated_sprite, "position:x", pos - 8, 0.1)
-		tween.tween_property(animated_sprite, "position:x", pos + 4, 0.1)
-		tween.tween_property(animated_sprite, "position:x", pos, 0.05)
-
-
-func _enter_door():
+func _use_door():
 	if target_scene.is_empty():
-		push_warning("🚪 Целевая сцена не указана!")
+		print("⚠️ target_scene не указан!")
 		return
 	
-	if not ResourceLoader.exists(target_scene):
-		push_error("🚪 Сцена не найдена: %s" % target_scene)
-		return
+	print("🚪 ═══════════════════════════════")
+	print("🚪 ПЕРЕХОД: %s" % target_scene)
+	print("🚪 SPAWN: '%s'" % spawn_point_id)
+	print("🚪 ═══════════════════════════════")
 	
-	print("🚪 Переход: %s → %s (spawn: %s)" % [name, target_scene, spawn_point_id])
-	
-	# Сохраняем состояние
-	var level = get_tree().current_scene
+	# Сохраняем HP перед переходом
+	var level = get_parent()
 	if level and level.has_method("save_before_transition"):
 		level.save_before_transition()
+	else:
+		# Fallback: сохраняем напрямую
+		_save_player_stats_direct()
 	
-	# Подготавливаем переход
-	if GameState:
-		GameState.prepare_level_transition(target_scene, spawn_point_id)
+	# Устанавливаем spawn point
+	Global.spawn_point = spawn_point_id
+	print("🚪 Global.spawn_point = '%s'" % spawn_point_id)
 	
-	# Переходим
+	door_used.emit()
+	
+	# Переход
 	get_tree().change_scene_to_file(target_scene)
+
+
+func _save_player_stats_direct():
+	"""Fallback сохранение если level не имеет метода"""
+	if not Global.current_player:
+		return
+	
+	var player = Global.current_player
+	Global.saved_player_health = player.current_health
+	
+	if "current_mana" in player:
+		Global.saved_player_mana = player.current_mana
+	
+	print("💾 Сохранено: HP=%d, Mana=%d" % [Global.saved_player_health, Global.saved_player_mana])
+
+
+func _show_locked_feedback():
+	"""Визуальная обратная связь что дверь закрыта"""
+	if animated_sprite:
+		var original = animated_sprite.modulate
+		animated_sprite.modulate = Color(1.5, 0.5, 0.5)
+		
+		var tween = create_tween()
+		tween.tween_property(animated_sprite, "modulate", original, 0.3)
+	
+	if hint_label:
+		var key_name = COLOR_NAMES.get(required_key, "ключ")
+		hint_label.text = "🔒 Нужен %s ключ!" % key_name
+		hint_label.add_theme_color_override("font_color", Color.RED)
+		
+		await get_tree().create_timer(1.5).timeout
+		
+		if hint_label:
+			hint_label.remove_theme_color_override("font_color")
+			_update_hint_text()

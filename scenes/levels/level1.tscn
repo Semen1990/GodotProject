@@ -10,7 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://33pqmbc78n27" path="res://prefabs/objects/chest.tscn" id="8_plydf"]
 [ext_resource type="PackedScene" uid="uid://cmkpjcmc0lm82" path="res://prefabs/objects/key_pickup.tscn" id="9_nkeig"]
 [ext_resource type="PackedScene" uid="uid://7j4r1w6ko53b" path="res://prefabs/objects/door.tscn" id="10_nfihu"]
-[ext_resource type="PackedScene" path="res://prefabs/objects/spawn_point.tscn" id="11_lgguw"]
+[ext_resource type="PackedScene" uid="uid://c3wgtlf6r8x7c" path="res://prefabs/objects/spawn_point.tscn" id="11_lgguw"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dd0lh"]
 texture = ExtResource("2_dd0lh")
@@ -607,6 +607,7 @@ position = Vector2(572, 849)
 [node name="Door" parent="." unique_id=1500273929 instance=ExtResource("10_nfihu")]
 position = Vector2(1750, 879)
 target_scene = "res://scenes/levels/level2.tscn"
+spawn_point_id = "SpawnPoint"
 
 [node name="SpawnPoint" parent="." unique_id=1873926194 instance=ExtResource("11_lgguw")]
 position = Vector2(1759, 749)

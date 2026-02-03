@@ -3,20 +3,20 @@
 [ext_resource type="Script" uid="uid://sqj3wwjwm7h5" path="res://scripts/objects/item_pickup.gd" id="1_72j5x"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_nc1ct"]
-radius = 25.0
+radius = 50.0
 
-[node name="ItemPickup" type="Area2D"]
+[node name="ItemPickup" type="Area2D" unique_id=1962327677]
 collision_layer = 8
-collision_mask = 3
+collision_mask = 2
 script = ExtResource("1_72j5x")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-scale = Vector2(1.5, 1.5)
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=23106964]
+scale = Vector2(3, 3)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=472711253]
 shape = SubResource("CircleShape2D_nc1ct")
 
-[node name="Label" type="Label" parent="."]
+[node name="Label" type="Label" parent="." unique_id=172505447]
 offset_left = -40.0
 offset_top = -50.0
 offset_right = 8.0
@@ -24,7 +24,7 @@ offset_bottom = -27.0
 text = "Зелье"
 horizontal_alignment = 1
 
-[node name="HintLabel" type="Label" parent="."]
+[node name="HintLabel" type="Label" parent="." unique_id=1592193791]
 visible = false
 offset_left = -30.0
 offset_top = -70.0

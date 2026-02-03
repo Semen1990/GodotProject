@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://cc2q04j7j5qr6" path="res://scripts/inventory/ui/death_menu.gd" id="4_gycjm"]
 [ext_resource type="PackedScene" uid="uid://6lwt8fuq8uah" path="res://scenes/Ui/game_ui.tscn" id="5_8i1lk"]
 [ext_resource type="PackedScene" uid="uid://ceck3rjiaby11" path="res://scenes/Ui/simple_pause_menu.tscn" id="6_hgky1"]
-[ext_resource type="PackedScene" path="res://prefabs/objects/spawn_point.tscn" id="7_b4tpv"]
+[ext_resource type="PackedScene" uid="uid://c3wgtlf6r8x7c" path="res://prefabs/objects/spawn_point.tscn" id="7_b4tpv"]
 [ext_resource type="PackedScene" uid="uid://7j4r1w6ko53b" path="res://prefabs/objects/door.tscn" id="8_hkuam"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_brxtv"]
@@ -473,4 +473,5 @@ spawn_point_id = "FromLevel1"
 [node name="Door" parent="." unique_id=1799376009 instance=ExtResource("8_hkuam")]
 position = Vector2(191, 760)
 target_scene = "res://scenes/levels/level1.tscn"
+spawn_point_id = "SpawnPoint"
 is_initially_open = true

@@ -89,26 +89,26 @@ animations = [{
 [sub_resource type="CircleShape2D" id="CircleShape2D_ffcdb"]
 radius = 50.0
 
-[node name="Chest" type="Area2D"]
+[node name="Chest" type="Area2D" unique_id=747516925]
 collision_mask = 3
 script = ExtResource("1_opa1x")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1319044678]
 position = Vector2(21, -15)
 scale = Vector2(3, 3.214)
 sprite_frames = SubResource("SpriteFrames_cu4jo")
 animation = &"idle"
 frame_progress = 0.20947194
 
-[node name="InteractionZone" type="Area2D" parent="."]
+[node name="InteractionZone" type="Area2D" parent="." unique_id=1700220958]
 position = Vector2(1, 0)
 collision_mask = 3
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionZone"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionZone" unique_id=774434936]
 position = Vector2(-3, 1)
 shape = SubResource("CircleShape2D_ffcdb")
 
-[node name="HintLabel" type="Label" parent="."]
+[node name="HintLabel" type="Label" parent="." unique_id=1400837576]
 visible = false
 offset_left = -33.0
 offset_top = -41.0

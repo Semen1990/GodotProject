@@ -59,12 +59,13 @@ func _ready():
 		animated_sprite.animation_finished.connect(_on_animation_finished)
 		animated_sprite.frame_changed.connect(_on_frame_changed)
 	
-	_change_state(State.IDLE)
-	
-	# Проверяем, не был ли враг уже убит (например, при возрождении игрока)
-	if not is_alive:
+	# ИСПРАВЛЕНО: Проверяем состояние ДО установки начального состояния
+	if GameState and GameState.is_enemy_killed(get_parent().name + "/" + name):
+		print("🦎 Загружаем мёртвое состояние для:", name)
 		_set_dead_state()
 		return
+	
+	_change_state(State.IDLE)
 
 func _physics_process(delta):
 	# Если враг мертв или неактивен - не обрабатываем физику
@@ -450,6 +451,10 @@ func _die():
 	# Обновляем статистику убийств
 	if Global and Global.has_method("add_enemy_killed"):
 		Global.add_enemy_killed(enemy_type)
+	
+	# Регистрируем смерть в GameState
+	if GameState:
+		Global.register_killed_enemy(name)
 	
 	# Устанавливаем состояние смерти
 	is_alive = false

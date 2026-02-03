@@ -1,9 +1,12 @@
 extends Node
 
 # ===========================================
-# GLOBAL.GD - ВЕРСИЯ v4.1 С СИСТЕМОЙ СОХРАНЕНИЯ
+# GLOBAL.GD - ВЕРСИЯ v5.0
 # ===========================================
-# Добавлено: сохранение состояния между уровнями
+# ИЗМЕНЕНИЯ:
+# 1. Правильный порядок цветов ключей
+# 2. Артефакты НЕ активируются автоматически
+# 3. Добавлен get_keys_array() для UI
 
 var selected_character = null
 var character_data = {}
@@ -74,48 +77,70 @@ var fallback_character_data = {
 }
 
 # ===========================================
-# СИСТЕМА АРТЕФАКТОВ
+# СИСТЕМА АРТЕФАКТОВ (ТОЛЬКО ДЛЯ ОТСЛЕЖИВАНИЯ)
 # ===========================================
+# ВАЖНО: Артефакты теперь работают ТОЛЬКО через инвентарь!
+# collected_artifacts - только для статистики
 
 var collected_artifacts: Array = []
 
 # ===========================================
 # СИСТЕМА КЛЮЧЕЙ
 # ===========================================
+# Порядок цветов (соответствует KeyPickup.KeyColor):
+# 0 = GOLD (Золотой)
+# 1 = SILVER (Серебряный)
+# 2 = RED (Красный)
+# 3 = BLUE (Синий)
+# 4 = GREEN (Зелёный)
+# 5 = PURPLE (Фиолетовый)
 
-var collected_keys: Array = []
+var keys: Dictionary = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+
+const KEY_COLOR_NAMES = {
+	0: "золотой",
+	1: "серебряный",
+	2: "красный",
+	3: "синий",
+	4: "зелёный",
+	5: "фиолетовый"
+}
+
 var spawn_point: String = ""
 var opened_doors: Array = []
 
 # ===========================================
-# СИСТЕМА СОХРАНЕНИЯ СОСТОЯНИЯ (НОВОЕ!)
+# СИСТЕМА СОХРАНЕНИЯ СОСТОЯНИЯ
 # ===========================================
 
-var collected_pickups: Array = []   # Имена подобранных объектов
-var killed_enemies: Array = []      # Имена убитых врагов
+var collected_pickups: Array = []
+var killed_enemies: Array = []
 
-# Сохранённые HP/Mana игрока
 var saved_player_health: int = -1
 var saved_player_mana: int = -1
 
+# ===========================================
+# БАЗА ДАННЫХ АРТЕФАКТОВ (для справки)
 # ===========================================
 
 var artifacts_database = {
 	"hermes_wings": {
 		"name": "Крылья Гермеса",
 		"description": "Легендарные крылатые сандалии",
-		"icon": "res://assets/artifacts/hermes_wings.png",
+		"icon": "res://assets/items/artifacts/hermes_wings.png",
 		"ability": "double_jump",
 		"rarity": "rare",
-		"effect_text": "Позволяет совершить второй прыжок в воздухе"
+		"effect_text": "Позволяет совершить второй прыжок в воздухе",
+		"item_id": 201  # ID в инвентаре
 	},
 	"phoenix_feather": {
 		"name": "Перо Феникса",
 		"description": "Магическое перо возрождения",
-		"icon": "res://assets/artifacts/phoenix_feather.png",
+		"icon": "res://assets/items/artifacts/phoenix_feather.png",
 		"ability": "revival",
 		"rarity": "legendary",
-		"effect_text": "Возрождает после смерти с 50% HP"
+		"effect_text": "Возрождает после смерти с 50% HP",
+		"item_id": 202  # ID в инвентаре
 	},
 	"griffin_feather": {
 		"name": "Перо Грифона",
@@ -217,14 +242,17 @@ var run_statistics: Dictionary = {
 	"start_time": 0.0
 }
 
+# Артефакт возрождения - устанавливается ТОЛЬКО из level1.gd
+# когда артефакт ЭКИПИРОВАН в слот!
 var revival_artifact_id: String = ""
+
 var last_room_path: String = ""
 var last_safe_position: Vector2 = Vector2.ZERO
 var run_started: bool = false
 
 
 func _ready():
-	print("🌍 Global.gd v4.1 loaded!")
+	print("🌍 Global.gd v5.0 loaded!")
 	load_character_data()
 	load_settings()
 
@@ -283,6 +311,7 @@ func load_character_scene(character_key: String):
 
 func register_game_ui(ui_node: CanvasLayer):
 	game_ui = ui_node
+	_update_keys_ui()
 
 
 func unregister_game_ui():
@@ -296,8 +325,8 @@ func register_player(player_node):
 	current_player = player_node
 	if player_node is Node:
 		print("✅ Игрок зарегистрирован: ", player_node.name)
-		apply_all_artifacts_to_player()
-		# Восстанавливаем HP если есть сохранённые
+		# НЕ применяем артефакты автоматически!
+		# Артефакты работают только через инвентарь
 		if saved_player_health > 0:
 			call_deferred("restore_player_stats")
 
@@ -349,32 +378,35 @@ func debug_print_state():
 	print("=== GLOBAL STATE DEBUG ===")
 	print("Selected character: ", selected_character)
 	print("Current player: ", current_player)
-	print("Collected keys: ", collected_keys)
+	print("Keys: ", keys)
 	print("Collected pickups: ", collected_pickups)
 	print("Killed enemies: ", killed_enemies)
 	print("Spawn point: ", spawn_point)
 	print("Run started: ", run_started)
+	print("Revival artifact: ", revival_artifact_id)
 	print("==========================")
 
 
 # ===========================================
-# АРТЕФАКТЫ
+# АРТЕФАКТЫ (ТОЛЬКО ДЛЯ СТАТИСТИКИ!)
 # ===========================================
+# ВАЖНО: Теперь артефакты работают ТОЛЬКО через систему инвентаря!
+# Эти методы оставлены для обратной совместимости
 
 func has_artifact(artifact_id: String) -> bool:
+	"""Проверяет был ли артефакт собран (для статистики)"""
 	return collected_artifacts.has(artifact_id)
 
 
 func has_ability(ability_name: String) -> bool:
-	for artifact_id in collected_artifacts:
-		if artifacts_database.has(artifact_id):
-			var artifact = artifacts_database[artifact_id]
-			if artifact.get("ability", "") == ability_name:
-				return true
+	"""УСТАРЕЛО: Теперь проверяется через инвентарь!"""
+	# Оставляем для обратной совместимости, но не используем
 	return false
 
 
 func collect_artifact(artifact_id: String) -> bool:
+	"""Регистрирует артефакт как собранный (для статистики)
+	   НЕ активирует эффекты! Эффекты применяются через инвентарь."""
 	if not artifacts_database.has(artifact_id):
 		return false
 	
@@ -384,59 +416,12 @@ func collect_artifact(artifact_id: String) -> bool:
 	collected_artifacts.append(artifact_id)
 	add_artifact_collected()
 	
-	var artifact = artifacts_database[artifact_id]
-	if artifact.get("ability", "") == "revival":
-		set_revival_artifact(artifact_id)
-	
-	if current_player:
-		apply_artifact_effect(artifact_id)
+	# НЕ применяем эффекты автоматически!
+	# Артефакт нужно экипировать в слот инвентаря
 	
 	artifact_collected.emit(artifact_id)
+	print("📦 Артефакт '%s' добавлен в статистику (нужно экипировать!)" % artifact_id)
 	return true
-
-
-func apply_artifact_effect(artifact_id: String):
-	if not current_player:
-		return
-	
-	if not artifacts_database.has(artifact_id):
-		return
-	
-	var artifact = artifacts_database[artifact_id]
-	
-	match artifact.get("ability", ""):
-		"double_jump":
-			if "enable_double_jump" in current_player:
-				current_player.enable_double_jump = true
-				print("✨ Двойной прыжок активирован!")
-		
-		"dash":
-			if "base_speed" in current_player and "current_speed" in current_player:
-				current_player.base_speed = int(current_player.base_speed * 1.3)
-				current_player.current_speed = current_player.base_speed
-		
-		"speed":
-			if "base_speed" in current_player and "current_speed" in current_player:
-				current_player.base_speed = int(current_player.base_speed * 1.15)
-				current_player.current_speed = current_player.base_speed
-		
-		"max_health":
-			if "max_health" in current_player and "current_health" in current_player:
-				current_player.max_health += 20
-				current_player.current_health += 20
-		
-		"max_mana":
-			if "max_mana" in current_player and "current_mana" in current_player:
-				current_player.max_mana += 20
-				current_player.current_mana += 20
-
-
-func apply_all_artifacts_to_player():
-	if not current_player:
-		return
-	
-	for artifact_id in collected_artifacts:
-		apply_artifact_effect(artifact_id)
 
 
 func get_artifact_data(artifact_id: String) -> Dictionary:
@@ -467,38 +452,94 @@ func reset_artifacts():
 	revival_artifact_id = ""
 
 
+func apply_all_artifacts_to_player():
+	"""УСТАРЕЛО: Оставлено для обратной совместимости.
+	   Артефакты теперь применяются через систему инвентаря!"""
+	pass
+
+
+func apply_artifact_effect(_artifact_id: String):
+	"""УСТАРЕЛО: Оставлено для обратной совместимости.
+	   Артефакты теперь применяются через систему инвентаря!"""
+	pass
+
+
 # ===========================================
-# КЛЮЧИ
+# СИСТЕМА КЛЮЧЕЙ
 # ===========================================
 
-func has_key(key_color: int) -> bool:
-	return collected_keys.has(key_color)
+func has_key(color: int) -> bool:
+	"""Проверяет наличие ключа указанного цвета"""
+	return keys.get(color, 0) > 0
 
 
-func add_key(key_color: int):
-	if not collected_keys.has(key_color):
-		collected_keys.append(key_color)
-		add_key_collected()
-		print("🔑 Ключ добавлен: цвет %d" % key_color)
+func add_key(color: int, amount: int = 1):
+	"""Добавляет ключ(и) указанного цвета"""
+	if not keys.has(color):
+		keys[color] = 0
+	keys[color] += amount
+	run_statistics["keys_collected"] += amount
+	
+	var color_name = KEY_COLOR_NAMES.get(color, "неизвестный")
+	print("🔑 +%d %s ключ (всего: %d)" % [amount, color_name, keys[color]])
+	_update_keys_ui()
 
 
-func remove_key(key_color: int):
-	if collected_keys.has(key_color):
-		collected_keys.erase(key_color)
+func remove_key(color: int, amount: int = 1) -> bool:
+	"""Удаляет ключ. Возвращает true если успешно"""
+	if keys.get(color, 0) < amount:
+		var color_name = KEY_COLOR_NAMES.get(color, "неизвестный")
+		print("🔑 ❌ Недостаточно %s ключей" % color_name)
+		return false
+	
+	keys[color] -= amount
+	var color_name = KEY_COLOR_NAMES.get(color, "неизвестный")
+	print("🔑 -%d %s ключ (осталось: %d)" % [amount, color_name, keys[color]])
+	_update_keys_ui()
+	return true
 
 
-func get_keys_count() -> int:
-	return collected_keys.size()
+func get_key_count(color: int) -> int:
+	"""Возвращает количество ключей указанного цвета"""
+	return keys.get(color, 0)
 
 
-func get_all_keys() -> Array:
-	return collected_keys.duplicate()
+func get_all_keys() -> Dictionary:
+	"""Возвращает все ключи"""
+	return keys.duplicate()
+
+
+func get_keys_array() -> Array:
+	"""Возвращает массив количества ключей для UI
+	   [gold, silver, red, blue, green, purple]"""
+	return [
+		keys.get(0, 0),  # Gold
+		keys.get(1, 0),  # Silver
+		keys.get(2, 0),  # Red
+		keys.get(3, 0),  # Blue
+		keys.get(4, 0),  # Green
+		keys.get(5, 0),  # Purple
+	]
 
 
 func reset_keys():
-	collected_keys.clear()
+	"""Сбрасывает все ключи"""
+	keys = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
 	spawn_point = ""
 	opened_doors.clear()
+	_update_keys_ui()
+
+
+func _update_keys_ui():
+	"""Обновляет UI ключей"""
+	if not game_ui:
+		return
+	
+	if game_ui.has_method("update_keys"):
+		game_ui.update_keys(get_keys_array())
+	elif game_ui.has_method("update_single_key"):
+		for i in range(6):
+			game_ui.update_single_key(i, keys.get(i, 0))
 
 
 func mark_door_opened(door_id: String):
@@ -511,7 +552,7 @@ func is_door_opened(door_id: String) -> bool:
 
 
 # ===========================================
-# СОХРАНЕНИЕ СОСТОЯНИЯ (НОВОЕ!)
+# СОХРАНЕНИЕ СОСТОЯНИЯ
 # ===========================================
 
 func register_collected_pickup(object_name: String):
@@ -544,6 +585,8 @@ func save_player_stats():
 		saved_player_health = current_player.current_health
 		if "current_mana" in current_player:
 			saved_player_mana = current_player.current_mana
+		else:
+			saved_player_mana = -1
 		print("💾 Сохранено: HP=%d Mana=%d" % [saved_player_health, saved_player_mana])
 
 
@@ -551,14 +594,14 @@ func restore_player_stats():
 	"""Восстанавливает HP/Mana после перехода"""
 	if current_player and saved_player_health > 0:
 		current_player.current_health = saved_player_health
-		if "current_mana" in current_player and saved_player_mana >= 0:
-			current_player.current_mana = saved_player_mana
 		print("💾 Восстановлено: HP=%d" % saved_player_health)
 		
-		# Уведомляем UI
+		if "current_mana" in current_player and saved_player_mana >= 0:
+			current_player.current_mana = saved_player_mana
+		
 		if current_player.has_signal("health_changed"):
 			current_player.health_changed.emit(current_player.current_health)
-		if current_player.has_signal("mana_changed"):
+		if current_player.has_signal("mana_changed") and "current_mana" in current_player:
 			current_player.mana_changed.emit(current_player.current_mana)
 
 
@@ -577,9 +620,10 @@ func start_run():
 	run_statistics["start_time"] = Time.get_unix_time_from_system()
 	run_started = true
 	
-	# Очищаем списки сохранения
 	collected_pickups.clear()
 	killed_enemies.clear()
+	reset_keys()
+	reset_artifacts()
 	clear_saved_stats()
 
 
@@ -608,7 +652,6 @@ func full_reset():
 	reset_artifacts()
 	reset_keys()
 	
-	# Очищаем списки сохранения
 	collected_pickups.clear()
 	killed_enemies.clear()
 	clear_saved_stats()
@@ -681,10 +724,14 @@ func get_run_statistics() -> Dictionary:
 # ===========================================
 # ВОЗРОЖДЕНИЕ
 # ===========================================
+# ВАЖНО: revival_artifact_id устанавливается ТОЛЬКО из level1.gd
+# когда Перо Феникса ЭКИПИРОВАНО в слот артефакта!
 
 func set_revival_artifact(artifact_id: String):
+	"""Устанавливает артефакт возрождения (вызывается из level1.gd)"""
 	revival_artifact_id = artifact_id
-	print("✨ Артефакт возрождения: %s" % artifact_id)
+	if artifact_id != "":
+		print("✨ Артефакт возрождения активен: %s" % artifact_id)
 
 
 func get_revival_artifact() -> String:
@@ -692,16 +739,16 @@ func get_revival_artifact() -> String:
 
 
 func has_revival_artifact() -> bool:
+	"""Проверяет есть ли АКТИВНЫЙ артефакт возрождения"""
 	return revival_artifact_id != ""
 
 
 func use_revival_artifact() -> String:
+	"""Использует артефакт возрождения.
+	   ВАЖНО: Удаление из инвентаря делается в level1.gd!"""
 	var used_id = revival_artifact_id
 	revival_artifact_id = ""
-	
-	if collected_artifacts.has(used_id):
-		collected_artifacts.erase(used_id)
-	
+	print("🔮 Артефакт возрождения использован: %s" % used_id)
 	return used_id
 
 

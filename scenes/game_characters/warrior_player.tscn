@@ -1,4 +1,4 @@
-[gd_scene load_steps=64 format=3 uid="uid://1ed5fqom83ta"]
+[gd_scene format=3 uid="uid://1ed5fqom83ta"]
 
 [ext_resource type="Script" uid="uid://bsvnj0wge81h6" path="res://scripts/game_characters/warrior_player.gd" id="1_wdn4x"]
 [ext_resource type="Texture2D" uid="uid://d21tutxngphof" path="res://assets/players/char_red_1.png" id="2_u2xg8"]
@@ -467,25 +467,25 @@ animations = [{
 radius = 5.5
 height = 32.0
 
-[node name="BaseGameCharacter" type="CharacterBody2D" groups=["player"]]
+[node name="BaseGameCharacter" type="CharacterBody2D" unique_id=2086548746 groups=["player"]]
 position = Vector2(-12, -8)
 scale = Vector2(4, 4)
 collision_layer = 2
 collision_mask = 13
 script = ExtResource("1_wdn4x")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." groups=["player"]]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=979882382 groups=["player"]]
 texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_wdn4x")
 animation = &"shield_defence"
 autoplay = "idle"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1070807085]
 position = Vector2(-1.5, 13)
 shape = SubResource("CapsuleShape2D_yn5gq")
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="Camera2D" type="Camera2D" parent="." unique_id=412420069]
 position = Vector2(-1, 12)
 
-[node name="PlayerController" type="Node" parent="."]
+[node name="PlayerController" type="Node" parent="." unique_id=103978168]
 script = ExtResource("3_p8vhd")

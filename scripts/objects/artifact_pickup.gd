@@ -1,214 +1,158 @@
 extends Area2D
+class_name ArtifactPickup
 
 # ===========================================
-# ARTIFACT PICKUP v7
+# ARTIFACT PICKUP v1.0 - ПОДБОР АРТЕФАКТОВ
 # ===========================================
-# Путь: res://scripts/objects/artifact_pickup.gd
+# Артефакт лежит на земле, подбирается по F
+# Добавляется В ИНВЕНТАРЬ (не активируется!)
+# Работает только когда экипирован в слот артефакта
+
+signal collected(artifact_id: String)
 
 @export var artifact_id: String = "hermes_wings"
-@export var float_height: float = 10.0
-@export var float_speed: float = 2.0
+@export var float_height: float = 4.0
+@export var float_speed: float = 2.5
 
-const ARTIFACT_ID_MAP = {
+# ID предметов артефактов в базе данных
+const ARTIFACT_ITEM_IDS = {
 	"hermes_wings": 201,
 	"phoenix_feather": 202,
-	"vampire_ring": 203,
-	"berserker_amulet": 204,
 }
 
-var initial_y: float
-var time: float = 0.0
-var is_collected: bool = false
-var player_in_range: bool = false
-
-@onready var sprite: Sprite2D = $Sprite2D
-@onready var collision: CollisionShape2D = $CollisionShape2D
-@onready var label: Label = $Label
+var sprite: Sprite2D = null
 var hint_label: Label = null
+
+var initial_y: float = 0.0
+var time: float = 0.0
+var player_in_range: bool = false
+var is_collected: bool = false
 
 
 func _ready():
-	print("🎁 ArtifactPickup создан: %s pos=%s" % [artifact_id, position])
+	sprite = get_node_or_null("Sprite2D")
+	hint_label = get_node_or_null("HintLabel")
 	
 	initial_y = position.y
 	
-	await get_tree().process_frame
-	
-	if _check_already_collected():
-		print("   ⚠️ Артефакт уже в инвентаре!")
+	if Global and Global.is_pickup_collected(name):
 		queue_free()
 		return
 	
-	_setup_artifact_from_inventory()
-	_create_hint_label()
+	if not body_entered.is_connected(_on_body_entered):
+		body_entered.connect(_on_body_entered)
+	if not body_exited.is_connected(_on_body_exited):
+		body_exited.connect(_on_body_exited)
 	
-	body_entered.connect(_on_body_entered)
-	body_exited.connect(_on_body_exited)
+	if hint_label:
+		hint_label.visible = false
+	
+	if sprite and not sprite.texture:
+		_load_texture()
+	
+	print("✨ ArtifactPickup '%s': %s" % [name, artifact_id])
 
 
-func _create_hint_label():
-	hint_label = get_node_or_null("HintLabel")
-	
-	if not hint_label:
-		hint_label = Label.new()
-		hint_label.name = "HintLabel"
-		hint_label.text = "Нажми F"
-		hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		hint_label.position = Vector2(-35, -70)
-		hint_label.add_theme_font_size_override("font_size", 14)
-		hint_label.add_theme_color_override("font_color", Color(1, 1, 0.7))
-		add_child(hint_label)
-	
-	hint_label.visible = false
+func _load_texture():
+	var path = "res://assets/items/artifacts/%s.png" % artifact_id
+	if ResourceLoader.exists(path):
+		sprite.texture = load(path)
 
 
-func _check_already_collected() -> bool:
-	if not Inventory or not Inventory.item_database:
-		return false
-	
-	var inv_id = ARTIFACT_ID_MAP.get(artifact_id, -1)
-	if inv_id < 0:
-		return false
-	
-	if Inventory.has_item(inv_id):
-		return true
-	
-	for slot in [
-		InventoryEnums.EquipSlot.ARTIFACT_1,
-		InventoryEnums.EquipSlot.ARTIFACT_2,
-		InventoryEnums.EquipSlot.ARTIFACT_3,
-		InventoryEnums.EquipSlot.ARTIFACT_4,
-	]:
-		var equipped = Inventory.get_equipped_item(slot)
-		if equipped and equipped.get_item_id() == inv_id:
-			return true
-	
-	return false
-
-
-func _setup_artifact_from_inventory():
-	if not Inventory or not Inventory.item_database:
-		_set_fallback_visuals()
-		return
-	
-	var inv_id = ARTIFACT_ID_MAP.get(artifact_id, -1)
-	if inv_id < 0:
-		_set_fallback_visuals()
-		return
-	
-	var item_data = Inventory.item_database.get_item_by_id(inv_id)
-	if not item_data:
-		_set_fallback_visuals()
-		return
-	
-	if item_data.icon and sprite:
-		sprite.texture = item_data.icon
-	else:
-		_create_color_sprite(item_data.rarity)
-	
-	if label:
-		label.text = item_data.display_name
-		label.modulate = InventoryEnums.get_rarity_color(item_data.rarity)
-	
-	print("   ✅ Загружен: %s" % item_data.display_name)
-
-
-func _create_color_sprite(rarity):
-	if not sprite:
-		return
-	var color = InventoryEnums.get_rarity_color(rarity)
-	var image = Image.create(32, 32, false, Image.FORMAT_RGBA8)
-	image.fill(color)
-	sprite.texture = ImageTexture.create_from_image(image)
-
-
-func _set_fallback_visuals():
+func setup(id: String):
+	artifact_id = id
 	if sprite:
-		var image = Image.create(32, 32, false, Image.FORMAT_RGBA8)
-		image.fill(Color.PURPLE)
-		sprite.texture = ImageTexture.create_from_image(image)
-	if label:
-		label.text = artifact_id.replace("_", " ").capitalize()
+		_load_texture()
 
 
 func _process(delta):
-	if not is_collected:
-		time += delta * float_speed
-		position.y = initial_y + sin(time) * float_height
+	if is_collected:
+		return
 	
-	if player_in_range and not is_collected:
+	time += delta * float_speed
+	position.y = initial_y + sin(time) * float_height
+	
+	if player_in_range:
 		if Input.is_action_just_pressed("interact"):
-			_collect_artifact()
+			_collect()
 
 
-func _on_body_entered(body):
-	if is_collected:
-		return
-	if not (body.is_in_group("player") or body.has_method("take_damage")):
-		return
-	
-	player_in_range = true
-	if hint_label:
-		hint_label.visible = true
-	print("🎁 Игрок рядом с артефактом: %s" % artifact_id)
-
-
-func _on_body_exited(body):
-	if not (body.is_in_group("player") or body.has_method("take_damage")):
-		return
-	
-	player_in_range = false
-	if hint_label:
-		hint_label.visible = false
-
-
-func _collect_artifact():
+func _on_body_entered(body: Node2D):
 	if is_collected:
 		return
 	
-	var success = _add_to_inventory()
+	if _is_player(body):
+		player_in_range = true
+		if hint_label:
+			hint_label.visible = true
+
+
+func _on_body_exited(body: Node2D):
+	if _is_player(body):
+		player_in_range = false
+		if hint_label:
+			hint_label.visible = false
+
+
+func _is_player(body: Node2D) -> bool:
+	return body.is_in_group("player") or body.has_method("take_damage")
+
+
+func _collect():
+	if is_collected:
+		return
 	
-	if success:
-		print("✅ Артефакт в инвентаре: %s" % artifact_id)
+	is_collected = true
+	
+	if Global:
+		Global.register_collected_pickup(name)
+	
+	# Добавляем артефакт В ИНВЕНТАРЬ как предмет
+	var item_id = ARTIFACT_ITEM_IDS.get(artifact_id, 0)
+	if item_id > 0 and Inventory:
+		var remaining = Inventory.add_item_by_id(item_id, 1)
+		if remaining > 0:
+			print("⚠️ Инвентарь полон!")
+			is_collected = false
+			return
+		print("✨ Артефакт '%s' добавлен в инвентарь (ID=%d)" % [artifact_id, item_id])
 	else:
-		if Global and Global.has_method("collect_artifact"):
-			Global.collect_artifact(artifact_id)
+		# Fallback: регистрируем в Global но НЕ активируем
+		print("✨ Артефакт '%s' подобран (нужно экипировать!)" % artifact_id)
 	
+	collected.emit(artifact_id)
 	_play_collect_effect()
 
 
-func _add_to_inventory() -> bool:
-	if not Inventory:
-		return false
-	
-	var inv_id = ARTIFACT_ID_MAP.get(artifact_id, -1)
-	if inv_id < 0:
-		return false
-	
-	if _check_already_collected():
-		return false
-	
-	var remaining = Inventory.add_item_by_id(inv_id, 1)
-	return remaining == 0
-
-
 func _play_collect_effect():
-	is_collected = true
-	
 	if hint_label:
 		hint_label.visible = false
 	
-	if collision:
-		collision.set_deferred("disabled", true)
+	set_deferred("monitoring", false)
 	
 	var tween = create_tween()
 	tween.set_parallel(true)
 	
 	if sprite:
-		tween.tween_property(sprite, "scale", sprite.scale * 1.5, 0.3)
-		tween.tween_property(sprite, "modulate:a", 0, 0.3)
+		tween.tween_property(sprite, "scale", sprite.scale * 1.5, 0.2)
+		tween.tween_property(sprite, "modulate:a", 0.0, 0.2)
+		tween.tween_property(sprite, "position:y", sprite.position.y - 25, 0.2)
 	
-	if label:
-		tween.tween_property(label, "modulate:a", 0, 0.3)
+	# Эффект звёздочек
+	_spawn_particles()
 	
 	tween.chain().tween_callback(queue_free)
+
+
+func _spawn_particles():
+	for i in range(5):
+		var particle = Label.new()
+		particle.text = "✨"
+		particle.add_theme_font_size_override("font_size", 16)
+		particle.position = Vector2(randf_range(-20, 20), randf_range(-20, 0))
+		add_child(particle)
+		
+		var tween = create_tween()
+		tween.tween_property(particle, "position:y", particle.position.y - 30, 0.5)
+		tween.parallel().tween_property(particle, "modulate:a", 0.0, 0.5)
+		tween.tween_callback(particle.queue_free)

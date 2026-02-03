@@ -2,22 +2,18 @@ extends Node2D
 class_name BaseLevel
 
 # ===========================================
-# BASE LEVEL - БАЗОВЫЙ СКРИПТ УРОВНЯ
+# BASE LEVEL v2.1 - ИСПРАВЛЕНО
 # ===========================================
-# Путь: res://scripts/levels/BaseLevel.gd
-#
-# Наследуйся от этого скрипта для создания уровней.
-# Или просто прикрепи его к сцене уровня.
+# - Исправлен спавн (spawn_point_id работает правильно)
+# - Исправлено сохранение HP при переходе
+# - Исправлена логика "новая игра vs продолжение"
 
 @export var level_name: String = "Level"
-@export var level_path: String = ""  # Автоматически определяется
+@export var level_path: String = ""
 
-# Ноды (ищутся автоматически)
 var player_spawn: Marker2D = null
 var game_ui: CanvasLayer = null
 var current_player: Node = null
-
-# Флаг инициализации
 var is_initialized: bool = false
 
 
@@ -27,33 +23,29 @@ func _ready():
 	print("🎮 %s ЗАГРУЖЕН" % level_name.to_upper())
 	print("🎮 ═══════════════════════════════════")
 	
-	# Определяем путь уровня
 	if level_path.is_empty():
 		level_path = scene_file_path
 	
-	# Устанавливаем текущий уровень в GameState
 	if GameState:
 		GameState.set_current_level(level_path)
 	
-	# Ищем ноды
 	_find_nodes()
 	
-	# Проверяем: новая игра или продолжение?
-	if GameState and GameState.is_run_active:
-		print("🔄 Продолжение забега")
-		_on_level_continue()
-	else:
+	# ВАЖНО: Проверяем ПЕРЕД спавном игрока
+	var is_new_game = not GameState or not GameState.is_run_active
+	
+	if is_new_game:
 		print("🆕 Новый забег")
 		_on_level_start_new()
+	else:
+		print("🔄 Продолжение забега")
+		_on_level_continue()
 	
-	# Спавним игрока
 	await get_tree().process_frame
-	_spawn_player()
+	_spawn_player(is_new_game)
 	
-	# Применяем сохранённое состояние
 	call_deferred("_apply_saved_state")
 	
-	# Регистрируем UI
 	if game_ui and Global:
 		Global.register_game_ui(game_ui)
 	
@@ -64,17 +56,11 @@ func _ready():
 	print("")
 
 
-# ===========================================
-# ПОИСК НОД
-# ===========================================
-
 func _find_nodes():
-	"""Находит важные ноды на уровне"""
 	player_spawn = get_node_or_null("PlayerSpawn")
 	game_ui = get_node_or_null("GameUI")
 	
 	if not player_spawn:
-		# Ищем любой Marker2D с "spawn" в имени
 		for child in get_children():
 			if child is Marker2D and "spawn" in child.name.to_lower():
 				player_spawn = child
@@ -84,37 +70,28 @@ func _find_nodes():
 	print("   GameUI: %s" % ("✅" if game_ui else "❌"))
 
 
-# ===========================================
-# СОБЫТИЯ УРОВНЯ (ПЕРЕОПРЕДЕЛЯЙ!)
-# ===========================================
-
 func _on_level_start_new():
-	"""Вызывается при новом забеге"""
-	# Очищаем инвентарь
+	"""Новый забег - очищаем всё"""
 	if Inventory:
 		Inventory.clear_all()
-	
-	# Начинаем забег
 	if GameState:
 		GameState.start_new_run()
 
 
 func _on_level_continue():
-	"""Вызывается при продолжении забега (переход с другого уровня)"""
+	"""Продолжение - НЕ очищаем инвентарь"""
 	pass
 
 
 func _on_level_ready():
-	"""Вызывается когда уровень полностью готов"""
 	pass
 
 
 # ===========================================
-# СПАВН ИГРОКА
+# СПАВН ИГРОКА - ИСПРАВЛЕНО!
 # ===========================================
 
-func _spawn_player():
-	"""Спавнит выбранного персонажа"""
+func _spawn_player(is_new_game: bool):
 	if not Global or not Global.selected_character:
 		Global.selected_character = "warrior"
 	
@@ -126,67 +103,100 @@ func _spawn_player():
 	var scene = load(scene_path)
 	current_player = scene.instantiate()
 	
-	# Позиция спавна
+	# === ОПРЕДЕЛЯЕМ ПОЗИЦИЮ СПАВНА ===
 	var spawn_pos = Vector2(100, 500)
+	var spawn_source = "default"
 	
-	# Ищем точку спавна по ID
-	if GameState and not GameState.spawn_point_id.is_empty():
-		var spawn_node = _find_spawn_point(GameState.spawn_point_id)
+	# 1. Приоритет: spawn_point_id от двери
+	if GameState and GameState.spawn_point_id != "":
+		var spawn_id = GameState.spawn_point_id
+		var spawn_node = _find_spawn_point(spawn_id)
+		
 		if spawn_node:
 			spawn_pos = spawn_node.global_position
-			print("   Спавн: %s (%s)" % [GameState.spawn_point_id, spawn_pos])
-		GameState.spawn_point_id = ""  # Сбрасываем
+			spawn_source = "spawn_point: " + spawn_id
+			print("   ✅ Найден spawn: '%s' → %s" % [spawn_id, spawn_pos])
+		else:
+			print("   ⚠️ Spawn '%s' не найден!" % spawn_id)
+			# Fallback на PlayerSpawn
+			if player_spawn:
+				spawn_pos = player_spawn.global_position
+				spawn_source = "PlayerSpawn (fallback)"
+		
+		# Сбрасываем ПОСЛЕ использования
+		GameState.spawn_point_id = ""
+	
+	# 2. Если нет spawn_point_id - используем PlayerSpawn
 	elif player_spawn:
 		spawn_pos = player_spawn.global_position
+		spawn_source = "PlayerSpawn"
+	
+	print("   📍 Спавн: %s [%s]" % [spawn_pos, spawn_source])
 	
 	current_player.global_position = spawn_pos
 	add_child(current_player)
 	
-	# Регистрируем
 	if Global:
 		Global.register_player(current_player)
 	
-	# Подключаем сигналы
 	if current_player.has_signal("died"):
 		current_player.died.connect(_on_player_died)
 	
-	# Восстанавливаем статы
-	if GameState and GameState.has_saved_stats():
+	# === ВОССТАНАВЛИВАЕМ HP ТОЛЬКО ПРИ ПРОДОЛЖЕНИИ ===
+	if not is_new_game and GameState and GameState.has_saved_stats():
 		_restore_player_stats()
 	
 	_setup_camera()
 	_setup_ui()
 	
-	print("   ✅ Игрок создан: %s" % Global.selected_character)
+	print("   ✅ Игрок: %s, HP: %d/%d" % [
+		Global.selected_character, 
+		current_player.current_health,
+		current_player.max_health
+	])
 
 
 func _find_spawn_point(spawn_id: String) -> Node2D:
 	"""Ищет точку спавна по ID"""
+	# Прямой поиск по имени
+	var node = get_node_or_null(spawn_id)
+	if node:
+		return node
+	
+	# Поиск среди детей
 	for child in get_children():
 		if child.name == spawn_id:
 			return child
-		if child is Marker2D and child.get("spawn_point_id") == spawn_id:
+		if child.get("spawn_point_id") == spawn_id:
 			return child
+	
 	return null
 
 
 func _restore_player_stats():
 	"""Восстанавливает HP/Mana после перехода"""
-	if not current_player:
+	if not current_player or not GameState:
 		return
 	
 	var stats = GameState.get_saved_stats()
 	
 	if stats["health"] > 0:
 		current_player.current_health = stats["health"]
+		print("   💾 HP восстановлено: %d" % stats["health"])
+	
 	if stats["mana"] >= 0 and "current_mana" in current_player:
 		current_player.current_mana = stats["mana"]
+		print("   💾 Mana восстановлена: %d" % stats["mana"])
 	
-	print("   💾 Статы восстановлены: HP=%d" % stats["health"])
+	# Очищаем сохранённые статы
+	GameState.clear_saved_stats()
 	
 	# Обновляем UI
+	await get_tree().process_frame
 	if current_player.has_signal("health_changed"):
 		current_player.health_changed.emit(current_player.current_health)
+	if current_player.has_signal("mana_changed") and "current_mana" in current_player:
+		current_player.mana_changed.emit(current_player.current_mana)
 
 
 # ===========================================
@@ -194,43 +204,41 @@ func _restore_player_stats():
 # ===========================================
 
 func _apply_saved_state():
-	"""Удаляет собранные объекты и убитых врагов"""
 	if not GameState or not GameState.is_run_active:
 		return
 	
 	await get_tree().process_frame
-	
 	print("📂 Применяем сохранённое состояние...")
 	
 	for child in get_children():
 		var child_name = child.name
 		
-		# Собранные пикапы
+		# Проверяем pickup (только по имени)
 		if GameState.is_pickup_collected(child_name):
-			print("   🗑️ Удаляем pickup: %s" % child_name)
+			print("   🗑️ Удаляем: %s" % child_name)
 			child.queue_free()
 			continue
 		
-		# Убитые враги
+		# Проверяем врага
 		if GameState.is_enemy_killed(child_name):
-			print("   💀 Враг мёртв: %s" % child_name)
+			print("   💀 Враг: %s" % child_name)
 			child.queue_free()
 			continue
 		
-		# Открытые сундуки
+		# Проверяем сундук
 		if GameState.is_chest_opened(child_name):
 			if child.has_method("set_opened"):
 				child.set_opened(true)
-			else:
-				child.queue_free()
+			print("   📦 Сундук: %s" % child_name)
 			continue
 		
-		# Открытые двери
+		# Проверяем дверь
 		if GameState.is_door_opened(child_name):
 			if "is_open" in child:
 				child.is_open = true
-			if child.has_method("update_visual"):
-				child.update_visual()
+			if child.has_method("_update_visual"):
+				child._update_visual()
+			print("   🚪 Дверь: %s" % child_name)
 
 
 # ===========================================
@@ -242,14 +250,16 @@ func save_before_transition():
 	if not current_player or not GameState:
 		return
 	
+	var health = current_player.current_health
 	var mana = current_player.current_mana if "current_mana" in current_player else -1
 	var armor = current_player.armor if "armor" in current_player else -1
 	
-	GameState.save_player_stats(
-		current_player.current_health,
-		mana,
-		armor
-	)
+	print("💾 ═══════════════════════════════")
+	print("💾 СОХРАНЕНИЕ ПЕРЕД ПЕРЕХОДОМ")
+	print("💾 HP: %d, Mana: %d, Armor: %d" % [health, mana, armor])
+	print("💾 ═══════════════════════════════")
+	
+	GameState.save_player_stats(health, mana, armor)
 
 
 # ===========================================
@@ -267,7 +277,6 @@ func _setup_camera():
 		camera.zoom = Vector2(1.5, 1.5)
 		current_player.add_child(camera)
 	
-	# Лимиты камеры (переопредели для своего уровня)
 	camera.limit_left = 0
 	camera.limit_right = 3000
 	camera.limit_top = 0
@@ -293,11 +302,13 @@ func _setup_ui():
 		}
 		game_ui.setup_character_ui(stats)
 	
-	# Подключаем сигналы
 	if current_player.has_signal("health_changed"):
-		current_player.health_changed.connect(_on_health_changed)
+		if not current_player.health_changed.is_connected(_on_health_changed):
+			current_player.health_changed.connect(_on_health_changed)
+	
 	if current_player.has_signal("mana_changed"):
-		current_player.mana_changed.connect(_on_mana_changed)
+		if not current_player.mana_changed.is_connected(_on_mana_changed):
+			current_player.mana_changed.connect(_on_mana_changed)
 
 
 func _on_health_changed(value):
@@ -310,11 +321,5 @@ func _on_mana_changed(value):
 		game_ui.update_mana(value)
 
 
-# ===========================================
-# СМЕРТЬ ИГРОКА
-# ===========================================
-
 func _on_player_died():
 	print("💀 Игрок погиб на %s" % level_name)
-	
-	# Меню смерти покажется автоматически через death_menu.gd

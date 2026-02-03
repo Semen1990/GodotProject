@@ -2,174 +2,153 @@ extends Area2D
 class_name ItemPickup
 
 # ===========================================
-# ПОДБИРАЕМЫЙ ПРЕДМЕТ v7
+# ITEM PICKUP v1.0 - ПОДБОР ПРЕДМЕТОВ С ЗЕМЛИ
 # ===========================================
-# Путь: res://scripts/objects/item_pickup.gd
+# Предмет лежит на земле, подбирается по F
+# После подбора добавляется в инвентарь
+
+signal collected(item_id: int)
 
 @export var item_id: int = 1
-@export var item_count: int = 1
-@export var float_height: float = 8.0
+@export var float_height: float = 3.0
 @export var float_speed: float = 2.0
 
-@onready var sprite: Sprite2D = $Sprite2D
-@onready var collision: CollisionShape2D = $CollisionShape2D
-@onready var label: Label = $Label
-
+var sprite: Sprite2D = null
 var hint_label: Label = null
-var initial_y: float
+var collision: CollisionShape2D = null
+
+var initial_y: float = 0.0
 var time: float = 0.0
-var is_collected: bool = false
 var player_in_range: bool = false
+var is_collected: bool = false
 
 
 func _ready():
-	print("📦 ItemPickup создан: ID=%d x%d pos=%s" % [item_id, item_count, position])
+	sprite = get_node_or_null("Sprite2D")
+	hint_label = get_node_or_null("HintLabel")
+	collision = get_node_or_null("CollisionShape2D")
 	
 	initial_y = position.y
 	
-	call_deferred("_load_item_data")
-	_ensure_hint_label()
-	
-	body_entered.connect(_on_body_entered)
-	body_exited.connect(_on_body_exited)
-
-
-func _ensure_hint_label():
-	hint_label = get_node_or_null("HintLabel")
-	
-	if not hint_label:
-		hint_label = Label.new()
-		hint_label.name = "HintLabel"
-		hint_label.text = "Нажми F"
-		hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		hint_label.position = Vector2(-35, -65)
-		hint_label.add_theme_font_size_override("font_size", 14)
-		hint_label.add_theme_color_override("font_color", Color(1, 1, 0.7))
-		add_child(hint_label)
-	
-	hint_label.visible = false
-
-
-func _load_item_data():
-	if not Inventory or not Inventory.item_database:
-		print("   ⚠️ База данных недоступна")
-		_set_fallback_visuals()
+	# Проверяем: уже подобран?
+	if Global and Global.is_pickup_collected(name):
+		queue_free()
 		return
 	
-	var item_data = Inventory.item_database.get_item_by_id(item_id)
+	# Подключаем сигналы
+	if not body_entered.is_connected(_on_body_entered):
+		body_entered.connect(_on_body_entered)
+	if not body_exited.is_connected(_on_body_exited):
+		body_exited.connect(_on_body_exited)
 	
-	if not item_data:
-		print("   ⚠️ Предмет ID=%d не найден в базе" % item_id)
-		_set_fallback_visuals()
-		return
+	if hint_label:
+		hint_label.visible = false
 	
-	if sprite and item_data.icon:
-		sprite.texture = item_data.icon
-	else:
-		_create_colored_sprite(item_data)
+	# Устанавливаем текстуру если не установлена
+	if sprite and not sprite.texture:
+		_load_texture()
 	
-	if label:
-		var text = item_data.display_name
-		if item_count > 1:
-			text += " x%d" % item_count
-		label.text = text
-		label.modulate = InventoryEnums.get_rarity_color(item_data.rarity)
-	
-	print("   ✅ Загружен: %s" % item_data.display_name)
+	print("📦 ItemPickup '%s': ID=%d" % [name, item_id])
 
 
-func _create_colored_sprite(item_data):
-	if not sprite:
-		return
-	var color = Color.GRAY
-	if item_data:
-		color = InventoryEnums.get_rarity_color(item_data.rarity)
-	var image = Image.create(32, 32, false, Image.FORMAT_RGBA8)
-	image.fill(color)
-	sprite.texture = ImageTexture.create_from_image(image)
+func _load_texture():
+	var paths = {
+		1: "res://assets/items/potions/Small Health Potion.png",
+		2: "res://assets/items/potions/Small Mana Potion.png",
+		3: "res://assets/items/potions/Small Stone Skin Potion.png",
+		4: "res://assets/items/potions/Potion of Rage.png",
+		101: "res://assets/items/weapons/Iron Sword.png",
+		102: "res://assets/items/shields/Wooden Shield.png",
+		103: "res://assets/items/armor/Steel Helmet.png",
+		104: "res://assets/items/armor/Leather Armor.png",
+		105: "res://assets/items/armor/Combat Gloves.png",
+	}
+	
+	var path = paths.get(item_id, "")
+	if path != "" and ResourceLoader.exists(path):
+		sprite.texture = load(path)
 
 
-func _set_fallback_visuals():
+func setup(id: int):
+	"""Настраивает pickup"""
+	item_id = id
 	if sprite:
-		var image = Image.create(32, 32, false, Image.FORMAT_RGBA8)
-		image.fill(Color.GRAY)
-		sprite.texture = ImageTexture.create_from_image(image)
-	if label:
-		label.text = "ID: %d" % item_id
+		_load_texture()
 
 
 func _process(delta):
+	if is_collected:
+		return
+	
 	# Парение
-	if not is_collected:
-		time += delta * float_speed
-		position.y = initial_y + sin(time) * float_height
+	time += delta * float_speed
+	position.y = initial_y + sin(time) * float_height
 	
 	# Подбор по F
-	if player_in_range and not is_collected:
+	if player_in_range:
 		if Input.is_action_just_pressed("interact"):
-			_collect_item()
+			_collect()
 
 
 func _on_body_entered(body: Node2D):
 	if is_collected:
 		return
-	if not _is_player(body):
-		return
 	
-	player_in_range = true
-	if hint_label:
-		hint_label.visible = true
-	print("📦 Игрок рядом с предметом ID=%d" % item_id)
+	if _is_player(body):
+		player_in_range = true
+		if hint_label:
+			hint_label.visible = true
 
 
 func _on_body_exited(body: Node2D):
-	if not _is_player(body):
-		return
-	
-	player_in_range = false
-	if hint_label:
-		hint_label.visible = false
+	if _is_player(body):
+		player_in_range = false
+		if hint_label:
+			hint_label.visible = false
 
 
 func _is_player(body: Node2D) -> bool:
 	return body.is_in_group("player") or body.has_method("take_damage")
 
 
-func _collect_item():
+func _collect():
 	if is_collected:
 		return
 	
-	if not Inventory:
-		print("❌ Инвентарь недоступен!")
-		return
+	is_collected = true
 	
-	var remaining = Inventory.add_item_by_id(item_id, item_count)
+	# Регистрируем
+	if Global:
+		Global.register_collected_pickup(name)
 	
-	if remaining > 0:
-		print("⚠️ Инвентарь полон!")
-		return
+	# Добавляем в инвентарь
+	if Inventory:
+		var remaining = Inventory.add_item_by_id(item_id, 1)
+		if remaining > 0:
+			print("⚠️ Инвентарь полон!")
+			is_collected = false
+			return
 	
-	print("✅ Подобран: ID=%d x%d" % [item_id, item_count])
+	print("📦 Подобран предмет ID=%d" % item_id)
+	collected.emit(item_id)
+	
 	_play_collect_effect()
 
 
 func _play_collect_effect():
-	is_collected = true
-	
 	if hint_label:
 		hint_label.visible = false
 	
-	if collision:
-		collision.set_deferred("disabled", true)
+	set_deferred("monitoring", false)
 	
 	var tween = create_tween()
 	tween.set_parallel(true)
 	
 	if sprite:
-		tween.tween_property(sprite, "scale", sprite.scale * 1.5, 0.25)
-		tween.tween_property(sprite, "modulate:a", 0.0, 0.25)
-	
-	if label:
-		tween.tween_property(label, "modulate:a", 0.0, 0.25)
+		tween.tween_property(sprite, "scale", sprite.scale * 1.3, 0.15)
+		tween.tween_property(sprite, "modulate:a", 0.0, 0.15)
+		tween.tween_property(sprite, "position:y", sprite.position.y - 20, 0.15)
+	else:
+		tween.tween_property(self, "modulate:a", 0.0, 0.15)
 	
 	tween.chain().tween_callback(queue_free)

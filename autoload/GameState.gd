@@ -1,52 +1,38 @@
 extends Node
 
 # ===========================================
-# GAMESTATE.GD - СОСТОЯНИЕ ЗАБЕГА (AUTOLOAD)
+# GAMESTATE v2.1 - СОСТОЯНИЕ ЗАБЕГА
 # ===========================================
-# Путь: res://scripts/autoload/GameState.gd
 # AutoLoad: GameState
-#
-# Хранит ВСЁ состояние текущего забега.
+# Хранит ВСЁ состояние текущего забега
 # НЕ сбрасывается при смене сцены!
 
 signal run_started
 signal run_ended
-signal player_died
-signal player_revived
+signal keys_changed(keys: Dictionary)
+signal artifact_collected(artifact_id: String)
 
 # ===========================================
-# ФЛАГИ ЗАБЕГА
+# ФЛАГИ
 # ===========================================
 
 var is_run_active: bool = false
 var current_level_path: String = ""
-var previous_level_path: String = ""
 
 # ===========================================
-# СОСТОЯНИЕ ОБЪЕКТОВ (ПО ИМЕНАМ УЗЛОВ)
+# СОСТОЯНИЕ ОБЪЕКТОВ (по имени узла)
 # ===========================================
 
-var collected_pickups: Dictionary = {}   # {"Level1/Key_Gold": true}
-var killed_enemies: Dictionary = {}      # {"Level1/Lizard1": true}
-var opened_doors: Dictionary = {}        # {"Level1/Door_ToLevel2": true}
-var opened_chests: Dictionary = {}       # {"Level1/Chest1": true}
+var collected_pickups: Dictionary = {}   # {"Key_Gold": true}
+var killed_enemies: Dictionary = {}      # {"Lizard1": true}
+var opened_doors: Dictionary = {}        # {"Door_ToLevel2": true}
+var opened_chests: Dictionary = {}       # {"Chest1": true}
 
 # ===========================================
-# КЛЮЧИ (ПО ЦВЕТАМ)
+# КЛЮЧИ (по цветам)
 # ===========================================
 
-enum KeyColor { GOLD = 0, SILVER = 1, ORANGE = 2, BLUE = 3, GREEN = 4, RED = 5 }
-
-var keys: Dictionary = {
-	KeyColor.GOLD: 0,
-	KeyColor.SILVER: 0,
-	KeyColor.ORANGE: 0,
-	KeyColor.BLUE: 0,
-	KeyColor.GREEN: 0,
-	KeyColor.RED: 0
-}
-
-signal keys_changed(keys: Dictionary)
+var keys: Dictionary = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
 
 # ===========================================
 # АРТЕФАКТЫ
@@ -54,8 +40,6 @@ signal keys_changed(keys: Dictionary)
 
 var collected_artifacts: Array = []
 var revival_artifact_id: String = ""
-
-signal artifact_collected(artifact_id: String)
 
 # ===========================================
 # СОХРАНЁННЫЕ СТАТЫ ИГРОКА
@@ -66,68 +50,26 @@ var saved_mana: int = -1
 var saved_armor: int = -1
 
 # ===========================================
-# ТОЧКА СПАВНА
+# ТОЧКА СПАВНА (от двери)
 # ===========================================
 
 var spawn_point_id: String = ""
 
 # ===========================================
-# СТАТИСТИКА ЗАБЕГА
+# СТАТИСТИКА
 # ===========================================
 
-var stats: Dictionary = {
-	"start_time": 0.0,
-	"play_time": 0.0,
-	"enemies_killed": 0,
-	"damage_dealt": 0,
-	"damage_taken": 0,
-	"keys_collected": 0,
-	"items_collected": 0,
-	"rooms_visited": 1,
-	"death_reason": ""
-}
+var stats: Dictionary = {}
 
 
 func _ready():
-	print("🎮 GameState.gd loaded (AutoLoad)")
+	print("🎮 GameState v2.1 loaded")
+	_reset_stats()
 
 
-# ===========================================
-# УПРАВЛЕНИЕ ЗАБЕГОМ
-# ===========================================
-
-func start_new_run():
-	"""Начинает новый забег - полный сброс"""
-	print("🎮 ═══════════════════════════════")
-	print("🎮 НОВЫЙ ЗАБЕГ")
-	print("🎮 ═══════════════════════════════")
-	
-	is_run_active = true
-	
-	# Сброс состояния объектов
-	collected_pickups.clear()
-	killed_enemies.clear()
-	opened_doors.clear()
-	opened_chests.clear()
-	
-	# Сброс ключей
-	for color in keys:
-		keys[color] = 0
-	keys_changed.emit(keys)
-	
-	# Сброс артефактов
-	collected_artifacts.clear()
-	revival_artifact_id = ""
-	
-	# Сброс сохранённых статов
-	saved_health = -1
-	saved_mana = -1
-	saved_armor = -1
-	spawn_point_id = ""
-	
-	# Сброс статистики
+func _reset_stats():
 	stats = {
-		"start_time": Time.get_unix_time_from_system(),
+		"start_time": 0.0,
 		"play_time": 0.0,
 		"enemies_killed": 0,
 		"damage_dealt": 0,
@@ -137,82 +79,79 @@ func start_new_run():
 		"rooms_visited": 1,
 		"death_reason": ""
 	}
+
+
+# ===========================================
+# УПРАВЛЕНИЕ ЗАБЕГОМ
+# ===========================================
+
+func start_new_run():
+	print("🎮 ═══════════════════════════════")
+	print("🎮 НОВЫЙ ЗАБЕГ")
+	print("🎮 ═══════════════════════════════")
+	
+	is_run_active = true
+	
+	# Очищаем состояния
+	collected_pickups.clear()
+	killed_enemies.clear()
+	opened_doors.clear()
+	opened_chests.clear()
+	
+	# Очищаем ключи
+	for color in keys:
+		keys[color] = 0
+	keys_changed.emit(keys)
+	
+	# Очищаем артефакты
+	collected_artifacts.clear()
+	revival_artifact_id = ""
+	
+	# Очищаем сохранённые статы
+	clear_saved_stats()
+	spawn_point_id = ""
+	
+	# Сбрасываем статистику
+	_reset_stats()
+	stats["start_time"] = Time.get_unix_time_from_system()
 	
 	run_started.emit()
 
 
 func end_run(reason: String = ""):
-	"""Завершает забег"""
 	print("🎮 ЗАБЕГ ЗАВЕРШЁН: %s" % reason)
-	
 	is_run_active = false
 	stats["death_reason"] = reason
-	_update_play_time()
-	
 	run_ended.emit()
 
 
-func _update_play_time():
-	if stats["start_time"] > 0:
-		stats["play_time"] = Time.get_unix_time_from_system() - stats["start_time"]
-
-
-# ===========================================
-# ПЕРЕХОД МЕЖДУ УРОВНЯМИ
-# ===========================================
-
-func prepare_level_transition(target_level: String, spawn_id: String = ""):
-	"""Подготовка к переходу на другой уровень"""
-	print("🚪 Переход: %s → %s (spawn: %s)" % [current_level_path, target_level, spawn_id])
-	
-	previous_level_path = current_level_path
-	spawn_point_id = spawn_id
-	
-	stats["rooms_visited"] += 1
-
-
 func set_current_level(level_path: String):
-	"""Устанавливает текущий уровень"""
 	current_level_path = level_path
 
 
 # ===========================================
-# РЕГИСТРАЦИЯ ОБЪЕКТОВ
+# РЕГИСТРАЦИЯ ОБЪЕКТОВ (только по имени!)
 # ===========================================
 
-func _get_full_id(object_name: String) -> String:
-	"""Формирует полный ID: Level/ObjectName"""
-	var level_name = current_level_path.get_file().get_basename()
-	return "%s/%s" % [level_name, object_name]
-
-
 func register_pickup(object_name: String):
-	"""Регистрирует подобранный объект"""
-	var full_id = _get_full_id(object_name)
-	collected_pickups[full_id] = true
-	print("📦 Подобрано: %s" % full_id)
+	collected_pickups[object_name] = true
+	print("📦 Pickup: %s" % object_name)
 
 
 func register_enemy_killed(enemy_name: String):
-	"""Регистрирует убитого врага"""
-	var full_id = _get_full_id(enemy_name)
-	killed_enemies[full_id] = true
+	killed_enemies[enemy_name] = true
 	stats["enemies_killed"] += 1
-	print("💀 Убит: %s" % full_id)
+	print("💀 Enemy: %s" % enemy_name)
 
 
 func register_door_opened(door_name: String):
-	"""Регистрирует открытую дверь"""
-	var full_id = _get_full_id(door_name)
-	opened_doors[full_id] = true
-	print("🚪 Открыта: %s" % full_id)
+	opened_doors[door_name] = true
+	print("🚪 Door: %s" % door_name)
 
 
 func register_chest_opened(chest_name: String):
-	"""Регистрирует открытый сундук"""
-	var full_id = _get_full_id(chest_name)
-	opened_chests[full_id] = true
-	print("📦 Сундук открыт: %s" % full_id)
+	opened_chests[chest_name] = true
+	print("📦 Chest: %s" % chest_name)
 
 
 # ===========================================
@@ -220,23 +159,19 @@ func register_chest_opened(chest_name: String):
 # ===========================================
 
 func is_pickup_collected(object_name: String) -> bool:
-	var full_id = _get_full_id(object_name)
-	return collected_pickups.has(full_id)
+	return collected_pickups.has(object_name)
 
 
 func is_enemy_killed(enemy_name: String) -> bool:
-	var full_id = _get_full_id(enemy_name)
-	return killed_enemies.has(full_id)
+	return killed_enemies.has(enemy_name)
 
 
 func is_door_opened(door_name: String) -> bool:
-	var full_id = _get_full_id(door_name)
-	return opened_doors.has(full_id)
+	return opened_doors.has(door_name)
 
 
 func is_chest_opened(chest_name: String) -> bool:
-	var full_id = _get_full_id(chest_name)
-	return opened_chests.has(full_id)
+	return opened_chests.has(chest_name)
 
 
 # ===========================================
@@ -248,15 +183,16 @@ func add_key(color: int, amount: int = 1):
 		keys[color] = 0
 	keys[color] += amount
 	stats["keys_collected"] += amount
-	print("🔑 +%d ключ (цвет %d), всего: %d" % [amount, color, keys[color]])
+	print("🔑 +%d ключ цвет %d (всего: %d)" % [amount, color, keys[color]])
 	keys_changed.emit(keys)
 
 
 func remove_key(color: int, amount: int = 1) -> bool:
 	if keys.get(color, 0) < amount:
+		print("🔑 ❌ Нет ключа цвет %d" % color)
 		return false
 	keys[color] -= amount
-	print("🔑 -%d ключ (цвет %d), осталось: %d" % [amount, color, keys[color]])
+	print("🔑 -%d ключ цвет %d (осталось: %d)" % [amount, color, keys[color]])
 	keys_changed.emit(keys)
 	return true
 
@@ -277,13 +213,11 @@ func get_all_keys() -> Dictionary:
 # АРТЕФАКТЫ
 # ===========================================
 
-func collect_artifact(artifact_id: String):
+func collect_artifact(artifact_id: String) -> bool:
 	if artifact_id in collected_artifacts:
 		return false
-	
 	collected_artifacts.append(artifact_id)
 	print("🎁 Артефакт: %s" % artifact_id)
-	
 	artifact_collected.emit(artifact_id)
 	return true
 
@@ -294,7 +228,6 @@ func has_artifact(artifact_id: String) -> bool:
 
 func set_revival_artifact(artifact_id: String):
 	revival_artifact_id = artifact_id
-	print("✨ Артефакт возрождения: %s" % artifact_id)
 
 
 func has_revival_artifact() -> bool:
@@ -305,7 +238,6 @@ func use_revival_artifact() -> String:
 	var used = revival_artifact_id
 	revival_artifact_id = ""
 	collected_artifacts.erase(used)
-	print("🔥 Использован артефакт: %s" % used)
 	return used
 
 
@@ -314,11 +246,10 @@ func use_revival_artifact() -> String:
 # ===========================================
 
 func save_player_stats(health: int, mana: int = -1, armor: int = -1):
-	"""Сохраняет статы перед переходом"""
 	saved_health = health
 	saved_mana = mana
 	saved_armor = armor
-	print("💾 Сохранено: HP=%d, Mana=%d, Armor=%d" % [health, mana, armor])
+	print("💾 Saved: HP=%d, Mana=%d, Armor=%d" % [health, mana, armor])
 
 
 func get_saved_stats() -> Dictionary:
@@ -356,7 +287,8 @@ func add_item_collected():
 
 
 func get_stats() -> Dictionary:
-	_update_play_time()
+	if stats["start_time"] > 0:
+		stats["play_time"] = Time.get_unix_time_from_system() - stats["start_time"]
 	return stats.duplicate()
 
 
@@ -368,13 +300,13 @@ func debug_print():
 	print("═══════════════════════════════════")
 	print("GAMESTATE DEBUG")
 	print("═══════════════════════════════════")
-	print("Run active: %s" % is_run_active)
-	print("Current level: %s" % current_level_path)
-	print("Spawn point: %s" % spawn_point_id)
+	print("Run: %s" % is_run_active)
+	print("Level: %s" % current_level_path)
+	print("Spawn: '%s'" % spawn_point_id)
 	print("Keys: %s" % keys)
 	print("Pickups: %d" % collected_pickups.size())
-	print("Enemies killed: %d" % killed_enemies.size())
-	print("Doors opened: %d" % opened_doors.size())
-	print("Artifacts: %s" % collected_artifacts)
+	print("Enemies: %d" % killed_enemies.size())
+	print("Doors: %d" % opened_doors.size())
+	print("Chests: %d" % opened_chests.size())
 	print("Saved HP: %d" % saved_health)
 	print("═══════════════════════════════════")
