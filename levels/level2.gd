@@ -1,23 +1,30 @@
 extends Node2D
 
 # ===========================================
-# LEVEL 2 - БАЗОВЫЙ СКРИПТ
+# LEVEL 2 v3.0 - UI СОЗДАЁТСЯ ПРОГРАММНО
 # ===========================================
-# Прикрепи этот скрипт к Level2
 
 @onready var player_spawn = $PlayerSpawn
-@onready var game_ui = $GameUI
 
+var game_ui = null  # Создаём программно
 var current_player = null
 
 
 func _ready():
-	print("🎮 Level 2 loaded!")
+	print("\n🎮 ========== LEVEL 2 v2.1 ==========")
+	
+	# Устанавливаем текущий уровень в Global
+	if Global:
+		Global.set_current_level("level2")
 	
 	# Level2 НИКОГДА не начинает новый забег
 	# Игрок пришёл с Level1
 	
 	await get_tree().process_frame
+	
+	# === СОЗДАЁМ UI ПРОГРАММНО ===
+	_create_game_ui()
+	_create_inventory_ui()
 	
 	spawn_selected_character()
 	
@@ -25,6 +32,22 @@ func _ready():
 		Global.register_game_ui(game_ui)
 	
 	print("✅ Level 2 готов!")
+
+
+func _create_game_ui():
+	"""Создаёт GameUI программно"""
+	# Создаём CanvasLayer и прикрепляем скрипт
+	var script_path = "res://scripts/ui/game_ui.gd"
+	
+	if ResourceLoader.exists(script_path):
+		var ui_script = load(script_path)
+		game_ui = CanvasLayer.new()
+		game_ui.set_script(ui_script)
+		game_ui.name = "GameUI"
+		add_child(game_ui)
+		print("✅ GameUI создан программно")
+	else:
+		print("⚠️ Скрипт GameUI не найден: %s" % script_path)
 
 
 func spawn_selected_character():
@@ -78,23 +101,43 @@ func spawn_selected_character():
 	print("✅ Player spawned")
 
 
+func _create_inventory_ui():
+	"""Создаёт InventoryUI и HotbarUI если их нет"""
+	# Проверяем, есть ли уже InventoryUI
+	var existing_inv = get_node_or_null("InventoryUI")
+	if not existing_inv:
+		var inv_ui = InventoryUI.new()
+		inv_ui.name = "InventoryUI"
+		add_child(inv_ui)
+		print("📦 InventoryUI создан")
+	
+	# Проверяем, есть ли уже HotbarUI
+	var existing_hotbar = get_node_or_null("HotbarUI")
+	if not existing_hotbar:
+		var hotbar = HotbarUI.new()
+		hotbar.name = "HotbarUI"
+		add_child(hotbar)
+		print("🧪 HotbarUI создан")
+
+
 func _restore_player_stats():
 	if not current_player:
 		return
 	
 	print("💾 Восстанавливаем статы...")
-	print("💾 Saved HP: %d" % Global.saved_player_health)
+	print("   💾 Saved HP: %d" % Global.saved_player_health)
 	
 	if Global.saved_player_health > 0:
-		current_player.current_health = Global.saved_player_health
-		print("💾 HP: %d" % current_player.current_health)
+		# Ограничиваем HP максимумом!
+		current_player.current_health = mini(Global.saved_player_health, current_player.max_health)
+		print("   💾 HP восстановлено: %d/%d" % [current_player.current_health, current_player.max_health])
 		
 		if current_player.has_signal("health_changed"):
 			current_player.health_changed.emit(current_player.current_health)
 	
 	if Global.saved_player_mana >= 0 and "current_mana" in current_player:
 		current_player.current_mana = Global.saved_player_mana
-		print("💾 Mana: %d" % current_player.current_mana)
+		print("   💾 Mana восстановлена: %d" % current_player.current_mana)
 		
 		if current_player.has_signal("mana_changed"):
 			current_player.mana_changed.emit(current_player.current_mana)
@@ -146,7 +189,9 @@ func _setup_ui():
 			"armor": current_player.armor if "armor" in current_player else 0
 		}
 		game_ui.setup_character_ui(stats)
+		print("✅ UI настроен: HP=%d/%d ARM=%d" % [stats["health"], stats["max_health"], stats["armor"]])
 	
+	# Подключаем сигналы
 	if current_player.has_signal("health_changed"):
 		if not current_player.health_changed.is_connected(_on_health_changed):
 			current_player.health_changed.connect(_on_health_changed)

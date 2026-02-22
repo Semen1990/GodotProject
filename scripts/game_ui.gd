@@ -1,7 +1,7 @@
 extends CanvasLayer
 
 # ===========================================
-# GAME UI v7.0 - ИСПРАВЛЕННЫЕ ЦВЕТА КЛЮЧЕЙ
+# GAME UI v7.2 - БЕЗ ПРОВЕРКИ ДУБЛИКАТОВ
 # ===========================================
 
 var stats_vbox: VBoxContainer
@@ -36,9 +36,13 @@ var key_icons: Array = []
 
 
 func _ready():
-	print("\n=== 🎮 GAME UI v7.0 ===")
+	print("\n=== 🎮 GAME UI v7.2 ===")
 	_create_all_ui()
 	print("✅ UI создан")
+
+
+func _exit_tree():
+	print("🗑️ GameUI удалён")
 
 
 func _create_all_ui():

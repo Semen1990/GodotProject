@@ -2,10 +2,12 @@ extends Area2D
 class_name Chest
 
 # ===========================================
-# CHEST v5.0 - ВСТРОЕННАЯ ЛОГИКА ПОДБОРА
+# CHEST v7.0 - ПРАВИЛЬНОЕ СОХРАНЕНИЕ СОСТОЯНИЯ
 # ===========================================
-# Предметы создаются со встроенными сигналами и логикой
-# Не требует внешних скриптов ItemPickup/ArtifactPickup
+# Логика:
+# - Закрытый сундук → при возврате сундук на месте
+# - Открытый сундук → при возврате сундука НЕТ, 
+#   но выпавшие не подобранные предметы лежат
 
 signal opened
 signal item_spawned(pickup_node: Node2D)
@@ -20,6 +22,12 @@ enum ChestType { ITEMS, ARTIFACTS, MIXED, RANDOM }
 @export var artifact_ids: Array[String] = []
 
 @export var spawn_frame: int = 3
+
+@export_group("Размеры выпадающих предметов")
+@export var item_scale: float = 1.5
+@export var artifact_scale: float = 1.8
+@export var collision_radius: float = 40.0
+@export var item_spread: float = 35.0
 
 var animated_sprite: AnimatedSprite2D = null
 var interaction_zone: Area2D = null
@@ -38,9 +46,23 @@ func _ready():
 	
 	is_open = is_initially_open
 	
-	if Global and Global.is_pickup_collected(name):
-		is_open = true
+	# === ПРОВЕРЯЕМ: БЫЛ ЛИ СУНДУК УЖЕ ОТКРЫТ? ===
+	if Global and Global.is_chest_opened(name):
+		print("📦 '%s' был открыт ранее → восстанавливаем предметы, удаляем сундук" % name)
+		# Сундук был открыт - восстанавливаем не подобранные предметы и удаляем сундук
+		call_deferred("_restore_items_and_delete")
+		return
 	
+	# Сундук НЕ был открыт - работаем как обычно
+	_setup_signals()
+	_update_visual()
+	_setup_hint()
+	
+	print("📦 Сундук '%s': закрыт, ждёт открытия" % name)
+
+
+func _setup_signals():
+	"""Настраивает сигналы для взаимодействия"""
 	if interaction_zone:
 		if not interaction_zone.body_entered.is_connected(_on_body_entered):
 			interaction_zone.body_entered.connect(_on_body_entered)
@@ -57,17 +79,12 @@ func _ready():
 			animated_sprite.frame_changed.connect(_on_frame_changed)
 		if not animated_sprite.animation_finished.is_connected(_on_animation_finished):
 			animated_sprite.animation_finished.connect(_on_animation_finished)
-	
-	_update_visual()
-	_setup_hint()
-	
-	print("📦 Сундук '%s': открыт=%s" % [name, is_open])
 
 
 func _setup_hint():
 	if hint_label:
 		hint_label.visible = false
-		hint_label.text = "[F] Открыть" if not is_open else ""
+		hint_label.text = "[F] Открыть"
 
 
 func _update_visual():
@@ -75,29 +92,31 @@ func _update_visual():
 		return
 	
 	if is_open:
-		if animated_sprite.sprite_frames.has_animation("opening"):
-			animated_sprite.animation = "opening"
-			var count = animated_sprite.sprite_frames.get_frame_count("opening")
-			if count > 0:
-				animated_sprite.frame = count - 1
+		if animated_sprite.sprite_frames.has_animation("opened"):
+			animated_sprite.play("opened")
+		elif animated_sprite.sprite_frames.has_animation("opening"):
+			animated_sprite.play("opening")
 			animated_sprite.stop()
+			animated_sprite.frame = animated_sprite.sprite_frames.get_frame_count("opening") - 1
 	else:
 		if animated_sprite.sprite_frames.has_animation("idle"):
 			animated_sprite.play("idle")
+		elif animated_sprite.sprite_frames.has_animation("closed"):
+			animated_sprite.play("closed")
 
 
-func _process(_delta):
-	if player_in_range and not is_open and not is_opening:
-		if Input.is_action_just_pressed("interact"):
-			open_chest()
-
+# ===========================================
+# ВЗАИМОДЕЙСТВИЕ С ИГРОКОМ
+# ===========================================
 
 func _on_body_entered(body: Node2D):
-	if _is_player(body) and not is_open:
+	if is_open or is_opening:
+		return
+	
+	if _is_player(body):
 		player_in_range = true
 		if hint_label:
 			hint_label.visible = true
-			hint_label.text = "[F] Открыть"
 
 
 func _on_body_exited(body: Node2D):
@@ -111,15 +130,23 @@ func _is_player(body: Node2D) -> bool:
 	return body.is_in_group("player") or body.has_method("take_damage")
 
 
+func _process(_delta):
+	if is_open or is_opening or not player_in_range:
+		return
+	
+	if Input.is_action_just_pressed("interact"):
+		open_chest()
+
+
 func open_chest():
 	if is_open or is_opening:
 		return
 	
 	is_opening = true
-	items_spawned = false
 	
+	# Регистрируем что сундук ОТКРЫТ
 	if Global:
-		Global.register_collected_pickup(name)
+		Global.register_opened_chest(name)
 	
 	if hint_label:
 		hint_label.visible = false
@@ -160,11 +187,16 @@ func _finish_opening():
 	opened.emit()
 	print("📦 '%s' открыт!" % name)
 	
+	# Плавно удаляем сундук
 	var tween = create_tween()
 	tween.tween_interval(0.3)
 	tween.tween_property(self, "modulate:a", 0.0, 0.3)
 	tween.tween_callback(queue_free)
 
+
+# ===========================================
+# СПАВН СОДЕРЖИМОГО
+# ===========================================
 
 func _spawn_contents():
 	match chest_type:
@@ -199,26 +231,88 @@ func _spawn_random():
 
 
 # ===========================================
-# СОЗДАНИЕ PICKUP С ВСТРОЕННОЙ ЛОГИКОЙ
+# ВОССТАНОВЛЕНИЕ ПРИ ВОЗВРАТЕ НА УРОВЕНЬ
+# ===========================================
+
+func _restore_items_and_delete():
+	"""Восстанавливает НЕ подобранные предметы и удаляет сундук"""
+	await get_tree().process_frame
+	
+	# Спавним только НЕ подобранные предметы
+	match chest_type:
+		ChestType.ITEMS:
+			_restore_items()
+		ChestType.ARTIFACTS:
+			_restore_artifacts()
+		ChestType.MIXED:
+			_restore_items()
+			_restore_artifacts()
+		ChestType.RANDOM:
+			_restore_items()
+	
+	# Сразу удаляем сундук
+	queue_free()
+
+
+func _restore_items():
+	"""Спавнит только НЕ подобранные предметы"""
+	var restored_count = 0
+	
+	for i in range(item_ids.size()):
+		var item_id = item_ids[i]
+		var amount = item_amounts[i] if i < item_amounts.size() else 1
+		
+		for j in range(amount):
+			var pickup_name = "ItemPickup_%d_%d" % [item_id, i * 10 + j]
+			
+			# Проверяем - был ли подобран
+			if Global and Global.is_pickup_collected(pickup_name):
+				continue  # Пропускаем
+			
+			_create_item_pickup(item_id, i * 10 + j)
+			restored_count += 1
+	
+	if restored_count > 0:
+		print("   📦 Восстановлено предметов: %d" % restored_count)
+
+
+func _restore_artifacts():
+	"""Спавнит только НЕ подобранные артефакты"""
+	var restored_count = 0
+	
+	for i in range(artifact_ids.size()):
+		var artifact_id = artifact_ids[i]
+		var pickup_name = "ArtifactPickup_%s" % artifact_id
+		
+		# Проверяем - был ли подобран
+		if Global and Global.is_pickup_collected(pickup_name):
+			continue  # Пропускаем
+		
+		_create_artifact_pickup(artifact_id, i)
+		restored_count += 1
+	
+	if restored_count > 0:
+		print("   📦 Восстановлено артефактов: %d" % restored_count)
+
+
+# ===========================================
+# СОЗДАНИЕ PICKUP
 # ===========================================
 
 func _create_item_pickup(item_id: int, index: int):
-	"""Создаёт pickup предмета со встроенной логикой подбора"""
+	"""Создаёт pickup предмета"""
 	var pickup = Area2D.new()
 	pickup.name = "ItemPickup_%d_%d" % [item_id, index]
 	
-	# Layer 4 = предметы
+	# Collision layers
 	pickup.set_collision_layer_value(1, false)
 	pickup.set_collision_layer_value(2, false)
 	pickup.set_collision_layer_value(3, false)
-	pickup.set_collision_layer_value(4, true)   # Layer 4 (items)
-	
-	# Mask: видим ТОЛЬКО layer 2 (игрок!)
-	pickup.set_collision_mask_value(1, false)   # НЕ видим layer 1 (мир)
-	pickup.set_collision_mask_value(2, true)    # Видим layer 2 (ИГРОК!)
-	pickup.set_collision_mask_value(3, false)   # НЕ видим layer 3 (враги)
-	pickup.set_collision_mask_value(4, false)   # НЕ видим layer 4 (предметы)
-	
+	pickup.set_collision_layer_value(4, true)
+	pickup.set_collision_mask_value(1, false)
+	pickup.set_collision_mask_value(2, true)  # Видит игрока
+	pickup.set_collision_mask_value(3, false)
+	pickup.set_collision_mask_value(4, false)
 	pickup.monitoring = true
 	pickup.monitorable = true
 	
@@ -226,68 +320,62 @@ func _create_item_pickup(item_id: int, index: int):
 	var sprite = Sprite2D.new()
 	sprite.name = "Sprite2D"
 	_set_item_texture(sprite, item_id)
+	sprite.scale = Vector2(item_scale, item_scale)
 	pickup.add_child(sprite)
 	
-	# Collision - большой радиус для удобства
+	# Collision
 	var collision = CollisionShape2D.new()
 	collision.name = "CollisionShape2D"
 	var shape = CircleShape2D.new()
-	shape.radius = 40  # Увеличен ещё больше
+	shape.radius = collision_radius
 	collision.shape = shape
 	pickup.add_child(collision)
 	
-	print("   🔧 ItemPickup ID=%d: layer=4, mask=2 (видит ИГРОКА)" % item_id)
-	
-	# Hint Label
+	# Hint
 	var hint = Label.new()
 	hint.name = "HintLabel"
 	hint.text = "[F] Подобрать"
-	hint.position = Vector2(-45, -40)
+	hint.position = Vector2(-50, -30 * item_scale)
 	hint.visible = false
-	hint.add_theme_font_size_override("font_size", 12)
+	hint.add_theme_font_size_override("font_size", 14)
 	hint.add_theme_color_override("font_color", Color.WHITE)
 	pickup.add_child(hint)
 	
-	# Позиция с разбросом
-	var offset_x = (index % 5 - 2) * 30
+	# Позиция
+	var offset_x = (index % 5 - 2) * item_spread
 	pickup.global_position = global_position + Vector2(offset_x, -10)
 	
 	# Добавляем на сцену
 	get_parent().add_child(pickup)
 	
-	# Сигналы не нужны - логика в скрипте pickup
-	
-	# Сохраняем данные в метаданных
+	# Metadata
 	pickup.set_meta("item_id", item_id)
 	pickup.set_meta("pickup_type", "item")
 	pickup.set_meta("collected", false)
 	
-	# Анимация появления
+	# Анимация
 	_animate_spawn(pickup)
 	
-	# Запускаем проверку ввода
-	_start_pickup_input_check(pickup, hint)
+	# Логика подбора
+	_attach_pickup_script(pickup, hint)
 	
-	print("   📦→ Предмет ID=%d (подбор по F)" % item_id)
+	print("   📦→ Предмет ID=%d" % item_id)
 
 
 func _create_artifact_pickup(artifact_id: String, index: int):
-	"""Создаёт pickup артефакта со встроенной логикой подбора"""
+	"""Создаёт pickup артефакта"""
 	var pickup = Area2D.new()
 	pickup.name = "ArtifactPickup_%s" % artifact_id
 	
-	# Layer 4 = предметы/артефакты
+	# Collision layers
 	pickup.set_collision_layer_value(1, false)
 	pickup.set_collision_layer_value(2, false)
 	pickup.set_collision_layer_value(3, false)
-	pickup.set_collision_layer_value(4, true)   # Layer 4 (items)
-	
-	# Mask: видим ТОЛЬКО layer 2 (игрок!)
-	pickup.set_collision_mask_value(1, false)   # НЕ видим layer 1 (мир)
-	pickup.set_collision_mask_value(2, true)    # Видим layer 2 (ИГРОК!)
-	pickup.set_collision_mask_value(3, false)   # НЕ видим layer 3 (враги)
-	pickup.set_collision_mask_value(4, false)   # НЕ видим layer 4 (предметы)
-	
+	pickup.set_collision_layer_value(4, true)
+	pickup.set_collision_mask_value(1, false)
+	pickup.set_collision_mask_value(2, true)  # Видит игрока
+	pickup.set_collision_mask_value(3, false)
+	pickup.set_collision_mask_value(4, false)
 	pickup.monitoring = true
 	pickup.monitorable = true
 	
@@ -297,38 +385,35 @@ func _create_artifact_pickup(artifact_id: String, index: int):
 	var tex_path = "res://assets/items/artifacts/%s.png" % artifact_id
 	if ResourceLoader.exists(tex_path):
 		sprite.texture = load(tex_path)
+	sprite.scale = Vector2(artifact_scale, artifact_scale)
 	pickup.add_child(sprite)
 	
-	# Collision - большой радиус
+	# Collision
 	var collision = CollisionShape2D.new()
 	collision.name = "CollisionShape2D"
 	var shape = CircleShape2D.new()
-	shape.radius = 40  # Увеличен
+	shape.radius = collision_radius
 	collision.shape = shape
 	pickup.add_child(collision)
 	
-	print("   🔧 ArtifactPickup %s: layer=4, mask=2 (видит ИГРОКА)" % artifact_id)
-	
-	# Hint Label
+	# Hint
 	var hint = Label.new()
 	hint.name = "HintLabel"
 	hint.text = "[F] Подобрать"
-	hint.position = Vector2(-45, -40)
+	hint.position = Vector2(-50, -35 * artifact_scale)
 	hint.visible = false
-	hint.add_theme_font_size_override("font_size", 12)
-	hint.add_theme_color_override("font_color", Color(1.0, 0.9, 0.5))  # Золотистый
+	hint.add_theme_font_size_override("font_size", 14)
+	hint.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
 	pickup.add_child(hint)
 	
 	# Позиция
-	var offset_x = (index - artifact_ids.size() / 2.0) * 40
+	var offset_x = (index - artifact_ids.size() / 2.0) * item_spread * 1.2
 	pickup.global_position = global_position + Vector2(offset_x, -10)
 	
 	# Добавляем на сцену
 	get_parent().add_child(pickup)
 	
-	# Сигналы не нужны - логика в скрипте pickup
-	
-	# Метаданные
+	# Metadata
 	pickup.set_meta("artifact_id", artifact_id)
 	pickup.set_meta("pickup_type", "artifact")
 	pickup.set_meta("collected", false)
@@ -336,42 +421,31 @@ func _create_artifact_pickup(artifact_id: String, index: int):
 	# Анимация
 	_animate_spawn(pickup)
 	
-	# Запускаем проверку ввода
-	_start_pickup_input_check(pickup, hint)
+	# Логика подбора
+	_attach_pickup_script(pickup, hint)
 	
-	print("   📦→ Артефакт: %s (подбор по F)" % artifact_id)
+	print("   📦→ Артефакт: %s" % artifact_id)
 
 
-# ===========================================
-# ЛОГИКА ПОДБОРА (ВСТРОЕННАЯ)
-# ===========================================
-
-# Функции обработки сигналов удалены - логика теперь в скрипте pickup
-
-
-func _start_pickup_input_check(pickup: Area2D, hint: Label):
-	"""Добавляет скрипт к pickup для обработки нажатия F"""
-	# Создаём встроенный скрипт для обработки ввода
+func _attach_pickup_script(pickup: Area2D, hint: Label):
+	"""Прикрепляет скрипт обработки подбора к pickup"""
 	var script = GDScript.new()
 	script.source_code = """
 extends Area2D
 
 var hint_label: Label = null
 var is_collected: bool = false
-var chest_ref = null
 
-func setup(hint: Label, chest):
-	hint_label = hint
-	is_collected = false
-	chest_ref = chest
+func _ready():
 	set_process(true)
+
+func setup(hint: Label):
+	hint_label = hint
 
 func _process(_delta):
 	if is_collected:
-		set_process(false)
 		return
 	
-	# Проверяем overlapping bodies каждый кадр
 	var player_near = false
 	for body in get_overlapping_bodies():
 		if body.is_in_group(\"player\") or body.has_method(\"take_damage\"):
@@ -412,6 +486,8 @@ func _collect():
 		var artifact_item_ids = {
 			\"hermes_wings\": 201,
 			\"phoenix_feather\": 202,
+			\"vampire_ring\": 203,
+			\"berserker_amulet\": 204,
 		}
 		var item_id = artifact_item_ids.get(artifact_id, 0)
 		if item_id > 0 and Inventory:
@@ -442,30 +518,11 @@ func _collect():
 """
 	script.reload()
 	pickup.set_script(script)
-	pickup.call("setup", hint, self)
+	pickup.call("setup", hint)
 
-
-# Функция _check_pickup_input удалена - логика теперь в скрипте pickup
-
-
-# Функция _collect_pickup удалена - логика теперь в скрипте pickup
-
-
-# Функция _add_item_to_inventory удалена - логика теперь в скрипте pickup
-
-
-# Функция _add_artifact_to_inventory удалена - логика теперь в скрипте pickup
-
-
-# Функция _play_collect_effect удалена - логика теперь в скрипте pickup
-
-
-# ===========================================
-# ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-# ===========================================
 
 func _set_item_texture(sprite: Sprite2D, item_id: int):
-	"""Устанавливает текстуру предмета по ID"""
+	"""Устанавливает текстуру предмета"""
 	var paths = {
 		1: "res://assets/items/potions/Small Health Potion.png",
 		2: "res://assets/items/potions/Small Mana Potion.png",
@@ -484,17 +541,20 @@ func _set_item_texture(sprite: Sprite2D, item_id: int):
 
 
 func _animate_spawn(pickup: Node2D):
-	"""Анимация появления предмета из сундука"""
+	"""Анимация появления"""
 	var start_y = pickup.global_position.y
-	pickup.global_position.y -= 40
-	pickup.scale = Vector2(0.3, 0.3)
+	var random_offset_x = randf_range(-20, 20)
+	
+	pickup.global_position.y -= 50
+	pickup.global_position.x += random_offset_x
+	pickup.scale = Vector2(0.2, 0.2)
 	pickup.modulate.a = 0.0
 	
 	var tween = create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(pickup, "global_position:y", start_y + 15, 0.5).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BOUNCE)
-	tween.tween_property(pickup, "scale", Vector2(1, 1), 0.3)
-	tween.tween_property(pickup, "modulate:a", 1.0, 0.2)
+	tween.tween_property(pickup, "global_position:y", start_y + 5, 0.6).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BOUNCE)
+	tween.tween_property(pickup, "scale", Vector2(1, 1), 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(pickup, "modulate:a", 1.0, 0.25)
 
 
 # ===========================================

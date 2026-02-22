@@ -38,8 +38,11 @@ var potion_bonus_damage: int = 0
 
 
 func _ready():
-	print("")
-	print("🎮 ========== LEVEL 1 v8.0 ==========")
+	print("\n🎮 ========== LEVEL 1 v8.1 ==========")
+	
+	# Устанавливаем текущий уровень в Global
+	if Global:
+		Global.set_current_level("level1")
 	print("   run_started: %s" % Global.run_started)
 	print("   spawn_point: '%s'" % Global.spawn_point)
 	

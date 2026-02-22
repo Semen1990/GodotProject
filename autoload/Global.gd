@@ -1,12 +1,14 @@
 extends Node
 
 # ===========================================
-# GLOBAL.GD - ВЕРСИЯ v5.0
+# GLOBAL.GD - ВЕРСИЯ v6.0
 # ===========================================
 # ИЗМЕНЕНИЯ:
 # 1. Правильный порядок цветов ключей
 # 2. Артефакты НЕ активируются автоматически
 # 3. Добавлен get_keys_array() для UI
+# 4. Система сохранения открытых сундуков
+# 5. Система восстановления выпавших предметов
 
 var selected_character = null
 var character_data = {}
@@ -118,6 +120,11 @@ var killed_enemies: Array = []
 
 var saved_player_health: int = -1
 var saved_player_mana: int = -1
+
+# === НОВОЕ: Сохранение сундуков и выпавших предметов ===
+var opened_chests: Dictionary = {}  # {"level1": ["Chest", "ChestEquipment"], ...}
+var dropped_pickups: Dictionary = {}  # {"level1": [{type, id, position}, ...], ...}
+var current_level: String = ""  # Текущий уровень для отслеживания
 
 # ===========================================
 # БАЗА ДАННЫХ АРТЕФАКТОВ (для справки)
@@ -579,6 +586,73 @@ func is_enemy_killed(enemy_name: String) -> bool:
 	return enemy_name in killed_enemies
 
 
+# ===========================================
+# СИСТЕМА СУНДУКОВ И ВЫПАВШИХ ПРЕДМЕТОВ
+# ===========================================
+
+func set_current_level(level_name: String):
+	"""Устанавливает текущий уровень"""
+	current_level = level_name
+	print("🗺️ Текущий уровень: %s" % level_name)
+
+
+func register_opened_chest(chest_name: String):
+	"""Регистрирует открытый сундук"""
+	if current_level == "":
+		current_level = "unknown"
+	
+	if current_level not in opened_chests:
+		opened_chests[current_level] = []
+	
+	if chest_name not in opened_chests[current_level]:
+		opened_chests[current_level].append(chest_name)
+		print("📦 Сундук открыт: %s на %s" % [chest_name, current_level])
+
+
+func is_chest_opened(chest_name: String) -> bool:
+	"""Проверяет, был ли сундук уже открыт (ищем во всех уровнях)"""
+	for level in opened_chests.keys():
+		if chest_name in opened_chests[level]:
+			return true
+	return false
+
+
+func register_dropped_pickup(pickup_data: Dictionary):
+	"""Регистрирует выпавший предмет для восстановления при возврате
+	pickup_data = {type: "item"/"artifact", id: int/String, position: Vector2}
+	"""
+	if current_level == "":
+		current_level = "unknown"
+	
+	if current_level not in dropped_pickups:
+		dropped_pickups[current_level] = []
+	
+	dropped_pickups[current_level].append(pickup_data)
+
+
+func get_dropped_pickups_for_level(level_name: String) -> Array:
+	"""Возвращает список выпавших предметов для уровня"""
+	if level_name in dropped_pickups:
+		return dropped_pickups[level_name]
+	return []
+
+
+func remove_dropped_pickup(pickup_name: String):
+	"""Удаляет выпавший предмет из списка (когда подобран)"""
+	if current_level in dropped_pickups:
+		for i in range(dropped_pickups[current_level].size() - 1, -1, -1):
+			var pickup = dropped_pickups[current_level][i]
+			if pickup.get("name", "") == pickup_name:
+				dropped_pickups[current_level].remove_at(i)
+				return
+
+
+func clear_dropped_pickups_for_level(level_name: String):
+	"""Очищает выпавшие предметы для уровня"""
+	if level_name in dropped_pickups:
+		dropped_pickups[level_name].clear()
+
+
 func save_player_stats():
 	"""Сохраняет HP/Mana игрока перед переходом"""
 	if current_player:
@@ -622,6 +696,8 @@ func start_run():
 	
 	collected_pickups.clear()
 	killed_enemies.clear()
+	opened_chests.clear()  # Очищаем открытые сундуки
+	dropped_pickups.clear()  # Очищаем выпавшие предметы
 	reset_keys()
 	reset_artifacts()
 	clear_saved_stats()
@@ -654,6 +730,9 @@ func full_reset():
 	
 	collected_pickups.clear()
 	killed_enemies.clear()
+	opened_chests.clear()    # Очищаем открытые сундуки
+	dropped_pickups.clear()  # Очищаем выпавшие предметы
+	current_level = ""
 	clear_saved_stats()
 	
 	unregister_player()
