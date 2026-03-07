@@ -19,11 +19,17 @@ enum ChestType { ITEMS, ARTIFACTS, MIXED, RANDOM }
 
 @export var spawn_frame: int = 3
 
-@export_group("Р’РёР·СѓР°Р» РІС‹РїР°РІС€РёС… РїСЂРµРґРјРµС‚РѕРІ")
+@export_group("Визуал выпавших предметов")
 @export var item_scale: float = 1.5
 @export var artifact_scale: float = 1.8
 @export var collision_radius: float = 40.0
 @export var item_spread: float = 35.0
+@export var drop_front_offset: float = 42.0
+@export var drop_hover_height: float = 18.0
+@export var ground_probe_height: float = 120.0
+@export var ground_search_depth: float = 220.0
+@export var ground_search_step: float = 18.0
+@export var max_ground_search_steps: int = 10
 
 var animated_sprite: AnimatedSprite2D = null
 var interaction_zone: Area2D = null
@@ -36,6 +42,8 @@ var is_opening: bool = false
 var items_spawned: bool = false
 var pending_restore_after_setup: bool = false
 var contents_configured: bool = false
+var last_player_body: Node2D = null
+var last_drop_direction: int = 1
 
 
 func _ready() -> void:
@@ -68,6 +76,7 @@ func capture_persistent_state() -> Dictionary:
 		"opened": is_open or is_opening,
 		"contents_spawned": items_spawned,
 		"consumed": is_open or is_opening,
+		"drop_direction": last_drop_direction,
 	}
 
 
@@ -75,6 +84,7 @@ func apply_persistent_state(state: Dictionary) -> void:
 	is_open = bool(state.get("opened", false))
 	is_opening = false
 	items_spawned = bool(state.get("contents_spawned", false))
+	last_drop_direction = _normalize_drop_direction(int(state.get("drop_direction", last_drop_direction)))
 
 
 func _ensure_persistence() -> void:
@@ -133,7 +143,7 @@ func _setup_signals() -> void:
 func _setup_hint() -> void:
 	if hint_label:
 		hint_label.visible = false
-		hint_label.text = "[F] РћС‚РєСЂС‹С‚СЊ"
+		hint_label.text = "[F] Открыть"
 
 
 func _update_visual() -> void:
@@ -159,6 +169,7 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 
 	if _is_player(body):
+		last_player_body = body
 		player_in_range = true
 		if hint_label:
 			hint_label.visible = true
@@ -188,11 +199,13 @@ func open_chest() -> void:
 		return
 
 	is_opening = true
+	last_drop_direction = _resolve_drop_direction()
 
 	if persistence:
 		persistence.mark_consumed({
 			"opened": true,
 			"contents_spawned": false,
+			"drop_direction": last_drop_direction,
 		})
 
 	if Global:
@@ -256,6 +269,7 @@ func _spawn_contents() -> void:
 
 
 func _spawn_items() -> void:
+	var total_pickups: int = _count_total_item_pickups()
 	var layout_index: int = 0
 
 	for i in range(item_ids.size()):
@@ -263,18 +277,20 @@ func _spawn_items() -> void:
 		var amount: int = item_amounts[i] if i < item_amounts.size() else 1
 
 		for j in range(amount):
-			_create_item_pickup(item_id, i * 10 + j, layout_index)
+			_create_item_pickup(item_id, i * 10 + j, layout_index, total_pickups)
 			layout_index += 1
 
 
 func _spawn_artifacts() -> void:
+	var total_pickups: int = artifact_ids.size()
 	for i in range(artifact_ids.size()):
-		_create_artifact_pickup(artifact_ids[i], i, i)
+		_create_artifact_pickup(artifact_ids[i], i, i, total_pickups)
 
 
 func _spawn_random() -> void:
-	_create_item_pickup(1, 0, 0)
-	_create_item_pickup(2, 1, 1)
+	var total_pickups: int = 2
+	_create_item_pickup(1, 0, 0, total_pickups)
+	_create_item_pickup(2, 1, 1, total_pickups)
 
 
 func _restore_items_and_delete() -> void:
@@ -303,6 +319,7 @@ func restore_opened_chest() -> void:
 
 
 func _restore_items() -> void:
+	var total_pickups: int = _count_remaining_item_pickups()
 	var layout_index: int = 0
 
 	for i in range(item_ids.size()):
@@ -312,21 +329,24 @@ func _restore_items() -> void:
 		for j in range(amount):
 			var pickup_index: int = i * 10 + j
 			if _is_item_pickup_collected(item_id, pickup_index):
-				layout_index += 1
 				continue
-			_create_restored_item_pickup(item_id, pickup_index, layout_index)
+			_create_restored_item_pickup(item_id, pickup_index, layout_index, total_pickups)
 			layout_index += 1
 
 
 func _restore_artifacts() -> void:
+	var total_pickups: int = _count_remaining_artifact_pickups()
+	var layout_index: int = 0
+
 	for i in range(artifact_ids.size()):
 		var artifact_id: String = artifact_ids[i]
 		if _is_artifact_pickup_collected(artifact_id, i):
 			continue
-		_create_restored_artifact_pickup(artifact_id, i, i)
+		_create_restored_artifact_pickup(artifact_id, i, layout_index, total_pickups)
+		layout_index += 1
 
 
-func _create_item_pickup(item_id: int, persistent_index: int, layout_index: int) -> void:
+func _create_item_pickup(item_id: int, persistent_index: int, layout_index: int, total_pickups: int) -> void:
 	var pickup: ItemPickup = ITEM_PICKUP_SCENE.instantiate() as ItemPickup
 	if pickup == null:
 		push_error("Chest: failed to instantiate ItemPickup scene")
@@ -334,13 +354,13 @@ func _create_item_pickup(item_id: int, persistent_index: int, layout_index: int)
 
 	pickup.name = _build_item_pickup_name(item_id, persistent_index)
 	pickup.item_id = item_id
-	pickup.global_position = _get_item_pickup_position(layout_index)
+	pickup.global_position = _get_item_pickup_position(layout_index, total_pickups)
 	pickup.setup(item_id, _build_item_pickup_config())
 	pickup.set_persistent_id(pickup.name)
 	_add_spawned_pickup(pickup)
 
 
-func _create_restored_item_pickup(item_id: int, persistent_index: int, layout_index: int) -> void:
+func _create_restored_item_pickup(item_id: int, persistent_index: int, layout_index: int, total_pickups: int) -> void:
 	var pickup: ItemPickup = ITEM_PICKUP_SCENE.instantiate() as ItemPickup
 	if pickup == null:
 		push_error("Chest: failed to instantiate restored ItemPickup scene")
@@ -348,13 +368,13 @@ func _create_restored_item_pickup(item_id: int, persistent_index: int, layout_in
 
 	pickup.name = _build_item_pickup_name(item_id, persistent_index)
 	pickup.item_id = item_id
-	pickup.global_position = _get_item_pickup_position(layout_index)
+	pickup.global_position = _get_item_pickup_position(layout_index, total_pickups)
 	pickup.setup(item_id, _build_item_pickup_config())
 	pickup.set_persistent_id(pickup.name)
 	_add_restored_pickup(pickup)
 
 
-func _create_artifact_pickup(artifact_id: String, persistent_index: int, layout_index: int) -> void:
+func _create_artifact_pickup(artifact_id: String, persistent_index: int, layout_index: int, total_pickups: int) -> void:
 	var pickup: ArtifactPickup = ARTIFACT_PICKUP_SCENE.instantiate() as ArtifactPickup
 	if pickup == null:
 		push_error("Chest: failed to instantiate ArtifactPickup scene")
@@ -362,13 +382,13 @@ func _create_artifact_pickup(artifact_id: String, persistent_index: int, layout_
 
 	pickup.name = _build_artifact_pickup_name(artifact_id, persistent_index)
 	pickup.artifact_id = artifact_id
-	pickup.global_position = _get_artifact_pickup_position(layout_index)
+	pickup.global_position = _get_artifact_pickup_position(layout_index, total_pickups)
 	pickup.setup(artifact_id, _build_artifact_pickup_config())
 	pickup.set_persistent_id(pickup.name)
 	_add_spawned_pickup(pickup)
 
 
-func _create_restored_artifact_pickup(artifact_id: String, persistent_index: int, layout_index: int) -> void:
+func _create_restored_artifact_pickup(artifact_id: String, persistent_index: int, layout_index: int, total_pickups: int) -> void:
 	var pickup: ArtifactPickup = ARTIFACT_PICKUP_SCENE.instantiate() as ArtifactPickup
 	if pickup == null:
 		push_error("Chest: failed to instantiate restored ArtifactPickup scene")
@@ -376,40 +396,138 @@ func _create_restored_artifact_pickup(artifact_id: String, persistent_index: int
 
 	pickup.name = _build_artifact_pickup_name(artifact_id, persistent_index)
 	pickup.artifact_id = artifact_id
-	pickup.global_position = _get_artifact_pickup_position(layout_index)
+	pickup.global_position = _get_artifact_pickup_position(layout_index, total_pickups)
 	pickup.setup(artifact_id, _build_artifact_pickup_config())
 	pickup.set_persistent_id(pickup.name)
 	_add_restored_pickup(pickup)
 
 
-func _get_item_pickup_position(index: int) -> Vector2:
-	var columns: int = 4
-	var column: int = index % columns
-	var row: int = index / columns
-	var center_offset: float = (columns - 1) * 0.5
-	var offset_x: float = (column - center_offset) * item_spread
-	var offset_y: float = -12.0 + row * 24.0
-	return global_position + Vector2(offset_x, offset_y)
+func _count_total_item_pickups() -> int:
+	var total_pickups: int = 0
+	for i in range(item_ids.size()):
+		total_pickups += item_amounts[i] if i < item_amounts.size() else 1
+	return max(total_pickups, 1)
 
 
-func _get_artifact_pickup_position(index: int) -> Vector2:
-	var columns: int = 3
-	var column: int = index % columns
-	var row: int = index / columns
-	var center_offset: float = (columns - 1) * 0.5
-	var offset_x: float = (column - center_offset) * item_spread * 1.25
-	var offset_y: float = -18.0 + row * 28.0
-	return global_position + Vector2(offset_x, offset_y)
+func _count_remaining_item_pickups() -> int:
+	var total_pickups: int = 0
+	for i in range(item_ids.size()):
+		var item_id: int = item_ids[i]
+		var amount: int = item_amounts[i] if i < item_amounts.size() else 1
+		for j in range(amount):
+			if not _is_item_pickup_collected(item_id, i * 10 + j):
+				total_pickups += 1
+	return max(total_pickups, 1)
+
+
+func _count_remaining_artifact_pickups() -> int:
+	var total_pickups: int = 0
+	for i in range(artifact_ids.size()):
+		if not _is_artifact_pickup_collected(artifact_ids[i], i):
+			total_pickups += 1
+	return max(total_pickups, 1)
+
+
+func _get_linear_pickup_position(index: int, total_pickups: int, spacing_multiplier: float, hover_height: float) -> Vector2:
+	var direction: int = _resolve_drop_direction()
+	var step: float = item_spread * spacing_multiplier
+	var base_offset: float = max(drop_front_offset, collision_radius * 0.55)
+	var target_x: float = global_position.x + direction * (base_offset + index * step)
+	return _resolve_grounded_pickup_position(target_x, hover_height)
+
+
+func _get_item_pickup_position(index: int, total_pickups: int) -> Vector2:
+	return _get_linear_pickup_position(index, total_pickups, 1.15, drop_hover_height)
+
+
+func _get_artifact_pickup_position(index: int, total_pickups: int) -> Vector2:
+	return _get_linear_pickup_position(index, total_pickups, 1.3, drop_hover_height + 2.0)
+
+
+func _resolve_drop_direction() -> int:
+	var player: Node2D = _get_reference_player()
+	if player and is_instance_valid(player):
+		var delta_x: float = player.global_position.x - global_position.x
+		if abs(delta_x) > 4.0:
+			return _normalize_drop_direction(-1 if delta_x < 0.0 else 1)
+	return _normalize_drop_direction(last_drop_direction)
+
+
+func _normalize_drop_direction(value: int) -> int:
+	return -1 if value < 0 else 1
+
+
+func _get_reference_player() -> Node2D:
+	if last_player_body and is_instance_valid(last_player_body):
+		return last_player_body
+	if Global and Global.current_player and is_instance_valid(Global.current_player):
+		return Global.current_player as Node2D
+	return null
+
+
+func _resolve_grounded_pickup_position(target_x: float, hover_height: float) -> Vector2:
+	var ground_hit: Dictionary = _find_ground_hit(target_x)
+	if ground_hit.is_empty():
+		ground_hit = _find_nearest_ground_hit(target_x)
+	if ground_hit.is_empty():
+		return Vector2(target_x, global_position.y - hover_height)
+
+	var hit_position: Vector2 = ground_hit.get("position", Vector2(target_x, global_position.y))
+	return Vector2(hit_position.x, hit_position.y - hover_height)
+
+
+func _find_nearest_ground_hit(target_x: float) -> Dictionary:
+	var toward_center: float = sign(global_position.x - target_x)
+	if toward_center == 0.0:
+		toward_center = -float(_resolve_drop_direction())
+
+	for step_index in range(1, max_ground_search_steps + 1):
+		var inward_x: float = target_x + toward_center * ground_search_step * step_index
+		var inward_hit: Dictionary = _find_ground_hit(inward_x)
+		if not inward_hit.is_empty():
+			return inward_hit
+
+		var outward_x: float = target_x - toward_center * ground_search_step * step_index
+		var outward_hit: Dictionary = _find_ground_hit(outward_x)
+		if not outward_hit.is_empty():
+			return outward_hit
+
+	return _find_ground_hit(global_position.x)
+
+
+func _find_ground_hit(world_x: float) -> Dictionary:
+	if get_world_2d() == null:
+		return {}
+
+	var origin: Vector2 = Vector2(world_x, global_position.y - ground_probe_height)
+	var target: Vector2 = Vector2(world_x, global_position.y + ground_search_depth)
+	var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(origin, target)
+	query.collide_with_bodies = true
+	query.collide_with_areas = false
+	query.exclude = _build_ground_query_excludes()
+	return get_world_2d().direct_space_state.intersect_ray(query)
+
+
+func _build_ground_query_excludes() -> Array:
+	var excludes: Array = [get_rid()]
+	if interaction_zone:
+		excludes.append(interaction_zone.get_rid())
+
+	var player: Node2D = _get_reference_player()
+	if player and player is CollisionObject2D:
+		excludes.append((player as CollisionObject2D).get_rid())
+
+	return excludes
 
 
 func _build_item_pickup_config() -> Dictionary:
 	return {
 		"display_scale": item_scale,
 		"collision_radius": collision_radius,
-		"hint_text": "[F] РџРѕРґРѕР±СЂР°С‚СЊ",
+		"hint_text": "[F] Подобрать",
 		"hint_offset": Vector2(-60, -30 * item_scale),
 		"label_offset": Vector2(-90, -62 * item_scale),
-		"label_visible": true,
+		"label_visible": false,
 	}
 
 
@@ -417,10 +535,10 @@ func _build_artifact_pickup_config() -> Dictionary:
 	return {
 		"display_scale": artifact_scale,
 		"collision_radius": collision_radius,
-		"hint_text": "[F] РџРѕРґРѕР±СЂР°С‚СЊ",
+		"hint_text": "[F] Подобрать",
 		"hint_offset": Vector2(-60, -35 * artifact_scale),
 		"label_offset": Vector2(-90, -68 * artifact_scale),
-		"label_visible": true,
+		"label_visible": false,
 	}
 
 

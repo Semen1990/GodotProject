@@ -1,4 +1,4 @@
-; Engine configuration file.
+﻿; Engine configuration file.
 ; It's best edited using the editor UI and not directly,
 ; since the parameters that go here are not all obvious.
 ;
@@ -14,7 +14,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
-config/name="Castle СЂР°Р±РѕС‡Р°СЏ РІРµСЂСЃРёСЏ"
+config/name="Castle РЎР‚Р В°Р В±Р С•РЎвЂЎР В°РЎРЏ Р Р†Р ВµРЎР‚РЎРѓР С‘РЎРЏ"
 run/main_scene="res://scenes/Ui/main_menu.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
@@ -24,7 +24,6 @@ config/icon="res://icon.svg"
 RunState="*res://autoload/RunState.gd"
 Global="*res://autoload/Global.gd"
 Inventory="*res://autoload/inventory_manager.gd"
-GameState="*uid://bkwffsy6gkii8"
 
 [display]
 

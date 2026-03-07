@@ -1,4 +1,4 @@
-extends CharacterBody2D
+﻿extends CharacterBody2D
 
 signal died()
 signal health_changed(new_health)
@@ -104,8 +104,6 @@ func _load_persistent_state() -> Dictionary:
 	if saved_state.is_empty():
 		var was_killed: bool = false
 		if Global and name in Global.killed_enemies:
-			was_killed = true
-		if GameState and GameState.is_enemy_killed(get_parent().name + "/" + name):
 			was_killed = true
 		if was_killed:
 			saved_state = persistence.mark_consumed({
@@ -402,7 +400,7 @@ func _deal_damage() -> void:
 
 	var dist: float = global_position.distance_to(target.global_position)
 	if dist <= attack_range + 30.0 and target.has_method("take_damage"):
-		target.take_damage(damage, "physical", "Ящерица с копьём")
+		target.take_damage(damage, "physical", "РЇС‰РµСЂРёС†Р° СЃ РєРѕРїСЊС‘Рј")
 
 
 func take_damage(amount: int, _type: String = "physical") -> void:

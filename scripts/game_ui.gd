@@ -95,7 +95,7 @@ func _create_health_ui() -> void:
 	stats_vbox.add_child(health_container)
 
 	var health_label := Label.new()
-	health_label.text = "Р—Р”РћР РћР’Р¬Р•"
+	health_label.text = "ЗДОРОВЬЕ"
 	health_label.add_theme_font_size_override("font_size", 14)
 	health_label.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
 	health_container.add_child(health_label)
@@ -137,7 +137,7 @@ func _create_armor_ui() -> void:
 	stats_vbox.add_child(armor_container)
 
 	var armor_label := Label.new()
-	armor_label.text = "Р‘Р РћРќРЇ:"
+	armor_label.text = "БРОНЯ:"
 	armor_label.add_theme_font_size_override("font_size", 14)
 	armor_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
 	armor_container.add_child(armor_label)
@@ -156,7 +156,7 @@ func _create_mana_ui() -> void:
 	stats_vbox.add_child(mana_container)
 
 	var mana_label := Label.new()
-	mana_label.text = "РњРђРќРђ"
+	mana_label.text = "МАНА"
 	mana_label.add_theme_font_size_override("font_size", 14)
 	mana_label.add_theme_color_override("font_color", Color(0.4, 0.6, 1.0))
 	mana_container.add_child(mana_label)
@@ -225,7 +225,7 @@ func _create_ability_ui() -> void:
 	icon_panel.add_child(ability_cooldown)
 
 	ability_label = Label.new()
-	ability_label.text = "[РџРљРњ]"
+	ability_label.text = "[ПКМ]"
 	ability_label.add_theme_font_size_override("font_size", 12)
 	ability_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ability_container.add_child(ability_label)
