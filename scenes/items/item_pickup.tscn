@@ -17,10 +17,10 @@ scale = Vector2(3, 3)
 shape = SubResource("CircleShape2D_nc1ct")
 
 [node name="Label" type="Label" parent="." unique_id=172505447]
-offset_left = -40.0
-offset_top = -50.0
-offset_right = 8.0
-offset_bottom = -27.0
+offset_left = -90.0
+offset_top = -68.0
+offset_right = 90.0
+offset_bottom = -24.0
 horizontal_alignment = 1
 
 [node name="HintLabel" type="Label" parent="." unique_id=1592193791]
@@ -30,4 +30,4 @@ offset_top = -70.0
 offset_right = 41.0
 offset_bottom = -47.0
 theme_override_font_sizes/font_size = 14
-text = "Press F"
+text = "[F] Подобрать"

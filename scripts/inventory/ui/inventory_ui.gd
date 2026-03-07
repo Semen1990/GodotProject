@@ -1184,34 +1184,16 @@ func _on_hotbar_slot_right_clicked(slot: InventorySlot):
 func _on_inventory_item_dropped(from_slot: InventorySlot, to_slot: InventorySlot):
 	if not Inventory:
 		return
-	
-	# Перетаскивание из хотбара в инвентарь
+
 	if from_slot.is_hotbar_slot and not to_slot.is_hotbar_slot:
-		# Если целевой слот пуст - просто перемещаем
-		if to_slot.current_item == null:
-			var item = Inventory.hotbar_slots[from_slot.hotbar_index]
-			if item:
-				Inventory.inventory_slots[to_slot.slot_index] = item
-				Inventory.hotbar_slots[from_slot.hotbar_index] = null
-				Inventory.hotbar_changed.emit(from_slot.hotbar_index)
-				Inventory.inventory_changed.emit()
-		# Если занят расходником - меняем местами
-		elif to_slot.current_item.is_usable():
-			var hotbar_item = Inventory.hotbar_slots[from_slot.hotbar_index]
-			var inv_item = Inventory.inventory_slots[to_slot.slot_index]
-			Inventory.inventory_slots[to_slot.slot_index] = hotbar_item
-			Inventory.hotbar_slots[from_slot.hotbar_index] = inv_item
-			Inventory.hotbar_changed.emit(from_slot.hotbar_index)
-			Inventory.inventory_changed.emit()
-		_refresh_inventory()
-		_refresh_hotbar()
+		if Inventory.move_hotbar_to_inventory_slot(from_slot.hotbar_index, to_slot.slot_index):
+			_refresh_inventory()
+			_refresh_hotbar()
 		return
-	
-	# Обычное перемещение внутри инвентаря
+
 	if from_slot.current_item:
 		Inventory.move_item(from_slot.slot_index, to_slot.slot_index)
 		_refresh_inventory()
-
 
 func _on_equip_item_dropped(from_slot: InventorySlot, to_slot: InventorySlot):
 	if not from_slot.current_item or not Inventory:
@@ -1231,26 +1213,17 @@ func _on_equip_item_dropped(from_slot: InventorySlot, to_slot: InventorySlot):
 func _on_hotbar_item_dropped(from_slot: InventorySlot, to_slot: InventorySlot):
 	if not from_slot.current_item or not Inventory:
 		return
-	
-	# Только расходники можно класть в хотбар
+
 	if not from_slot.current_item.is_usable():
 		return
-	
-	# Перетаскивание из инвентаря в хотбар
-	if not from_slot.is_hotbar_slot and to_slot.is_hotbar_slot:
-		Inventory.move_item_to_specific_hotbar_slot(from_slot.slot_index, to_slot.hotbar_index)
-		_refresh_inventory()
-		_refresh_hotbar()
-	
-	# Перетаскивание из хотбара в хотбар (обмен местами)
-	elif from_slot.is_hotbar_slot and to_slot.is_hotbar_slot:
-		var temp = Inventory.hotbar_slots[from_slot.hotbar_index]
-		Inventory.hotbar_slots[from_slot.hotbar_index] = Inventory.hotbar_slots[to_slot.hotbar_index]
-		Inventory.hotbar_slots[to_slot.hotbar_index] = temp
-		Inventory.hotbar_changed.emit(from_slot.hotbar_index)
-		Inventory.hotbar_changed.emit(to_slot.hotbar_index)
-		_refresh_hotbar()
 
+	if not from_slot.is_hotbar_slot and to_slot.is_hotbar_slot:
+		if Inventory.move_item_to_specific_hotbar_slot(from_slot.slot_index, to_slot.hotbar_index):
+			_refresh_inventory()
+			_refresh_hotbar()
+	elif from_slot.is_hotbar_slot and to_slot.is_hotbar_slot:
+		if Inventory.swap_hotbar_slots(from_slot.hotbar_index, to_slot.hotbar_index):
+			_refresh_hotbar()
 
 # ===========================================
 # ПОДСКАЗКИ

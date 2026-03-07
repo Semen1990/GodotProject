@@ -510,40 +510,123 @@ func is_slot_equipped(slot: InventoryEnums.EquipSlot) -> bool:
 # Ð‘Ð«Ð¡Ð¢Ð Ð«Ð• Ð¡Ð›ÐžÐ¢Ð« (HOTBAR)
 # ===========================================
 
+func _append_hotbar_change(changed_slots: Array[int], slot_index: int) -> void:
+	if slot_index >= 0 and not changed_slots.has(slot_index):
+		changed_slots.append(slot_index)
+
+
+func _emit_hotbar_changes(changed_slots: Array[int]) -> void:
+	for slot_index in changed_slots:
+		hotbar_changed.emit(slot_index)
+
+
+func _can_merge_stack(target_item: InventoryItem, source_item: InventoryItem) -> bool:
+	return (
+		target_item != null
+		and source_item != null
+		and target_item != source_item
+		and target_item.is_same_type(source_item)
+		and target_item.is_stackable()
+		and not target_item.is_full()
+	)
+
+
+func _merge_item_into_hotbar(source_item: InventoryItem, changed_slots: Array[int], preferred_slot: int = -1, only_preferred: bool = false) -> bool:
+	if source_item == null or source_item.is_empty() or not source_item.is_stackable():
+		return false
+
+	var merged := false
+	var slot_order: Array[int] = []
+
+	if preferred_slot >= 0 and preferred_slot < HOTBAR_SLOTS:
+		slot_order.append(preferred_slot)
+
+	if not only_preferred:
+		for i in range(HOTBAR_SLOTS):
+			if i != preferred_slot:
+				slot_order.append(i)
+
+	for slot_index in slot_order:
+		var target_item := hotbar_slots[slot_index]
+		if not _can_merge_stack(target_item, source_item):
+			continue
+
+		var overflow := target_item.add(source_item.quantity)
+		if overflow != source_item.quantity:
+			source_item.quantity = overflow
+			merged = true
+			_append_hotbar_change(changed_slots, slot_index)
+
+		if source_item.is_empty():
+			break
+
+	return merged
+
+
+func _merge_item_into_inventory(source_item: InventoryItem, preferred_slot: int = -1, only_preferred: bool = false, exclude_slot: int = -1) -> bool:
+	if source_item == null or source_item.is_empty() or not source_item.is_stackable():
+		return false
+
+	var merged := false
+	var slot_order: Array[int] = []
+
+	if preferred_slot >= 0 and preferred_slot < current_slot_count and preferred_slot != exclude_slot:
+		slot_order.append(preferred_slot)
+
+	if not only_preferred:
+		for i in range(current_slot_count):
+			if i == preferred_slot or i == exclude_slot:
+				continue
+			slot_order.append(i)
+
+	for slot_index in slot_order:
+		var target_item := inventory_slots[slot_index]
+		if not _can_merge_stack(target_item, source_item):
+			continue
+
+		var overflow := target_item.add(source_item.quantity)
+		if overflow != source_item.quantity:
+			source_item.quantity = overflow
+			merged = true
+
+		if source_item.is_empty():
+			break
+
+	return merged
+
+
+func find_free_hotbar_slot() -> int:
+	for i in range(HOTBAR_SLOTS):
+		if hotbar_slots[i] == null or hotbar_slots[i].is_empty():
+			return i
+	return -1
+
+
 func set_hotbar_item(hotbar_index: int, inventory_index: int) -> bool:
 	if hotbar_index < 0 or hotbar_index >= HOTBAR_SLOTS:
 		return false
-	
+
 	if inventory_index < 0 or inventory_index >= current_slot_count:
 		hotbar_slots[hotbar_index] = null
 		hotbar_changed.emit(hotbar_index)
 		return true
-	
-	var item = inventory_slots[inventory_index]
-	if item == null:
-		return false
-	
-	if not item.is_usable():
-		return false
-	
-	hotbar_slots[hotbar_index] = item
-	hotbar_changed.emit(hotbar_index)
-	return true
+
+	return move_item_to_specific_hotbar_slot(inventory_index, hotbar_index)
 
 
 func use_hotbar_item(hotbar_index: int) -> bool:
 	if hotbar_index < 0 or hotbar_index >= HOTBAR_SLOTS:
 		return false
-	
-	var item = hotbar_slots[hotbar_index]
+
+	var item := hotbar_slots[hotbar_index]
 	if item == null or item.is_empty():
 		hotbar_slots[hotbar_index] = null
 		hotbar_changed.emit(hotbar_index)
 		return false
-	
+
 	if _use_item(item):
 		hotbar_item_used.emit(hotbar_index, item)
-		
+
 		if item.is_empty():
 			hotbar_slots[hotbar_index] = null
 			for i in range(current_slot_count):
@@ -551,10 +634,10 @@ func use_hotbar_item(hotbar_index: int) -> bool:
 					inventory_slots[i] = null
 					break
 			inventory_changed.emit()
-		
+
 		hotbar_changed.emit(hotbar_index)
 		return true
-	
+
 	return false
 
 
@@ -564,85 +647,75 @@ func get_hotbar_item(hotbar_index: int) -> InventoryItem:
 	return hotbar_slots[hotbar_index]
 
 
-# ===========================================
-# ПЕРЕМЕЩЕНИЕ В ХОТБАР (новая механика ПКМ)
-# ===========================================
+func move_item_to_hotbar(inventory_index: int) -> int:
+	if inventory_index < 0 or inventory_index >= current_slot_count:
+		return -1
 
-func find_free_hotbar_slot() -> int:
-	"""Находит первый свободный слот хотбара. Возвращает -1 если все заняты"""
-	for i in range(HOTBAR_SLOTS):
-		if hotbar_slots[i] == null or hotbar_slots[i].is_empty():
-			return i
+	var item := inventory_slots[inventory_index]
+	if item == null or item.is_empty():
+		return -1
+
+	if not item.is_usable():
+		return -1
+
+	var changed_hotbar: Array[int] = []
+	_merge_item_into_hotbar(item, changed_hotbar)
+
+	if item.is_empty():
+		inventory_slots[inventory_index] = null
+		_emit_hotbar_changes(changed_hotbar)
+		inventory_changed.emit()
+		return changed_hotbar[0] if not changed_hotbar.is_empty() else -1
+
+	var free_hotbar := find_free_hotbar_slot()
+	if free_hotbar >= 0:
+		hotbar_slots[free_hotbar] = item
+		inventory_slots[inventory_index] = null
+		_append_hotbar_change(changed_hotbar, free_hotbar)
+		_emit_hotbar_changes(changed_hotbar)
+		inventory_changed.emit()
+		return changed_hotbar[0]
+
+	if not changed_hotbar.is_empty():
+		_emit_hotbar_changes(changed_hotbar)
+		inventory_changed.emit()
+		return changed_hotbar[0]
+
 	return -1
 
 
-func move_item_to_hotbar(inventory_index: int) -> int:
-	"""
-	ПЕРЕМЕЩАЕТ расходник из инвентаря в хотбар (удаляет из инвентаря!)
-	Возвращает индекс хотбара или -1 если не удалось
-	"""
-	if inventory_index < 0 or inventory_index >= current_slot_count:
-		return -1
-	
-	var item = inventory_slots[inventory_index]
-	if item == null or item.is_empty():
-		return -1
-	
-	# Только расходники можно класть в хотбар
-	if not item.is_usable():
-		print("⚠️ Только расходники можно перемещать в быстрые слоты")
-		return -1
-	
-	# Ищем свободный слот в хотбаре
-	var free_hotbar = find_free_hotbar_slot()
-	if free_hotbar < 0:
-		print("⚠️ Все быстрые слоты заняты")
-		return -1
-	
-	# ПЕРЕМЕЩАЕМ предмет (не копируем!)
-	hotbar_slots[free_hotbar] = item
-	inventory_slots[inventory_index] = null
-	
-	print("📦→⚡ Предмет перемещён в быстрый слот %d" % (free_hotbar + 1))
-	
-	hotbar_changed.emit(free_hotbar)
-	inventory_changed.emit()
-	
-	return free_hotbar
-
-
 func move_hotbar_to_inventory(hotbar_index: int) -> bool:
-	"""
-	ПЕРЕМЕЩАЕТ расходник из хотбара обратно в инвентарь
-	Возвращает true если успешно
-	"""
 	if hotbar_index < 0 or hotbar_index >= HOTBAR_SLOTS:
 		return false
-	
-	var item = hotbar_slots[hotbar_index]
+
+	var item := hotbar_slots[hotbar_index]
 	if item == null or item.is_empty():
 		return false
-	
-	# Ищем свободный слот в инвентаре
-	var free_inv = _find_empty_slot()
-	if free_inv < 0:
-		print("⚠️ Инвентарь полон")
-		return false
-	
-	# ПЕРЕМЕЩАЕМ обратно в инвентарь
-	inventory_slots[free_inv] = item
-	hotbar_slots[hotbar_index] = null
-	
-	print("⚡→📦 Предмет возвращён в инвентарь (слот %d)" % free_inv)
-	
-	hotbar_changed.emit(hotbar_index)
-	inventory_changed.emit()
-	
-	return true
+
+	var changed := _merge_item_into_inventory(item)
+	if item.is_empty():
+		hotbar_slots[hotbar_index] = null
+		hotbar_changed.emit(hotbar_index)
+		inventory_changed.emit()
+		return true
+
+	var free_inv := _find_empty_slot()
+	if free_inv >= 0:
+		inventory_slots[free_inv] = item
+		hotbar_slots[hotbar_index] = null
+		hotbar_changed.emit(hotbar_index)
+		inventory_changed.emit()
+		return true
+
+	if changed:
+		hotbar_changed.emit(hotbar_index)
+		inventory_changed.emit()
+		return true
+
+	return false
 
 
 func is_item_in_hotbar(item: InventoryItem) -> int:
-	"""Проверяет, находится ли предмет в хотбаре. Возвращает индекс или -1"""
 	for i in range(HOTBAR_SLOTS):
 		if hotbar_slots[i] == item:
 			return i
@@ -650,47 +723,117 @@ func is_item_in_hotbar(item: InventoryItem) -> int:
 
 
 func move_item_to_specific_hotbar_slot(inventory_index: int, hotbar_index: int) -> bool:
-	"""
-	ПЕРЕМЕЩАЕТ расходник из инвентаря в КОНКРЕТНЫЙ слот хотбара (для drag & drop)
-	Если слот занят - заменяет (старый предмет возвращается в инвентарь)
-	"""
 	if inventory_index < 0 or inventory_index >= current_slot_count:
 		return false
 	if hotbar_index < 0 or hotbar_index >= HOTBAR_SLOTS:
 		return false
-	
-	var item = inventory_slots[inventory_index]
-	if item == null or item.is_empty():
+
+	var item := inventory_slots[inventory_index]
+	if item == null or item.is_empty() or not item.is_usable():
 		return false
-	
-	# Только расходники
-	if not item.is_usable():
-		return false
-	
-	# Если в целевом слоте уже есть предмет - возвращаем его в инвентарь
-	var old_item = hotbar_slots[hotbar_index]
-	if old_item != null and not old_item.is_empty():
-		# Ставим старый предмет на место нового
-		inventory_slots[inventory_index] = old_item
-	else:
-		# Слот был пуст - просто очищаем инвентарный слот
+
+	var target_item := hotbar_slots[hotbar_index]
+	if _can_merge_stack(target_item, item):
+		var overflow := target_item.add(item.quantity)
+		if overflow == item.quantity:
+			return false
+
+		item.quantity = overflow
+		if item.is_empty():
+			inventory_slots[inventory_index] = null
+
+		hotbar_changed.emit(hotbar_index)
+		inventory_changed.emit()
+		return true
+
+	if target_item == null or target_item.is_empty():
+		hotbar_slots[hotbar_index] = item
 		inventory_slots[inventory_index] = null
-	
-	# Ставим новый предмет в хотбар
+		hotbar_changed.emit(hotbar_index)
+		inventory_changed.emit()
+		return true
+
+	if target_item.is_same_type(item):
+		return false
+
+	inventory_slots[inventory_index] = target_item
 	hotbar_slots[hotbar_index] = item
-	
-	print("📦→⚡ Предмет перемещён в быстрый слот %d" % (hotbar_index + 1))
-	
 	hotbar_changed.emit(hotbar_index)
 	inventory_changed.emit()
-	
 	return true
 
 
+func move_hotbar_to_inventory_slot(hotbar_index: int, inventory_index: int) -> bool:
+	if hotbar_index < 0 or hotbar_index >= HOTBAR_SLOTS:
+		return false
+	if inventory_index < 0 or inventory_index >= current_slot_count:
+		return false
 
-# ===========================================
-# Ð˜Ð¡ÐŸÐžÐ›Ð¬Ð—ÐžÐ’ÐÐÐ˜Ð• ÐŸÐ Ð•Ð”ÐœÐ•Ð¢ÐžÐ’
-# ===========================================
+	var item := hotbar_slots[hotbar_index]
+	if item == null or item.is_empty():
+		return false
+
+	var target_item := inventory_slots[inventory_index]
+	if target_item == null:
+		inventory_slots[inventory_index] = item
+		hotbar_slots[hotbar_index] = null
+		hotbar_changed.emit(hotbar_index)
+		inventory_changed.emit()
+		return true
+
+	if _can_merge_stack(target_item, item):
+		var overflow := target_item.add(item.quantity)
+		if overflow == item.quantity:
+			return false
+
+		item.quantity = overflow
+		if item.is_empty():
+			hotbar_slots[hotbar_index] = null
+
+		hotbar_changed.emit(hotbar_index)
+		inventory_changed.emit()
+		return true
+
+	if not target_item.is_usable():
+		return false
+
+	inventory_slots[inventory_index] = item
+	hotbar_slots[hotbar_index] = target_item
+	hotbar_changed.emit(hotbar_index)
+	inventory_changed.emit()
+	return true
+
+
+func swap_hotbar_slots(from_hotbar_index: int, to_hotbar_index: int) -> bool:
+	if from_hotbar_index < 0 or from_hotbar_index >= HOTBAR_SLOTS:
+		return false
+	if to_hotbar_index < 0 or to_hotbar_index >= HOTBAR_SLOTS:
+		return false
+	if from_hotbar_index == to_hotbar_index:
+		return false
+
+	var from_item := hotbar_slots[from_hotbar_index]
+	var to_item := hotbar_slots[to_hotbar_index]
+
+	if from_item == null and to_item == null:
+		return false
+
+	if _can_merge_stack(to_item, from_item):
+		var overflow := to_item.add(from_item.quantity)
+		if overflow != from_item.quantity:
+			from_item.quantity = overflow
+			if from_item.is_empty():
+				hotbar_slots[from_hotbar_index] = null
+			hotbar_changed.emit(from_hotbar_index)
+			hotbar_changed.emit(to_hotbar_index)
+			return true
+
+	hotbar_slots[from_hotbar_index] = to_item
+	hotbar_slots[to_hotbar_index] = from_item
+	hotbar_changed.emit(from_hotbar_index)
+	hotbar_changed.emit(to_hotbar_index)
+	return true
+
 
 func _use_item(item: InventoryItem) -> bool:
 	if item == null or item.data == null:
@@ -791,6 +934,10 @@ func get_equipment_stats() -> Dictionary:
 			total_stats[stat_name] = total_stats.get(stat_name, 0) + stats[stat_name]
 	
 	return total_stats
+
+
+func emit_current_stats() -> void:
+	_recalculate_stats()
 
 
 func has_special_effect(effect_type: InventoryEnums.EffectType) -> bool:

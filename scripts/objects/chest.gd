@@ -1,19 +1,12 @@
-extends Area2D
+﻿extends Area2D
 class_name Chest
-
-# ===========================================
-# CHEST v7.0 - Р СџР В Р С’Р вЂ™Р ВР вЂєР В¬Р СњР С›Р вЂў Р РЋР С›Р ТђР В Р С’Р СњР вЂўР СњР ВР вЂў Р РЋР С›Р РЋР СћР С›Р Р‡Р СњР ВР Р‡
-# ===========================================
-# Р вЂєР С•Р С–Р С‘Р С”Р В°:
-# - Р вЂ”Р В°Р С”РЎР‚РЎвЂ№РЎвЂљРЎвЂ№Р в„– РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С” РІвЂ вЂ™ Р С—РЎР‚Р С‘ Р Р†Р С•Р В·Р Р†РЎР‚Р В°РЎвЂљР Вµ РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С” Р Р…Р В° Р СР ВµРЎРѓРЎвЂљР Вµ
-# - Р С›РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљРЎвЂ№Р в„– РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С” РІвЂ вЂ™ Р С—РЎР‚Р С‘ Р Р†Р С•Р В·Р Р†РЎР‚Р В°РЎвЂљР Вµ РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С”Р В° Р СњР вЂўР Сћ,
-#   Р Р…Р С• Р Р†РЎвЂ№Р С—Р В°Р Р†РЎв‚¬Р С‘Р Вµ Р Р…Р Вµ Р С—Р С•Р Т‘Р С•Р В±РЎР‚Р В°Р Р…Р Р…РЎвЂ№Р Вµ Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљРЎвЂ№ Р В»Р ВµР В¶Р В°РЎвЂљ
 
 signal opened
 signal item_spawned(pickup_node: Node2D)
 
 const ITEM_PICKUP_SCENE := preload("res://scenes/items/item_pickup.tscn")
 const ARTIFACT_PICKUP_SCENE := preload("res://scenes/items/artifact_pickup.tscn")
+const PERSISTENCE_COMPONENT := preload("res://scripts/persistence/persistence_component.gd")
 
 enum ChestType { ITEMS, ARTIFACTS, MIXED, RANDOM }
 
@@ -26,7 +19,7 @@ enum ChestType { ITEMS, ARTIFACTS, MIXED, RANDOM }
 
 @export var spawn_frame: int = 3
 
-@export_group("Р В Р В°Р В·Р СР ВµРЎР‚РЎвЂ№ Р Р†РЎвЂ№Р С—Р В°Р Т‘Р В°РЎР‹РЎвЂ°Р С‘РЎвЂ¦ Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљР С•Р Р†")
+@export_group("Р’РёР·СѓР°Р» РІС‹РїР°РІС€РёС… РїСЂРµРґРјРµС‚РѕРІ")
 @export var item_scale: float = 1.5
 @export var artifact_scale: float = 1.8
 @export var collision_radius: float = 40.0
@@ -35,37 +28,90 @@ enum ChestType { ITEMS, ARTIFACTS, MIXED, RANDOM }
 var animated_sprite: AnimatedSprite2D = null
 var interaction_zone: Area2D = null
 var hint_label: Label = null
+var persistence: PersistenceComponent = null
 
 var is_open: bool = false
 var player_in_range: bool = false
 var is_opening: bool = false
 var items_spawned: bool = false
+var pending_restore_after_setup: bool = false
+var contents_configured: bool = false
 
 
-func _ready():
+func _ready() -> void:
 	animated_sprite = get_node_or_null("AnimatedSprite2D")
 	interaction_zone = get_node_or_null("InteractionZone")
 	hint_label = get_node_or_null("HintLabel")
-
 	is_open = is_initially_open
+	contents_configured = _has_defined_contents()
 
-	# === Р СџР В Р С›Р вЂ™Р вЂўР В Р Р‡Р вЂўР Сљ: Р вЂР В«Р вЂє Р вЂєР В Р РЋР Р€Р СњР вЂќР Р€Р С™ Р Р€Р вЂ“Р вЂў Р С›Р СћР С™Р В Р В«Р Сћ? ===
-	if Global and Global.is_chest_opened(name):
-		print("СЂСџвЂњВ¦ '%s' Р В±РЎвЂ№Р В» Р С•РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљ РЎР‚Р В°Р Р…Р ВµР Вµ РІвЂ вЂ™ Р Р†Р С•РЎРѓРЎРѓРЎвЂљР В°Р Р…Р В°Р Р†Р В»Р С‘Р Р†Р В°Р ВµР С Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљРЎвЂ№, РЎС“Р Т‘Р В°Р В»РЎРЏР ВµР С РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С”" % name)
-		# Р РЋРЎС“Р Р…Р Т‘РЎС“Р С” Р В±РЎвЂ№Р В» Р С•РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљ - Р Р†Р С•РЎРѓРЎРѓРЎвЂљР В°Р Р…Р В°Р Р†Р В»Р С‘Р Р†Р В°Р ВµР С Р Р…Р Вµ Р С—Р С•Р Т‘Р С•Р В±РЎР‚Р В°Р Р…Р Р…РЎвЂ№Р Вµ Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљРЎвЂ№ Р С‘ РЎС“Р Т‘Р В°Р В»РЎРЏР ВµР С РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С”
-		call_deferred("_restore_items_and_delete")
+	_ensure_persistence()
+	_configure_persistence()
+
+	var saved_state: Dictionary = _load_persistent_state()
+	if bool(saved_state.get("opened", false)) or bool(saved_state.get("consumed", false)):
+		_update_visual()
+		_setup_hint()
+		if contents_configured:
+			call_deferred("_restore_items_and_delete")
+		else:
+			pending_restore_after_setup = true
 		return
 
-	# Р РЋРЎС“Р Р…Р Т‘РЎС“Р С” Р СњР вЂў Р В±РЎвЂ№Р В» Р С•РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљ - РЎР‚Р В°Р В±Р С•РЎвЂљР В°Р ВµР С Р С”Р В°Р С” Р С•Р В±РЎвЂ№РЎвЂЎР Р…Р С•
 	_setup_signals()
 	_update_visual()
 	_setup_hint()
 
-	print("СЂСџвЂњВ¦ Р РЋРЎС“Р Р…Р Т‘РЎС“Р С” '%s': Р В·Р В°Р С”РЎР‚РЎвЂ№РЎвЂљ, Р В¶Р Т‘РЎвЂРЎвЂљ Р С•РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљР С‘РЎРЏ" % name)
+
+func capture_persistent_state() -> Dictionary:
+	return {
+		"opened": is_open or is_opening,
+		"contents_spawned": items_spawned,
+		"consumed": is_open or is_opening,
+	}
 
 
-func _setup_signals():
-	"""Р СњР В°РЎРѓРЎвЂљРЎР‚Р В°Р С‘Р Р†Р В°Р ВµРЎвЂљ РЎРѓР С‘Р С–Р Р…Р В°Р В»РЎвЂ№ Р Т‘Р В»РЎРЏ Р Р†Р В·Р В°Р С‘Р СР С•Р Т‘Р ВµР в„–РЎРѓРЎвЂљР Р†Р С‘РЎРЏ"""
+func apply_persistent_state(state: Dictionary) -> void:
+	is_open = bool(state.get("opened", false))
+	is_opening = false
+	items_spawned = bool(state.get("contents_spawned", false))
+
+
+func _ensure_persistence() -> void:
+	persistence = get_node_or_null("Persistence") as PersistenceComponent
+	if persistence != null:
+		return
+
+	persistence = PERSISTENCE_COMPONENT.new()
+	persistence.name = "Persistence"
+	add_child(persistence)
+
+
+func _configure_persistence() -> void:
+	if persistence:
+		persistence.configure(name, "chest", true)
+
+
+func _load_persistent_state() -> Dictionary:
+	if Global and not Global.run_started:
+		return {}
+	if persistence == null:
+		return {}
+
+	var saved_state: Dictionary = persistence.get_saved_state()
+	if saved_state.is_empty() and Global and Global.is_chest_opened(name):
+		saved_state = persistence.mark_consumed({
+			"opened": true,
+			"contents_spawned": true,
+		})
+
+	if not saved_state.is_empty():
+		apply_persistent_state(saved_state)
+
+	return saved_state
+
+
+func _setup_signals() -> void:
 	if interaction_zone:
 		if not interaction_zone.body_entered.is_connected(_on_body_entered):
 			interaction_zone.body_entered.connect(_on_body_entered)
@@ -84,13 +130,13 @@ func _setup_signals():
 			animated_sprite.animation_finished.connect(_on_animation_finished)
 
 
-func _setup_hint():
+func _setup_hint() -> void:
 	if hint_label:
 		hint_label.visible = false
-		hint_label.text = "[F] Р С›РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљРЎРЉ"
+		hint_label.text = "[F] РћС‚РєСЂС‹С‚СЊ"
 
 
-func _update_visual():
+func _update_visual() -> void:
 	if not animated_sprite or not animated_sprite.sprite_frames:
 		return
 
@@ -108,11 +154,7 @@ func _update_visual():
 			animated_sprite.play("closed")
 
 
-# ===========================================
-# Р вЂ™Р вЂ”Р С’Р ВР СљР С›Р вЂќР вЂўР в„ўР РЋР СћР вЂ™Р ВР вЂў Р РЋ Р ВР вЂњР В Р С›Р С™Р С›Р Сљ
-# ===========================================
-
-func _on_body_entered(body: Node2D):
+func _on_body_entered(body: Node2D) -> void:
 	if is_open or is_opening:
 		return
 
@@ -122,7 +164,7 @@ func _on_body_entered(body: Node2D):
 			hint_label.visible = true
 
 
-func _on_body_exited(body: Node2D):
+func _on_body_exited(body: Node2D) -> void:
 	if _is_player(body):
 		player_in_range = false
 		if hint_label:
@@ -133,7 +175,7 @@ func _is_player(body: Node2D) -> bool:
 	return body.is_in_group("player") or body.has_method("take_damage")
 
 
-func _process(_delta):
+func _process(_delta: float) -> void:
 	if is_open or is_opening or not player_in_range:
 		return
 
@@ -141,67 +183,63 @@ func _process(_delta):
 		open_chest()
 
 
-func open_chest():
+func open_chest() -> void:
 	if is_open or is_opening:
 		return
 
 	is_opening = true
 
-	# Р В Р ВµР С–Р С‘РЎРѓРЎвЂљРЎР‚Р С‘РЎР‚РЎС“Р ВµР С РЎвЂЎРЎвЂљР С• РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С” Р С›Р СћР С™Р В Р В«Р Сћ
+	if persistence:
+		persistence.mark_consumed({
+			"opened": true,
+			"contents_spawned": false,
+		})
+
 	if Global:
 		Global.register_opened_chest(name)
 
 	if hint_label:
 		hint_label.visible = false
 
-	if animated_sprite and animated_sprite.sprite_frames:
-		if animated_sprite.sprite_frames.has_animation("opening"):
-			print("СЂСџвЂњВ¦ '%s' - Р В°Р Р…Р С‘Р СР В°РЎвЂ Р С‘РЎРЏ opening" % name)
-			animated_sprite.play("opening")
-		else:
-			_spawn_contents()
-			_finish_opening()
+	if animated_sprite and animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("opening"):
+		animated_sprite.play("opening")
 	else:
 		_spawn_contents()
 		_finish_opening()
 
 
-func _on_frame_changed():
+func _on_frame_changed() -> void:
 	if not is_opening or items_spawned:
 		return
 
-	if animated_sprite.animation == "opening":
-		var current_frame = animated_sprite.frame
-
-		if current_frame == spawn_frame:
-			print("СЂСџвЂњВ¦ '%s' - Р РЋР СџР С’Р вЂ™Р Сњ Р Р…Р В° Р С”Р В°Р Т‘РЎР‚Р Вµ %d!" % [name, spawn_frame])
-			_spawn_contents()
-			items_spawned = true
+	if animated_sprite and animated_sprite.animation == "opening" and animated_sprite.frame == spawn_frame:
+		_spawn_contents()
 
 
-func _on_animation_finished():
-	if is_opening and animated_sprite.animation == "opening":
+func _on_animation_finished() -> void:
+	if is_opening and animated_sprite and animated_sprite.animation == "opening":
 		_finish_opening()
 
 
-func _finish_opening():
+func _finish_opening() -> void:
 	is_open = true
 	is_opening = false
+	if persistence:
+		persistence.save_from_owner()
 	opened.emit()
-	print("СЂСџвЂњВ¦ '%s' Р С•РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљ!" % name)
 
-	# Р СџР В»Р В°Р Р†Р Р…Р С• РЎС“Р Т‘Р В°Р В»РЎРЏР ВµР С РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С”
-	var tween = create_tween()
+	var tween: Tween = create_tween()
 	tween.tween_interval(0.3)
 	tween.tween_property(self, "modulate:a", 0.0, 0.3)
 	tween.tween_callback(queue_free)
 
 
-# ===========================================
-# Р РЋР СџР С’Р вЂ™Р Сњ Р РЋР С›Р вЂќР вЂўР В Р вЂ“Р ВР СљР С›Р вЂњР С›
-# ===========================================
+func _spawn_contents() -> void:
+	if items_spawned:
+		return
 
-func _spawn_contents():
+	items_spawned = true
+
 	match chest_type:
 		ChestType.ITEMS:
 			_spawn_items()
@@ -213,35 +251,35 @@ func _spawn_contents():
 		ChestType.RANDOM:
 			_spawn_random()
 
+	if persistence:
+		persistence.save_from_owner()
 
-func _spawn_items():
+
+func _spawn_items() -> void:
+	var layout_index: int = 0
+
 	for i in range(item_ids.size()):
-		var item_id = item_ids[i]
-		var amount = item_amounts[i] if i < item_amounts.size() else 1
+		var item_id: int = item_ids[i]
+		var amount: int = item_amounts[i] if i < item_amounts.size() else 1
 
 		for j in range(amount):
-			_create_item_pickup(item_id, i * 10 + j)
+			_create_item_pickup(item_id, i * 10 + j, layout_index)
+			layout_index += 1
 
 
-func _spawn_artifacts():
+func _spawn_artifacts() -> void:
 	for i in range(artifact_ids.size()):
-		_create_artifact_pickup(artifact_ids[i], i)
+		_create_artifact_pickup(artifact_ids[i], i, i)
 
 
-func _spawn_random():
-	_create_item_pickup(1, 0)
-	_create_item_pickup(2, 1)
+func _spawn_random() -> void:
+	_create_item_pickup(1, 0, 0)
+	_create_item_pickup(2, 1, 1)
 
 
-# ===========================================
-# Р вЂ™Р С›Р РЋР РЋР СћР С’Р СњР С›Р вЂ™Р вЂєР вЂўР СњР ВР вЂў Р СџР В Р В Р вЂ™Р С›Р вЂ”Р вЂ™Р В Р С’Р СћР вЂў Р СњР С’ Р Р€Р В Р С›Р вЂ™Р вЂўР СњР В¬
-# ===========================================
-
-func _restore_items_and_delete():
-	"""Р вЂ™Р С•РЎРѓРЎРѓРЎвЂљР В°Р Р…Р В°Р Р†Р В»Р С‘Р Р†Р В°Р ВµРЎвЂљ Р СњР вЂў Р С—Р С•Р Т‘Р С•Р В±РЎР‚Р В°Р Р…Р Р…РЎвЂ№Р Вµ Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљРЎвЂ№ Р С‘ РЎС“Р Т‘Р В°Р В»РЎРЏР ВµРЎвЂљ РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С”"""
+func _restore_items_and_delete() -> void:
 	await get_tree().process_frame
 
-	# Р РЋР С—Р В°Р Р†Р Р…Р С‘Р С РЎвЂљР С•Р В»РЎРЉР С”Р С• Р СњР вЂў Р С—Р С•Р Т‘Р С•Р В±РЎР‚Р В°Р Р…Р Р…РЎвЂ№Р Вµ Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљРЎвЂ№
 	match chest_type:
 		ChestType.ITEMS:
 			_restore_items()
@@ -253,102 +291,125 @@ func _restore_items_and_delete():
 		ChestType.RANDOM:
 			_restore_items()
 
-	# Р РЋРЎР‚Р В°Р В·РЎС“ РЎС“Р Т‘Р В°Р В»РЎРЏР ВµР С РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С”
 	queue_free()
 
 
-func _restore_items():
-	"""Р РЋР С—Р В°Р Р†Р Р…Р С‘РЎвЂљ РЎвЂљР С•Р В»РЎРЉР С”Р С• Р СњР вЂў Р С—Р С•Р Т‘Р С•Р В±РЎР‚Р В°Р Р…Р Р…РЎвЂ№Р Вµ Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљРЎвЂ№"""
-	var restored_count = 0
+func restore_opened_chest() -> void:
+	if not pending_restore_after_setup or not contents_configured:
+		return
+
+	pending_restore_after_setup = false
+	call_deferred("_restore_items_and_delete")
+
+
+func _restore_items() -> void:
+	var layout_index: int = 0
 
 	for i in range(item_ids.size()):
-		var item_id = item_ids[i]
-		var amount = item_amounts[i] if i < item_amounts.size() else 1
+		var item_id: int = item_ids[i]
+		var amount: int = item_amounts[i] if i < item_amounts.size() else 1
 
 		for j in range(amount):
-			var pickup_name = "ItemPickup_%d_%d" % [item_id, i * 10 + j]
-
-			# Р СџРЎР‚Р С•Р Р†Р ВµРЎР‚РЎРЏР ВµР С - Р В±РЎвЂ№Р В» Р В»Р С‘ Р С—Р С•Р Т‘Р С•Р В±РЎР‚Р В°Р Р…
-			if Global and Global.is_pickup_collected(pickup_name):
-				continue  # Р СџРЎР‚Р С•Р С—РЎС“РЎРѓР С”Р В°Р ВµР С
-
-			_create_item_pickup(item_id, i * 10 + j)
-			restored_count += 1
-
-	if restored_count > 0:
-		print("   СЂСџвЂњВ¦ Р вЂ™Р С•РЎРѓРЎРѓРЎвЂљР В°Р Р…Р С•Р Р†Р В»Р ВµР Р…Р С• Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљР С•Р Р†: %d" % restored_count)
+			var pickup_index: int = i * 10 + j
+			if _is_item_pickup_collected(item_id, pickup_index):
+				layout_index += 1
+				continue
+			_create_restored_item_pickup(item_id, pickup_index, layout_index)
+			layout_index += 1
 
 
-func _restore_artifacts():
-	"""Р РЋР С—Р В°Р Р†Р Р…Р С‘РЎвЂљ РЎвЂљР С•Р В»РЎРЉР С”Р С• Р СњР вЂў Р С—Р С•Р Т‘Р С•Р В±РЎР‚Р В°Р Р…Р Р…РЎвЂ№Р Вµ Р В°РЎР‚РЎвЂљР ВµРЎвЂћР В°Р С”РЎвЂљРЎвЂ№"""
-	var restored_count = 0
-
+func _restore_artifacts() -> void:
 	for i in range(artifact_ids.size()):
-		var artifact_id = artifact_ids[i]
-		var pickup_name = "ArtifactPickup_%s" % artifact_id
-
-		# Р СџРЎР‚Р С•Р Р†Р ВµРЎР‚РЎРЏР ВµР С - Р В±РЎвЂ№Р В» Р В»Р С‘ Р С—Р С•Р Т‘Р С•Р В±РЎР‚Р В°Р Р…
-		if Global and Global.is_pickup_collected(pickup_name):
-			continue  # Р СџРЎР‚Р С•Р С—РЎС“РЎРѓР С”Р В°Р ВµР С
-
-		_create_artifact_pickup(artifact_id, i)
-		restored_count += 1
-
-	if restored_count > 0:
-		print("   СЂСџвЂњВ¦ Р вЂ™Р С•РЎРѓРЎРѓРЎвЂљР В°Р Р…Р С•Р Р†Р В»Р ВµР Р…Р С• Р В°РЎР‚РЎвЂљР ВµРЎвЂћР В°Р С”РЎвЂљР С•Р Р†: %d" % restored_count)
+		var artifact_id: String = artifact_ids[i]
+		if _is_artifact_pickup_collected(artifact_id, i):
+			continue
+		_create_restored_artifact_pickup(artifact_id, i, i)
 
 
-# ===========================================
-# Р РЋР С›Р вЂ”Р вЂќР С’Р СњР ВР вЂў PICKUP
-# ===========================================
-
-func _create_item_pickup(item_id: int, index: int):
-	"""Create an item pickup from the reusable scene."""
-	var pickup = ITEM_PICKUP_SCENE.instantiate() as ItemPickup
+func _create_item_pickup(item_id: int, persistent_index: int, layout_index: int) -> void:
+	var pickup: ItemPickup = ITEM_PICKUP_SCENE.instantiate() as ItemPickup
 	if pickup == null:
-		push_error("Chest: failed to instantiate item pickup scene")
+		push_error("Chest: failed to instantiate ItemPickup scene")
 		return
 
-	pickup.name = "ItemPickup_%d_%d" % [item_id, index]
+	pickup.name = _build_item_pickup_name(item_id, persistent_index)
 	pickup.item_id = item_id
-	pickup.global_position = _get_item_pickup_position(index)
+	pickup.global_position = _get_item_pickup_position(layout_index)
 	pickup.setup(item_id, _build_item_pickup_config())
+	pickup.set_persistent_id(pickup.name)
 	_add_spawned_pickup(pickup)
 
-	print("   spawned item ID=%d" % item_id)
 
-
-func _create_artifact_pickup(artifact_id: String, index: int):
-	"""Create an artifact pickup from the reusable scene."""
-	var pickup = ARTIFACT_PICKUP_SCENE.instantiate() as ArtifactPickup
+func _create_restored_item_pickup(item_id: int, persistent_index: int, layout_index: int) -> void:
+	var pickup: ItemPickup = ITEM_PICKUP_SCENE.instantiate() as ItemPickup
 	if pickup == null:
-		push_error("Chest: failed to instantiate artifact pickup scene")
+		push_error("Chest: failed to instantiate restored ItemPickup scene")
 		return
 
-	pickup.name = "ArtifactPickup_%s" % artifact_id
+	pickup.name = _build_item_pickup_name(item_id, persistent_index)
+	pickup.item_id = item_id
+	pickup.global_position = _get_item_pickup_position(layout_index)
+	pickup.setup(item_id, _build_item_pickup_config())
+	pickup.set_persistent_id(pickup.name)
+	_add_restored_pickup(pickup)
+
+
+func _create_artifact_pickup(artifact_id: String, persistent_index: int, layout_index: int) -> void:
+	var pickup: ArtifactPickup = ARTIFACT_PICKUP_SCENE.instantiate() as ArtifactPickup
+	if pickup == null:
+		push_error("Chest: failed to instantiate ArtifactPickup scene")
+		return
+
+	pickup.name = _build_artifact_pickup_name(artifact_id, persistent_index)
 	pickup.artifact_id = artifact_id
-	pickup.global_position = _get_artifact_pickup_position(index)
+	pickup.global_position = _get_artifact_pickup_position(layout_index)
 	pickup.setup(artifact_id, _build_artifact_pickup_config())
+	pickup.set_persistent_id(pickup.name)
 	_add_spawned_pickup(pickup)
 
-	print("   spawned artifact %s" % artifact_id)
+
+func _create_restored_artifact_pickup(artifact_id: String, persistent_index: int, layout_index: int) -> void:
+	var pickup: ArtifactPickup = ARTIFACT_PICKUP_SCENE.instantiate() as ArtifactPickup
+	if pickup == null:
+		push_error("Chest: failed to instantiate restored ArtifactPickup scene")
+		return
+
+	pickup.name = _build_artifact_pickup_name(artifact_id, persistent_index)
+	pickup.artifact_id = artifact_id
+	pickup.global_position = _get_artifact_pickup_position(layout_index)
+	pickup.setup(artifact_id, _build_artifact_pickup_config())
+	pickup.set_persistent_id(pickup.name)
+	_add_restored_pickup(pickup)
 
 
 func _get_item_pickup_position(index: int) -> Vector2:
-	var offset_x = (index % 5 - 2) * item_spread
-	return global_position + Vector2(offset_x, -10)
+	var columns: int = 4
+	var column: int = index % columns
+	var row: int = index / columns
+	var center_offset: float = (columns - 1) * 0.5
+	var offset_x: float = (column - center_offset) * item_spread
+	var offset_y: float = -12.0 + row * 24.0
+	return global_position + Vector2(offset_x, offset_y)
 
 
 func _get_artifact_pickup_position(index: int) -> Vector2:
-	var offset_x = (index - artifact_ids.size() / 2.0) * item_spread * 1.2
-	return global_position + Vector2(offset_x, -10)
+	var columns: int = 3
+	var column: int = index % columns
+	var row: int = index / columns
+	var center_offset: float = (columns - 1) * 0.5
+	var offset_x: float = (column - center_offset) * item_spread * 1.25
+	var offset_y: float = -18.0 + row * 28.0
+	return global_position + Vector2(offset_x, offset_y)
 
 
 func _build_item_pickup_config() -> Dictionary:
 	return {
 		"display_scale": item_scale,
 		"collision_radius": collision_radius,
-		"hint_offset": Vector2(-50, -30 * item_scale),
+		"hint_text": "[F] РџРѕРґРѕР±СЂР°С‚СЊ",
+		"hint_offset": Vector2(-60, -30 * item_scale),
+		"label_offset": Vector2(-90, -62 * item_scale),
+		"label_visible": true,
 	}
 
 
@@ -356,13 +417,16 @@ func _build_artifact_pickup_config() -> Dictionary:
 	return {
 		"display_scale": artifact_scale,
 		"collision_radius": collision_radius,
-		"hint_offset": Vector2(-50, -35 * artifact_scale),
+		"hint_text": "[F] РџРѕРґРѕР±СЂР°С‚СЊ",
+		"hint_offset": Vector2(-60, -35 * artifact_scale),
+		"label_offset": Vector2(-90, -68 * artifact_scale),
+		"label_visible": true,
 	}
 
 
-func _add_spawned_pickup(pickup: Node2D):
+func _add_spawned_pickup(pickup: Node2D) -> void:
 	if get_parent() == null:
-		push_error("Chest: parent is missing, cannot spawn pickup")
+		push_error("Chest: missing parent node for spawned pickup")
 		pickup.queue_free()
 		return
 
@@ -373,42 +437,128 @@ func _add_spawned_pickup(pickup: Node2D):
 	item_spawned.emit(pickup)
 
 
-func _animate_spawn(pickup: Node2D):
-	"""Spawn animation."""
-	var start_y = pickup.global_position.y
-	var random_offset_x = randf_range(-20, 20)
+func _add_restored_pickup(pickup: Node2D) -> void:
+	if get_parent() == null:
+		push_error("Chest: missing parent node for restored pickup")
+		pickup.queue_free()
+		return
 
-	pickup.global_position.y -= 50
-	pickup.global_position.x += random_offset_x
-	pickup.scale = Vector2(0.2, 0.2)
+	get_parent().add_child(pickup)
+	pickup.scale = Vector2.ONE
+	pickup.modulate = Color.WHITE
+	if pickup is CanvasItem:
+		(pickup as CanvasItem).self_modulate = Color.WHITE
+
+	var sprite_node: CanvasItem = pickup.get_node_or_null("Sprite2D") as CanvasItem
+	if sprite_node:
+		sprite_node.modulate = Color.WHITE
+		sprite_node.self_modulate = Color.WHITE
+
+	if pickup.has_method("start_floating_after"):
+		pickup.start_floating_after(0.0)
+	item_spawned.emit(pickup)
+
+
+func _animate_spawn(pickup: Node2D) -> void:
+	var start_y: float = pickup.global_position.y
+
+	pickup.global_position.y -= 50.0
+	pickup.scale = Vector2.ONE * 0.2
 	pickup.modulate.a = 0.0
 
-	var tween = create_tween()
+	var tween: Tween = create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(pickup, "global_position:y", start_y + 5, 0.6).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BOUNCE)
-	tween.tween_property(pickup, "scale", Vector2(1, 1), 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-	tween.tween_property(pickup, "modulate:a", 1.0, 0.25)
+	tween.tween_property(pickup, "global_position:y", start_y, 0.35).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BOUNCE)
+	tween.tween_property(pickup, "scale", Vector2.ONE, 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(pickup, "modulate:a", 1.0, 0.2)
 
 
-func setup_items(ids: Array, amounts: Array = []):
+func _get_level_id() -> String:
+	var current_scene: Node = get_tree().current_scene
+	return current_scene.name if current_scene else "unknown_level"
+
+
+func _build_item_pickup_name(item_id: int, index: int) -> String:
+	return "%s_%s_ItemPickup_%d_%d" % [_get_level_id(), name, item_id, index]
+
+
+func _build_legacy_item_pickup_name(item_id: int, index: int) -> String:
+	return "ItemPickup_%d_%d" % [item_id, index]
+
+
+func _build_artifact_pickup_name(artifact_id: String, index: int) -> String:
+	return "%s_%s_ArtifactPickup_%s_%d" % [_get_level_id(), name, artifact_id, index]
+
+
+func _build_legacy_artifact_pickup_name(artifact_id: String) -> String:
+	return "ArtifactPickup_%s" % artifact_id
+
+
+func _is_item_pickup_collected(item_id: int, index: int) -> bool:
+	if not Global:
+		return false
+
+	return (
+		Global.is_pickup_collected(_build_item_pickup_name(item_id, index))
+		or Global.is_pickup_collected(_build_legacy_item_pickup_name(item_id, index))
+	)
+
+
+func _is_artifact_pickup_collected(artifact_id: String, index: int) -> bool:
+	if not Global:
+		return false
+
+	return (
+		Global.is_pickup_collected(_build_artifact_pickup_name(artifact_id, index))
+		or Global.is_pickup_collected(_build_legacy_artifact_pickup_name(artifact_id))
+	)
+
+
+func _has_defined_contents() -> bool:
+	match chest_type:
+		ChestType.ITEMS:
+			return not item_ids.is_empty() or not item_amounts.is_empty()
+		ChestType.ARTIFACTS:
+			return not artifact_ids.is_empty()
+		ChestType.MIXED:
+			return not item_ids.is_empty() or not artifact_ids.is_empty()
+		ChestType.RANDOM:
+			return true
+		_:
+			return false
+
+
+func _mark_contents_configured() -> void:
+	contents_configured = true
+	restore_opened_chest()
+
+
+func setup_items(ids: Array, amounts: Array = []) -> void:
 	chest_type = ChestType.ITEMS
 	item_ids.clear()
 	item_amounts.clear()
 	for i in range(ids.size()):
 		item_ids.append(ids[i])
 		item_amounts.append(amounts[i] if i < amounts.size() else 1)
+	_mark_contents_configured()
 
 
-func setup_artifacts(ids: Array):
+func setup_artifacts(ids: Array) -> void:
 	chest_type = ChestType.ARTIFACTS
 	artifact_ids.clear()
 	for id in ids:
 		artifact_ids.append(id)
+	_mark_contents_configured()
 
 
-func setup_mixed(items: Array, items_amounts: Array, artifacts: Array):
+func setup_mixed(items: Array, items_amounts: Array, artifacts: Array) -> void:
 	chest_type = ChestType.MIXED
-	setup_items(items, items_amounts)
+	item_ids.clear()
+	item_amounts.clear()
+	for i in range(items.size()):
+		item_ids.append(items[i])
+		item_amounts.append(items_amounts[i] if i < items_amounts.size() else 1)
 	artifact_ids.clear()
 	for id in artifacts:
 		artifact_ids.append(id)
+	_mark_contents_configured()
