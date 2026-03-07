@@ -1,0 +1,395 @@
+{
+  "weapons": [
+    // ========== КИНЖАЛЫ "ЛОВКАЧ" (уклонение + скорость атаки) ==========
+    {
+      "id": "rogue_dagger_dodge_common",
+      "name": "Кинжал проворства",
+      "rarity": "common",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 1,
+      "damage_max": 2,
+      "speed": 1.4,
+      "dodge_chance": 2,
+      "description": "+2% уклонения."
+    },
+    {
+      "id": "rogue_dagger_dodge_uncommon",
+      "name": "Кинжал акробата",
+      "rarity": "uncommon",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 1,
+      "damage_max": 3,
+      "speed": 1.4,
+      "dodge_chance": 3,
+      "attack_speed": 2,
+      "description": "+3% уклонения, +2% скорости атаки."
+    },
+    {
+      "id": "rogue_dagger_dodge_rare",
+      "name": "Кинжал ветра",
+      "rarity": "rare",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 2,
+      "damage_max": 3,
+      "speed": 1.5,
+      "dodge_chance": 4,
+      "attack_speed": 3,
+      "description": "+4% уклонения, +3% скорости атаки."
+    },
+    {
+      "id": "rogue_dagger_dodge_epic",
+      "name": "Кинжал тени",
+      "rarity": "epic",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 2,
+      "damage_max": 4,
+      "speed": 1.5,
+      "dodge_chance": 5,
+      "attack_speed": 4,
+      "description": "+5% уклонения, +4% скорости атаки."
+    },
+    {
+      "id": "rogue_dagger_dodge_legendary",
+      "name": "Кинжал невидимки",
+      "rarity": "legendary",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 3,
+      "damage_max": 4,
+      "speed": 1.6,
+      "dodge_chance": 7,
+      "attack_speed": 5,
+      "description": "+7% уклонения, +5% скорости атаки."
+    },
+
+    // ========== КИНЖАЛЫ "ОТРАВИТЕЛЬ" (яд) ==========
+    {
+      "id": "rogue_dagger_poison_common",
+      "name": "Отравленный кинжал",
+      "rarity": "common",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 1,
+      "damage_max": 2,
+      "speed": 1.3,
+      "effects": [
+        { "type": "on_hit", "effect": "poison", "chance": 10, "power": 1, "duration": 3 }
+      ],
+      "description": "10% шанс отравить (1 урон/сек, 3 сек)."
+    },
+    {
+      "id": "rogue_dagger_poison_uncommon",
+      "name": "Кинжал с ядом",
+      "rarity": "uncommon",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 1,
+      "damage_max": 3,
+      "speed": 1.3,
+      "effects": [
+        { "type": "on_hit", "effect": "poison", "chance": 12, "power": 1, "duration": 3 }
+      ],
+      "description": "12% шанс отравить."
+    },
+    {
+      "id": "rogue_dagger_poison_rare",
+      "name": "Кинжал аспида",
+      "rarity": "rare",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 2,
+      "damage_max": 3,
+      "speed": 1.3,
+      "effects": [
+        { "type": "on_hit", "effect": "poison", "chance": 15, "power": 1, "duration": 4 }
+      ],
+      "description": "15% шанс отравить (1 урон/сек, 4 сек)."
+    },
+    {
+      "id": "rogue_dagger_poison_epic",
+      "name": "Кинжал гадюки",
+      "rarity": "epic",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 2,
+      "damage_max": 4,
+      "speed": 1.4,
+      "effects": [
+        { "type": "on_hit", "effect": "poison", "chance": 18, "power": 2, "duration": 3 }
+      ],
+      "description": "18% шанс отравить (2 урон/сек, 3 сек)."
+    },
+    {
+      "id": "rogue_dagger_poison_legendary",
+      "name": "Кинжал василиска",
+      "rarity": "legendary",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 3,
+      "damage_max": 4,
+      "speed": 1.4,
+      "effects": [
+        { "type": "on_hit", "effect": "poison", "chance": 20, "power": 2, "duration": 4 }
+      ],
+      "description": "20% шанс отравить (2 урон/сек, 4 сек)."
+    },
+
+    // ========== КИНЖАЛЫ "ВАМПИР" (вампиризм) ==========
+    {
+      "id": "rogue_dagger_vampire_common",
+      "name": "Кровавый кинжал",
+      "rarity": "common",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 1,
+      "damage_max": 2,
+      "speed": 1.3,
+      "effects": [
+        { "type": "vampirism", "chance": 5, "value": 1 }
+      ],
+      "description": "5% шанс восстановить 1 HP при ударе."
+    },
+    {
+      "id": "rogue_dagger_vampire_uncommon",
+      "name": "Кинжал упыря",
+      "rarity": "uncommon",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 1,
+      "damage_max": 3,
+      "speed": 1.3,
+      "effects": [
+        { "type": "vampirism", "chance": 7, "value": 1 }
+      ],
+      "description": "7% шанс вампиризма."
+    },
+    {
+      "id": "rogue_dagger_vampire_rare",
+      "name": "Кинжал вампира",
+      "rarity": "rare",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 2,
+      "damage_max": 3,
+      "speed": 1.4,
+      "effects": [
+        { "type": "vampirism", "chance": 10, "value": 1 }
+      ],
+      "description": "10% шанс вампиризма."
+    },
+    {
+      "id": "rogue_dagger_vampire_epic",
+      "name": "Кинжал ночи",
+      "rarity": "epic",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 2,
+      "damage_max": 4,
+      "speed": 1.4,
+      "effects": [
+        { "type": "vampirism", "chance": 12, "value": 1 }
+      ],
+      "description": "12% шанс вампиризма."
+    },
+    {
+      "id": "rogue_dagger_vampire_legendary",
+      "name": "Кинжал древнего вампира",
+      "rarity": "legendary",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 3,
+      "damage_max": 4,
+      "speed": 1.5,
+      "effects": [
+        { "type": "vampirism", "chance": 15, "value": 2 }
+      ],
+      "description": "15% шанс восстановить 2 HP."
+    },
+
+    // ========== КИНЖАЛЫ "ТЕНЬ" (двойная атака) ==========
+    {
+      "id": "rogue_dagger_double_common",
+      "name": "Быстрый кинжал",
+      "rarity": "common",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 1,
+      "damage_max": 2,
+      "speed": 1.5,
+      "double_attack_chance": 5,
+      "description": "+5% двойной атаки."
+    },
+    {
+      "id": "rogue_dagger_double_uncommon",
+      "name": "Кинжал вихря",
+      "rarity": "uncommon",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 1,
+      "damage_max": 3,
+      "speed": 1.5,
+      "double_attack_chance": 7,
+      "description": "+7% двойной атаки."
+    },
+    {
+      "id": "rogue_dagger_double_rare",
+      "name": "Кинжал урагана",
+      "rarity": "rare",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 2,
+      "damage_max": 3,
+      "speed": 1.6,
+      "double_attack_chance": 10,
+      "description": "+10% двойной атаки."
+    },
+    {
+      "id": "rogue_dagger_double_epic",
+      "name": "Кинжал бури",
+      "rarity": "epic",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 2,
+      "damage_max": 4,
+      "speed": 1.6,
+      "double_attack_chance": 12,
+      "description": "+12% двойной атаки."
+    },
+    {
+      "id": "rogue_dagger_double_legendary",
+      "name": "Кинжал смерча",
+      "rarity": "legendary",
+      "type": "weapon",
+      "subtype": "dagger",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 3,
+      "damage_max": 4,
+      "speed": 1.7,
+      "double_attack_chance": 15,
+      "description": "+15% двойной атаки."
+    },
+
+    // ========== ОДНОРУЧНЫЕ МЕЧИ ==========
+    {
+      "id": "rogue_sword_common",
+      "name": "Короткий меч",
+      "rarity": "common",
+      "type": "weapon",
+      "subtype": "sword",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 2,
+      "damage_max": 3,
+      "speed": 1.1,
+      "description": "Обычный короткий меч."
+    },
+    {
+      "id": "rogue_sword_uncommon",
+      "name": "Меч разбойника",
+      "rarity": "uncommon",
+      "type": "weapon",
+      "subtype": "sword",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 2,
+      "damage_max": 4,
+      "speed": 1.1,
+      "dodge_chance": 2,
+      "description": "+2% уклонения."
+    },
+    {
+      "id": "rogue_sword_rare",
+      "name": "Меч ассасина",
+      "rarity": "rare",
+      "type": "weapon",
+      "subtype": "sword",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 3,
+      "damage_max": 4,
+      "speed": 1.2,
+      "dodge_chance": 3,
+      "double_attack_chance": 3,
+      "description": "+3% уклонения, +3% двойной атаки."
+    },
+    {
+      "id": "rogue_sword_epic",
+      "name": "Меч ночи",
+      "rarity": "epic",
+      "type": "weapon",
+      "subtype": "sword",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 3,
+      "damage_max": 5,
+      "speed": 1.2,
+      "dodge_chance": 5,
+      "double_attack_chance": 5,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+5% уклонения, +5% двойной атаки, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_sword_legendary",
+      "name": "Меч теней",
+      "rarity": "legendary",
+      "type": "weapon",
+      "subtype": "sword",
+      "slot": "one_hand",
+      "class_restrictions": ["rogue"],
+      "damage_min": 4,
+      "damage_max": 5,
+      "speed": 1.3,
+      "dodge_chance": 7,
+      "double_attack_chance": 7,
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+7% уклонения, +7% двойной атаки, +10% сопротивления яду."
+    }
+  ]
+}

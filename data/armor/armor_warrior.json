@@ -1,0 +1,1709 @@
+{
+  "armor": [
+    // ========== ГОЛОВА (ШЛЕМЫ) ==========
+    // Вариант А (броня)
+    {
+      "id": "warrior_helm_a_common",
+      "name": "Железный шлем",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "resistances": [],
+      "description": "Обычный железный шлем, даёт 2 брони."
+    },
+    {
+      "id": "warrior_helm_a_uncommon",
+      "name": "Стальной шлем",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "Стальной шлем, даёт +5% сопротивления огню."
+    },
+    {
+      "id": "warrior_helm_a_rare",
+      "name": "Шлем стража",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "Шлем стража: +10% сопротивления огню."
+    },
+    {
+      "id": "warrior_helm_a_epic",
+      "name": "Драконий шлем",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "fire", "value": 15 }
+      ],
+      "description": "Драконий шлем: +15% сопротивления огню."
+    },
+    {
+      "id": "warrior_helm_a_legendary",
+      "name": "Шлем непобедимого",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["warrior"],
+      "armor": 4,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "fire", "value": 20 }
+      ],
+      "description": "Легендарный шлем: +20% сопротивления огню."
+    },
+    // Вариант Б (здоровье)
+    {
+      "id": "warrior_helm_b_common",
+      "name": "Шлем здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 2,
+      "resistances": [],
+      "description": "Шлем здоровья: +2 здоровья."
+    },
+    {
+      "id": "warrior_helm_b_uncommon",
+      "name": "Шлем здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 3,
+      "resistances": [],
+      "description": "Шлем здоровья II: +3 здоровья."
+    },
+    {
+      "id": "warrior_helm_b_rare",
+      "name": "Шлем здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 2,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+2 здоровья, +5% огня."
+    },
+    {
+      "id": "warrior_helm_b_epic",
+      "name": "Шлем здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 3,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "+3 здоровья, +10% огня."
+    },
+    {
+      "id": "warrior_helm_b_legendary",
+      "name": "Шлем здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 4,
+      "resistances": [
+        { "element": "fire", "value": 15 }
+      ],
+      "description": "+4 здоровья, +15% огня."
+    },
+    // Вариант В (блок)
+    {
+      "id": "warrior_helm_c_common",
+      "name": "Шлем с забралом",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "block_chance": 5,
+      "block_amount": 1,
+      "resistances": [],
+      "description": "Шлем с забралом: 5% шанс заблокировать 1 урон."
+    },
+    {
+      "id": "warrior_helm_c_uncommon",
+      "name": "Шлем с забралом II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "block_chance": 7,
+      "block_amount": 1,
+      "resistances": [],
+      "description": "7% шанс блока."
+    },
+    {
+      "id": "warrior_helm_c_rare",
+      "name": "Шлем с забралом III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "block_chance": 10,
+      "block_amount": 2,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "10% блок 2, +5% огня."
+    },
+    {
+      "id": "warrior_helm_c_epic",
+      "name": "Шлем с забралом IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "block_chance": 12,
+      "block_amount": 2,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "12% блок, +10% огня."
+    },
+    {
+      "id": "warrior_helm_c_legendary",
+      "name": "Шлем с забралом V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 0,
+      "block_chance": 15,
+      "block_amount": 3,
+      "resistances": [
+        { "element": "fire", "value": 15 }
+      ],
+      "description": "15% блок 3, +15% огня."
+    },
+
+    // ========== ПЛЕЧИ ==========
+    // Вариант А (броня)
+    {
+      "id": "warrior_shoulders_a_common",
+      "name": "Кожаные наплечники",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "resistances": [],
+      "description": "Кожаные наплечники, дают 1 броню."
+    },
+    {
+      "id": "warrior_shoulders_a_uncommon",
+      "name": "Железные наплечники",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "cold", "value": 5 }
+      ],
+      "description": "+5% сопротивления холоду."
+    },
+    {
+      "id": "warrior_shoulders_a_rare",
+      "name": "Стальные наплечники",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "cold", "value": 10 }
+      ],
+      "description": "+10% холода."
+    },
+    {
+      "id": "warrior_shoulders_a_epic",
+      "name": "Наплечники великана",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "cold", "value": 15 }
+      ],
+      "description": "+15% холода."
+    },
+    {
+      "id": "warrior_shoulders_a_legendary",
+      "name": "Наплечники титана",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "cold", "value": 20 }
+      ],
+      "description": "+20% холода."
+    },
+    // Вариант Б (здоровье)
+    {
+      "id": "warrior_shoulders_b_common",
+      "name": "Наплечники здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 2,
+      "resistances": [],
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "warrior_shoulders_b_uncommon",
+      "name": "Наплечники здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 3,
+      "resistances": [],
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "warrior_shoulders_b_rare",
+      "name": "Наплечники здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 2,
+      "resistances": [
+        { "element": "cold", "value": 5 }
+      ],
+      "description": "+2 здоровья, +5% холода."
+    },
+    {
+      "id": "warrior_shoulders_b_epic",
+      "name": "Наплечники здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 3,
+      "resistances": [
+        { "element": "cold", "value": 10 }
+      ],
+      "description": "+3 здоровья, +10% холода."
+    },
+    {
+      "id": "warrior_shoulders_b_legendary",
+      "name": "Наплечники здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 4,
+      "resistances": [
+        { "element": "cold", "value": 15 }
+      ],
+      "description": "+4 здоровья, +15% холода."
+    },
+    // Вариант В (блок)
+    {
+      "id": "warrior_shoulders_c_common",
+      "name": "Наплечники с шипами",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "block_chance": 5,
+      "block_amount": 1,
+      "resistances": [],
+      "description": "5% блок 1."
+    },
+    {
+      "id": "warrior_shoulders_c_uncommon",
+      "name": "Наплечники с шипами II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "block_chance": 7,
+      "block_amount": 1,
+      "resistances": [
+        { "element": "cold", "value": 5 }
+      ],
+      "description": "7% блок, +5% холода."
+    },
+    {
+      "id": "warrior_shoulders_c_rare",
+      "name": "Наплечники с шипами III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "block_chance": 10,
+      "block_amount": 2,
+      "resistances": [
+        { "element": "cold", "value": 10 }
+      ],
+      "description": "10% блок 2, +10% холода."
+    },
+    {
+      "id": "warrior_shoulders_c_epic",
+      "name": "Наплечники с шипами IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "block_chance": 12,
+      "block_amount": 2,
+      "resistances": [
+        { "element": "cold", "value": 15 }
+      ],
+      "description": "12% блок, +15% холода."
+    },
+    {
+      "id": "warrior_shoulders_c_legendary",
+      "name": "Наплечники с шипами V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "block_chance": 15,
+      "block_amount": 3,
+      "resistances": [
+        { "element": "cold", "value": 20 }
+      ],
+      "description": "15% блок 3, +20% холода."
+    },
+
+    // ========== ДОСПЕХ ==========
+    // Вариант А (броня)
+    {
+      "id": "warrior_chest_a_common",
+      "name": "Железный доспех",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["warrior"],
+      "armor": 4,
+      "health_bonus": 0,
+      "resistances": [],
+      "description": "Железный доспех, даёт 4 брони."
+    },
+    {
+      "id": "warrior_chest_a_uncommon",
+      "name": "Стальной доспех",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["warrior"],
+      "armor": 4,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+5% сопротивления яду."
+    },
+    {
+      "id": "warrior_chest_a_rare",
+      "name": "Кираса стража",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["warrior"],
+      "armor": 5,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+10% яда."
+    },
+    {
+      "id": "warrior_chest_a_epic",
+      "name": "Доспех дракона",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["warrior"],
+      "armor": 5,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "poison", "value": 15 }
+      ],
+      "description": "+15% яда."
+    },
+    {
+      "id": "warrior_chest_a_legendary",
+      "name": "Доспех непобедимого",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["warrior"],
+      "armor": 6,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "poison", "value": 20 }
+      ],
+      "description": "+20% яда."
+    },
+    // Вариант Б (здоровье)
+    {
+      "id": "warrior_chest_b_common",
+      "name": "Доспех здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 2,
+      "resistances": [],
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "warrior_chest_b_uncommon",
+      "name": "Доспех здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 3,
+      "resistances": [],
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "warrior_chest_b_rare",
+      "name": "Доспех здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["warrior"],
+      "armor": 4,
+      "health_bonus": 2,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+2 здоровья, +5% яда."
+    },
+    {
+      "id": "warrior_chest_b_epic",
+      "name": "Доспех здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["warrior"],
+      "armor": 4,
+      "health_bonus": 3,
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+3 здоровья, +10% яда."
+    },
+    {
+      "id": "warrior_chest_b_legendary",
+      "name": "Доспех здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["warrior"],
+      "armor": 5,
+      "health_bonus": 4,
+      "resistances": [
+        { "element": "poison", "value": 15 }
+      ],
+      "description": "+4 здоровья, +15% яда."
+    },
+    // Вариант В (блок)
+    {
+      "id": "warrior_chest_c_common",
+      "name": "Доспех с бляхами",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 0,
+      "block_chance": 5,
+      "block_amount": 1,
+      "resistances": [],
+      "description": "5% блок 1."
+    },
+    {
+      "id": "warrior_chest_c_uncommon",
+      "name": "Доспех с бляхами II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 0,
+      "block_chance": 7,
+      "block_amount": 1,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "7% блок, +5% яда."
+    },
+    {
+      "id": "warrior_chest_c_rare",
+      "name": "Доспех с бляхами III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["warrior"],
+      "armor": 4,
+      "health_bonus": 0,
+      "block_chance": 10,
+      "block_amount": 2,
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "10% блок 2, +10% яда."
+    },
+    {
+      "id": "warrior_chest_c_epic",
+      "name": "Доспех с бляхами IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["warrior"],
+      "armor": 4,
+      "health_bonus": 0,
+      "block_chance": 12,
+      "block_amount": 2,
+      "resistances": [
+        { "element": "poison", "value": 15 }
+      ],
+      "description": "12% блок, +15% яда."
+    },
+    {
+      "id": "warrior_chest_c_legendary",
+      "name": "Доспех с бляхами V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["warrior"],
+      "armor": 5,
+      "health_bonus": 0,
+      "block_chance": 15,
+      "block_amount": 3,
+      "resistances": [
+        { "element": "poison", "value": 20 }
+      ],
+      "description": "15% блок 3, +20% яда."
+    },
+
+    // ========== НАРУЧИ ==========
+    // Вариант А (броня)
+    {
+      "id": "warrior_bracers_a_common",
+      "name": "Железные наручи",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "resistances": [],
+      "description": "Железные наручи, дают 1 броню."
+    },
+    {
+      "id": "warrior_bracers_a_uncommon",
+      "name": "Стальные наручи",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "+5% сопротивления кровотечению."
+    },
+    {
+      "id": "warrior_bracers_a_rare",
+      "name": "Наручи стража",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "bleed", "value": 10 }
+      ],
+      "description": "+10% кровотечения."
+    },
+    {
+      "id": "warrior_bracers_a_epic",
+      "name": "Наручи дракона",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "bleed", "value": 15 }
+      ],
+      "description": "+15% кровотечения."
+    },
+    {
+      "id": "warrior_bracers_a_legendary",
+      "name": "Наручи титана",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "bleed", "value": 20 }
+      ],
+      "description": "+20% кровотечения."
+    },
+    // Вариант Б (здоровье)
+    {
+      "id": "warrior_bracers_b_common",
+      "name": "Наручи здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 2,
+      "resistances": [],
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "warrior_bracers_b_uncommon",
+      "name": "Наручи здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 3,
+      "resistances": [],
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "warrior_bracers_b_rare",
+      "name": "Наручи здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 2,
+      "resistances": [
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "+2 здоровья, +5% кровотечения."
+    },
+    {
+      "id": "warrior_bracers_b_epic",
+      "name": "Наручи здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 3,
+      "resistances": [
+        { "element": "bleed", "value": 10 }
+      ],
+      "description": "+3 здоровья, +10% кровотечения."
+    },
+    {
+      "id": "warrior_bracers_b_legendary",
+      "name": "Наручи здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 4,
+      "resistances": [
+        { "element": "bleed", "value": 15 }
+      ],
+      "description": "+4 здоровья, +15% кровотечения."
+    },
+    // Вариант В (блок)
+    {
+      "id": "warrior_bracers_c_common",
+      "name": "Наручи с шипами",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "block_chance": 5,
+      "block_amount": 1,
+      "resistances": [],
+      "description": "5% блок 1."
+    },
+    {
+      "id": "warrior_bracers_c_uncommon",
+      "name": "Наручи с шипами II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "block_chance": 7,
+      "block_amount": 1,
+      "resistances": [
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "7% блок, +5% кровотечения."
+    },
+    {
+      "id": "warrior_bracers_c_rare",
+      "name": "Наручи с шипами III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "block_chance": 10,
+      "block_amount": 2,
+      "resistances": [
+        { "element": "bleed", "value": 10 }
+      ],
+      "description": "10% блок 2, +10% кровотечения."
+    },
+    {
+      "id": "warrior_bracers_c_epic",
+      "name": "Наручи с шипами IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "block_chance": 12,
+      "block_amount": 2,
+      "resistances": [
+        { "element": "bleed", "value": 15 }
+      ],
+      "description": "12% блок, +15% кровотечения."
+    },
+    {
+      "id": "warrior_bracers_c_legendary",
+      "name": "Наручи с шипами V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "block_chance": 15,
+      "block_amount": 3,
+      "resistances": [
+        { "element": "bleed", "value": 20 }
+      ],
+      "description": "15% блок 3, +20% кровотечения."
+    },
+
+    // ========== ПЕРЧАТКИ ==========
+    // Вариант А (скорость атаки/двойная атака)
+    {
+      "id": "warrior_gloves_a_common",
+      "name": "Кожаные перчатки",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "double_attack_chance": 2,
+      "description": "+2% двойной атаки."
+    },
+    {
+      "id": "warrior_gloves_a_uncommon",
+      "name": "Железные перчатки",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "double_attack_chance": 3,
+      "description": "+3% двойной атаки."
+    },
+    {
+      "id": "warrior_gloves_a_rare",
+      "name": "Стальные перчатки",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "double_attack_chance": 5,
+      "description": "+5% двойной атаки."
+    },
+    {
+      "id": "warrior_gloves_a_epic",
+      "name": "Перчатки дракона",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "double_attack_chance": 7,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+7% двойной атаки, +5% огня."
+    },
+    {
+      "id": "warrior_gloves_a_legendary",
+      "name": "Перчатки титана",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "double_attack_chance": 10,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "+10% двойной атаки, +10% огня."
+    },
+    // Вариант Б (здоровье)
+    {
+      "id": "warrior_gloves_b_common",
+      "name": "Перчатки здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 2,
+      "double_attack_chance": 0,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "warrior_gloves_b_uncommon",
+      "name": "Перчатки здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 3,
+      "double_attack_chance": 0,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "warrior_gloves_b_rare",
+      "name": "Перчатки здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 2,
+      "double_attack_chance": 2,
+      "description": "+2 здоровья, +2% двойной атаки."
+    },
+    {
+      "id": "warrior_gloves_b_epic",
+      "name": "Перчатки здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 3,
+      "double_attack_chance": 2,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+3 здоровья, +2% двойной атаки, +5% огня."
+    },
+    {
+      "id": "warrior_gloves_b_legendary",
+      "name": "Перчатки здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 4,
+      "double_attack_chance": 3,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "+4 здоровья, +3% двойной атаки, +10% огня."
+    },
+    // Вариант В (блок)
+    {
+      "id": "warrior_gloves_c_common",
+      "name": "Перчатки блока",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "block_chance": 5,
+      "block_amount": 1,
+      "description": "5% блок 1."
+    },
+    {
+      "id": "warrior_gloves_c_uncommon",
+      "name": "Перчатки блока II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "block_chance": 7,
+      "block_amount": 1,
+      "description": "7% блок."
+    },
+    {
+      "id": "warrior_gloves_c_rare",
+      "name": "Перчатки блока III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "block_chance": 10,
+      "block_amount": 2,
+      "description": "10% блок 2."
+    },
+    {
+      "id": "warrior_gloves_c_epic",
+      "name": "Перчатки блока IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "block_chance": 12,
+      "block_amount": 2,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "12% блок, +5% огня."
+    },
+    {
+      "id": "warrior_gloves_c_legendary",
+      "name": "Перчатки блока V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "block_chance": 15,
+      "block_amount": 3,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "double_attack_chance": 2,
+      "description": "15% блок 3, +10% огня, +2% двойной атаки."
+    },
+
+    // ========== ПОЯС ==========
+    // Вариант А (броня)
+    {
+      "id": "warrior_belt_a_common",
+      "name": "Кожаный пояс",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "description": "Кожаный пояс."
+    },
+    {
+      "id": "warrior_belt_a_uncommon",
+      "name": "Железный пояс",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "description": "Железный пояс: 1 броня."
+    },
+    {
+      "id": "warrior_belt_a_rare",
+      "name": "Стальной пояс",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "description": "Стальной пояс: 1 броня."
+    },
+    {
+      "id": "warrior_belt_a_epic",
+      "name": "Пояс дракона",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "2 брони, +5% огня."
+    },
+    {
+      "id": "warrior_belt_a_legendary",
+      "name": "Пояс непобедимого",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "potion_slots": 1,
+      "description": "2 брони, +10% огня, +1 слот зелий."
+    },
+    // Вариант Б (здоровье)
+    {
+      "id": "warrior_belt_b_common",
+      "name": "Пояс здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "warrior_belt_b_uncommon",
+      "name": "Пояс здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "warrior_belt_b_rare",
+      "name": "Пояс здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 2,
+      "potion_slots": 1,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+2 здоровья, +1 слот, +5% огня."
+    },
+    {
+      "id": "warrior_belt_b_epic",
+      "name": "Пояс здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 3,
+      "potion_slots": 1,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "+3 здоровья, +1 слот, +10% огня."
+    },
+    {
+      "id": "warrior_belt_b_legendary",
+      "name": "Пояс здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 4,
+      "potion_slots": 2,
+      "resistances": [
+        { "element": "fire", "value": 15 }
+      ],
+      "description": "+4 здоровья, +2 слота, +15% огня."
+    },
+    // Вариант В (блок)
+    {
+      "id": "warrior_belt_c_common",
+      "name": "Пояс с пряжкой",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "block_chance": 5,
+      "block_amount": 1,
+      "description": "5% блок 1."
+    },
+    {
+      "id": "warrior_belt_c_uncommon",
+      "name": "Пояс с пряжкой II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "block_chance": 5,
+      "block_amount": 1,
+      "description": "1 броня, 5% блок."
+    },
+    {
+      "id": "warrior_belt_c_rare",
+      "name": "Пояс с пряжкой III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "block_chance": 8,
+      "block_amount": 2,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "1 броня, 8% блок 2, +5% огня."
+    },
+    {
+      "id": "warrior_belt_c_epic",
+      "name": "Пояс с пряжкой IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "block_chance": 10,
+      "block_amount": 2,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "potion_slots": 1,
+      "description": "1 броня, 10% блок, +10% огня, +1 слот."
+    },
+    {
+      "id": "warrior_belt_c_legendary",
+      "name": "Пояс с пряжкой V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "block_chance": 12,
+      "block_amount": 3,
+      "resistances": [
+        { "element": "fire", "value": 15 }
+      ],
+      "potion_slots": 1,
+      "description": "2 брони, 12% блок 3, +15% огня, +1 слот."
+    },
+
+    // ========== ШТАНЫ ==========
+    // Вариант А (броня)
+    {
+      "id": "warrior_legs_a_common",
+      "name": "Железные штаны",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 0,
+      "resistances": [],
+      "description": "Железные штаны, 3 брони."
+    },
+    {
+      "id": "warrior_legs_a_uncommon",
+      "name": "Стальные штаны",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "madness", "value": 5 }
+      ],
+      "description": "+5% безумия."
+    },
+    {
+      "id": "warrior_legs_a_rare",
+      "name": "Поножи стража",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["warrior"],
+      "armor": 4,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "madness", "value": 10 }
+      ],
+      "description": "+10% безумия."
+    },
+    {
+      "id": "warrior_legs_a_epic",
+      "name": "Поножи дракона",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["warrior"],
+      "armor": 4,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "madness", "value": 15 }
+      ],
+      "description": "+15% безумия."
+    },
+    {
+      "id": "warrior_legs_a_legendary",
+      "name": "Поножи непобедимого",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["warrior"],
+      "armor": 5,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "madness", "value": 20 }
+      ],
+      "description": "+20% безумия."
+    },
+    // Вариант Б (здоровье)
+    {
+      "id": "warrior_legs_b_common",
+      "name": "Штаны здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 2,
+      "resistances": [],
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "warrior_legs_b_uncommon",
+      "name": "Штаны здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 3,
+      "resistances": [],
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "warrior_legs_b_rare",
+      "name": "Штаны здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 2,
+      "resistances": [
+        { "element": "madness", "value": 5 }
+      ],
+      "description": "+2 здоровья, +5% безумия."
+    },
+    {
+      "id": "warrior_legs_b_epic",
+      "name": "Штаны здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 3,
+      "resistances": [
+        { "element": "madness", "value": 10 }
+      ],
+      "description": "+3 здоровья, +10% безумия."
+    },
+    {
+      "id": "warrior_legs_b_legendary",
+      "name": "Штаны здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["warrior"],
+      "armor": 4,
+      "health_bonus": 4,
+      "resistances": [
+        { "element": "madness", "value": 15 }
+      ],
+      "description": "+4 здоровья, +15% безумия."
+    },
+    // Вариант В (блок)
+    {
+      "id": "warrior_legs_c_common",
+      "name": "Штаны с наколенниками",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "block_chance": 5,
+      "block_amount": 1,
+      "resistances": [],
+      "description": "5% блок 1."
+    },
+    {
+      "id": "warrior_legs_c_uncommon",
+      "name": "Штаны с наколенниками II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "block_chance": 7,
+      "block_amount": 1,
+      "resistances": [
+        { "element": "madness", "value": 5 }
+      ],
+      "description": "7% блок, +5% безумия."
+    },
+    {
+      "id": "warrior_legs_c_rare",
+      "name": "Штаны с наколенниками III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 0,
+      "block_chance": 10,
+      "block_amount": 2,
+      "resistances": [
+        { "element": "madness", "value": 10 }
+      ],
+      "description": "10% блок 2, +10% безумия."
+    },
+    {
+      "id": "warrior_legs_c_epic",
+      "name": "Штаны с наколенниками IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 0,
+      "block_chance": 12,
+      "block_amount": 2,
+      "resistances": [
+        { "element": "madness", "value": 15 }
+      ],
+      "description": "12% блок, +15% безумия."
+    },
+    {
+      "id": "warrior_legs_c_legendary",
+      "name": "Штаны с наколенниками V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["warrior"],
+      "armor": 4,
+      "health_bonus": 0,
+      "block_chance": 15,
+      "block_amount": 3,
+      "resistances": [
+        { "element": "madness", "value": 20 }
+      ],
+      "description": "15% блок 3, +20% безумия."
+    },
+
+    // ========== САПОГИ ==========
+    // Вариант А (броня)
+    {
+      "id": "warrior_boots_a_common",
+      "name": "Железные сапоги",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "description": "Железные сапоги, 1 броня."
+    },
+    {
+      "id": "warrior_boots_a_uncommon",
+      "name": "Стальные сапоги",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "description": "Стальные сапоги, 1 броня."
+    },
+    {
+      "id": "warrior_boots_a_rare",
+      "name": "Сапоги стража",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "description": "Сапоги стража, 2 брони."
+    },
+    {
+      "id": "warrior_boots_a_epic",
+      "name": "Сапоги дракона",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "2 брони, +5% огня."
+    },
+    {
+      "id": "warrior_boots_a_legendary",
+      "name": "Сапоги непобедимого",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["warrior"],
+      "armor": 3,
+      "health_bonus": 0,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "3 брони, +10% огня."
+    },
+    // Вариант Б (здоровье/скорость)
+    {
+      "id": "warrior_boots_b_common",
+      "name": "Сапоги здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "warrior_boots_b_uncommon",
+      "name": "Сапоги здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "warrior_boots_b_rare",
+      "name": "Сапоги здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 2,
+      "speed_bonus": 5,
+      "description": "+2 здоровья, +5% скорости."
+    },
+    {
+      "id": "warrior_boots_b_epic",
+      "name": "Сапоги здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 3,
+      "speed_bonus": 5,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+3 здоровья, +5% скорости, +5% огня."
+    },
+    {
+      "id": "warrior_boots_b_legendary",
+      "name": "Сапоги здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 4,
+      "speed_bonus": 10,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "+4 здоровья, +10% скорости, +10% огня."
+    },
+    // Вариант В (блок/иммунитет)
+    {
+      "id": "warrior_boots_c_common",
+      "name": "Сапоги с шипами",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["warrior"],
+      "armor": 0,
+      "health_bonus": 0,
+      "block_chance": 5,
+      "block_amount": 1,
+      "description": "5% блок 1."
+    },
+    {
+      "id": "warrior_boots_c_uncommon",
+      "name": "Сапоги с шипами II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "block_chance": 5,
+      "block_amount": 1,
+      "description": "1 броня, 5% блок."
+    },
+    {
+      "id": "warrior_boots_c_rare",
+      "name": "Сапоги с шипами III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "block_chance": 10,
+      "block_amount": 2,
+      "immune": ["spikes"],
+      "description": "1 броня, 10% блок 2, иммунитет к шипам."
+    },
+    {
+      "id": "warrior_boots_c_epic",
+      "name": "Сапоги с шипами IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["warrior"],
+      "armor": 1,
+      "health_bonus": 0,
+      "block_chance": 12,
+      "block_amount": 2,
+      "immune": ["lava"],
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "1 броня, 12% блок, иммунитет к лаве, +5% огня."
+    },
+    {
+      "id": "warrior_boots_c_legendary",
+      "name": "Сапоги с шипами V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["warrior"],
+      "armor": 2,
+      "health_bonus": 0,
+      "block_chance": 15,
+      "block_amount": 3,
+      "immune": ["spikes", "lava"],
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "2 брони, 15% блок 3, иммунитет к шипам и лаве, +10% огня."
+    }
+  ]
+}

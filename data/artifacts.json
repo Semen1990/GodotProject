@@ -1,0 +1,313 @@
+{
+  "artifacts": [
+    {
+      "id": "hermes_boots",
+      "name": "Сапоги Гермеса",
+      "rarity": "legendary",
+      "type": "artifact",
+      "effect": {
+        "type": "double_jump",
+        "description": "Позволяет совершить двойной прыжок."
+      }
+    },
+    {
+      "id": "phoenix_feather",
+      "name": "Перо Феникса",
+      "rarity": "mythic",
+      "type": "artifact",
+      "effect": {
+        "type": "resurrect",
+        "value": 50,
+        "description": "Один раз воскрешает с 50% здоровья при смерти, после чего исчезает."
+      }
+    },
+    {
+      "id": "rogue_notebook",
+      "name": "Блокнот разбойника",
+      "rarity": "legendary",
+      "type": "artifact",
+      "effect": {
+        "type": "poison_enable",
+        "description": "Все классы могут накладывать яд на оружие. Разбойник получает +50% к шансу отравления и +1 сек длительности яда."
+      }
+    },
+    {
+      "id": "spellbook",
+      "name": "Книга заклинаний",
+      "rarity": "legendary",
+      "type": "artifact",
+      "effect": {
+        "type": "scroll_use",
+        "description": "Позволяет использовать свитки магии (даже если нет маны). Паладин имеет 50% шанс не потратить свиток."
+      }
+    },
+    {
+      "id": "vampire_amulet",
+      "name": "Амулет вампира",
+      "rarity": "epic",
+      "type": "artifact",
+      "effect": {
+        "type": "vampirism",
+        "value": 1,
+        "hits": 5,
+        "description": "Восстанавливает 1 HP за каждые 5 нанесённых ударов."
+      }
+    },
+    {
+      "id": "dragon_claw",
+      "name": "Коготь дракона",
+      "rarity": "epic",
+      "type": "artifact",
+      "effect": {
+        "type": "fire_bonus",
+        "damage": 2,
+        "ignite_chance": 10,
+        "ignite_power": 1,
+        "ignite_duration": 3,
+        "description": "Увеличивает урон огнём на 2. 10% шанс поджечь врага (1 урон/сек, 3 сек)."
+      }
+    },
+    {
+      "id": "alchemist_belt",
+      "name": "Пояс алхимика",
+      "rarity": "epic",
+      "type": "artifact",
+      "effect": {
+        "type": "potion_slot",
+        "value": 1,
+        "description": "Даёт +1 слот для активных зелий."
+      }
+    },
+    {
+      "id": "concentration_orb",
+      "name": "Сфера концентрации",
+      "rarity": "legendary",
+      "type": "artifact",
+      "effect": {
+        "type": "potion_conserve",
+        "chance": 25,
+        "description": "При использовании зелья 25% шанс не потратить его."
+      }
+    },
+    {
+      "id": "lucky_stone",
+      "name": "Камень удачи",
+      "rarity": "epic",
+      "type": "artifact",
+      "effect": {
+        "type": "luck_boost",
+        "value": 20,
+        "description": "Увеличивает шанс выпадения редких предметов на 20%."
+      }
+    },
+    {
+      "id": "shadow_cloak",
+      "name": "Плащ теней",
+      "rarity": "legendary",
+      "type": "artifact",
+      "effect": {
+        "type": "dodge_chance",
+        "value": 10,
+        "magic_dodge": 5,
+        "description": "Увеличивает уклонение на 10%. Даёт 5% шанс увернуться от магии."
+      }
+    },
+    {
+      "id": "mana_amulet",
+      "name": "Амулет маны",
+      "rarity": "epic",
+      "type": "artifact",
+      "effect": {
+        "type": "mana_bonus",
+        "value": 2,
+        "description": "Увеличивает максимальный запас маны на 2."
+      }
+    },
+    {
+      "id": "speed_ring",
+      "name": "Кольцо скорости",
+      "rarity": "epic",
+      "type": "artifact",
+      "effect": {
+        "type": "speed_bonus",
+        "value": 10,
+        "description": "Увеличивает скорость передвижения на 10%."
+      }
+    },
+    {
+      "id": "health_medallion",
+      "name": "Медальон здоровья",
+      "rarity": "epic",
+      "type": "artifact",
+      "effect": {
+        "type": "health_bonus",
+        "value": 3,
+        "description": "Увеличивает максимальное здоровье на 3."
+      }
+    },
+    {
+      "id": "resistance_talisman",
+      "name": "Талисман сопротивления",
+      "rarity": "legendary",
+      "type": "artifact",
+      "effect": {
+        "type": "all_resist",
+        "value": 10,
+        "description": "Даёт +10% ко всем сопротивлениям (огонь, яд, кровотечение, холод, безумие)."
+      }
+    },
+    {
+      "id": "dragon_eye",
+      "name": "Глаз дракона",
+      "rarity": "epic",
+      "type": "artifact",
+      "effect": {
+        "type": "trap_vision",
+        "description": "Позволяет видеть скрытые ловушки в комнатах."
+      }
+    },
+    {
+      "id": "teleport_crystal",
+      "name": "Кристалл телепортации",
+      "rarity": "legendary",
+      "type": "artifact",
+      "effect": {
+        "type": "trap_save",
+        "triggers": ["trap", "pit", "lava"],
+        "description": "Один раз спасает от смерти от ловушки (шипы, лава, пропасть) и телепортирует в начало комнаты. Не срабатывает от атак врагов или накопления безумия. После использования исчезает."
+      }
+    },
+    {
+      "id": "mana_scroll",
+      "name": "Свиток маны",
+      "rarity": "epic",
+      "type": "artifact",
+      "effect": {
+        "type": "mana_regen_room",
+        "value": 1,
+        "description": "При переходе в новую комнату восстанавливает 1 ману."
+      }
+    },
+    {
+      "id": "dragon_heart",
+      "name": "Сердце дракона",
+      "rarity": "mythic",
+      "type": "artifact",
+      "effect": {
+        "type": "fire_immunity",
+        "damage": 2,
+        "description": "Даёт иммунитет к огню. Увеличивает урон огнём на 2."
+      }
+    },
+    {
+      "id": "antimagic_amulet",
+      "name": "Амулет антимагии",
+      "rarity": "epic",
+      "type": "artifact",
+      "effect": {
+        "type": "magic_resist",
+        "value": 15,
+        "description": "Увеличивает сопротивление магии на 15%."
+      }
+    },
+    {
+      "id": "wind_boots",
+      "name": "Сапоги ветра",
+      "rarity": "epic",
+      "type": "artifact",
+      "effect": {
+        "type": "speed_bonus",
+        "value": 15,
+        "description": "Увеличивает скорость передвижения на 15%."
+      }
+    },
+    {
+      "id": "regeneration_medallion",
+      "name": "Медальон регенерации",
+      "rarity": "rare",
+      "type": "artifact",
+      "effect": {
+        "type": "room_regen",
+        "hp": 1,
+        "mp": 1,
+        "description": "При переходе в новую комнату восстанавливает 1 HP и 1 MP."
+      }
+    },
+    {
+      "id": "concentration_amulet",
+      "name": "Амулет концентрации",
+      "rarity": "legendary",
+      "type": "artifact",
+      "effect": {
+        "type": "cooldown_reduction",
+        "value": 10,
+        "description": "Сокращает время восстановления способностей на 10%."
+      }
+    },
+    {
+      "id": "defense_brooch",
+      "name": "Брошь защиты",
+      "rarity": "rare",
+      "type": "artifact",
+      "effect": {
+        "type": "armor_bonus",
+        "value": 2,
+        "description": "Увеличивает броню на 2."
+      }
+    },
+    // Новые артефакты для берсерка
+    {
+      "id": "blood_vengeance_amulet",
+      "name": "Амулет кровной мести",
+      "rarity": "legendary",
+      "type": "artifact",
+      "effect": {
+        "type": "berserker_rage",
+        "hp_threshold": 30,
+        "damage_bonus": 2,
+        "double_attack_bonus": 5,
+        "duration": "room",
+        "triggers_once_per_room": true,
+        "description": "Когда здоровье падает ниже 30%, вы получаете +2 к урону и +5% к шансу двойной атаки на всю комнату. Срабатывает один раз за комнату."
+      }
+    },
+    {
+      "id": "fury_belt",
+      "name": "Пояс неистовства",
+      "rarity": "epic",
+      "type": "artifact",
+      "effect": {
+        "type": "berserker_speed",
+        "hp_threshold": 50,
+        "speed_bonus": 10,
+        "dodge_bonus": 5,
+        "description": "При здоровье ниже 50% вы получаете +10% к скорости передвижения и +5% к уклонению."
+      }
+    },
+    {
+      "id": "despair_gloves",
+      "name": "Перчатки отчаяния",
+      "rarity": "epic",
+      "type": "artifact",
+      "effect": {
+        "type": "low_hp_vampirism",
+        "hp_threshold": 30,
+        "hits": 5,
+        "heal": 1,
+        "description": "Каждая пятая атака в состоянии низкого здоровья (ниже 30%) восстанавливает 1 HP."
+      }
+    },
+    {
+      "id": "berserker_mask",
+      "name": "Маска берсерка",
+      "rarity": "legendary",
+      "type": "artifact",
+      "effect": {
+        "type": "low_hp_damage_reduction",
+        "hp_threshold": 25,
+        "reduction": 1,
+        "description": "Снижает получаемый урон на 1, когда здоровье ниже 25%."
+      }
+    }
+  ]
+}

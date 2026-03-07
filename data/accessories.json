@@ -1,0 +1,744 @@
+{
+  "accessories": [
+    // ========== КОЛЬЦА ==========
+    // Common (6)
+    {
+      "id": "ring_health_common",
+      "name": "Кольцо здоровья",
+      "rarity": "common",
+      "type": "accessory",
+      "slot": "ring",
+      "health_bonus": 1,
+      "description": "Увеличивает здоровье на 1."
+    },
+    {
+      "id": "ring_mana_common",
+      "name": "Кольцо маны",
+      "rarity": "common",
+      "type": "accessory",
+      "slot": "ring",
+      "mana_bonus": 1,
+      "description": "Увеличивает ману на 1."
+    },
+    {
+      "id": "ring_armor_common",
+      "name": "Кольцо защиты",
+      "rarity": "common",
+      "type": "accessory",
+      "slot": "ring",
+      "armor_bonus": 1,
+      "description": "Увеличивает броню на 1."
+    },
+    {
+      "id": "ring_damage_common",
+      "name": "Кольцо силы",
+      "rarity": "common",
+      "type": "accessory",
+      "slot": "ring",
+      "damage_bonus": 1,
+      "description": "Увеличивает урон на 1."
+    },
+    {
+      "id": "ring_dodge_common",
+      "name": "Кольцо уклонения",
+      "rarity": "common",
+      "type": "accessory",
+      "slot": "ring",
+      "dodge_chance": 2,
+      "description": "Увеличивает шанс уклонения на 2%."
+    },
+    {
+      "id": "ring_double_common",
+      "name": "Кольцо скорости",
+      "rarity": "common",
+      "type": "accessory",
+      "slot": "ring",
+      "double_attack_chance": 2,
+      "description": "Увеличивает шанс двойной атаки на 2%."
+    },
+    // Uncommon (6)
+    {
+      "id": "ring_health_uncommon",
+      "name": "Кольцо здоровья II",
+      "rarity": "uncommon",
+      "type": "accessory",
+      "slot": "ring",
+      "health_bonus": 2,
+      "description": "Увеличивает здоровье на 2."
+    },
+    {
+      "id": "ring_mana_uncommon",
+      "name": "Кольцо маны II",
+      "rarity": "uncommon",
+      "type": "accessory",
+      "slot": "ring",
+      "mana_bonus": 2,
+      "description": "Увеличивает ману на 2."
+    },
+    {
+      "id": "ring_armor_uncommon",
+      "name": "Кольцо защиты II",
+      "rarity": "uncommon",
+      "type": "accessory",
+      "slot": "ring",
+      "armor_bonus": 2,
+      "description": "Увеличивает броню на 2."
+    },
+    {
+      "id": "ring_damage_uncommon",
+      "name": "Кольцо силы II",
+      "rarity": "uncommon",
+      "type": "accessory",
+      "slot": "ring",
+      "damage_bonus": 2,
+      "description": "Увеличивает урон на 2."
+    },
+    {
+      "id": "ring_dodge_uncommon",
+      "name": "Кольцо уклонения II",
+      "rarity": "uncommon",
+      "type": "accessory",
+      "slot": "ring",
+      "dodge_chance": 3,
+      "description": "Увеличивает уклонение на 3%."
+    },
+    {
+      "id": "ring_resist_fire_uncommon",
+      "name": "Кольцо огня",
+      "rarity": "uncommon",
+      "type": "accessory",
+      "slot": "ring",
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "Увеличивает сопротивление огню на 10%."
+    },
+    // Rare (6)
+    {
+      "id": "ring_health_rare",
+      "name": "Кольцо здоровья III",
+      "rarity": "rare",
+      "type": "accessory",
+      "slot": "ring",
+      "health_bonus": 2,
+      "mana_bonus": 1,
+      "description": "Увеличивает здоровье на 2, ману на 1."
+    },
+    {
+      "id": "ring_armor_rare",
+      "name": "Кольцо защиты III",
+      "rarity": "rare",
+      "type": "accessory",
+      "slot": "ring",
+      "armor_bonus": 2,
+      "health_bonus": 1,
+      "description": "Увеличивает броню на 2, здоровье на 1."
+    },
+    {
+      "id": "ring_damage_rare",
+      "name": "Кольцо силы III",
+      "rarity": "rare",
+      "type": "accessory",
+      "slot": "ring",
+      "damage_bonus": 2,
+      "double_attack_chance": 2,
+      "description": "Увеличивает урон на 2, двойную атаку на 2%."
+    },
+    {
+      "id": "ring_dodge_rare",
+      "name": "Кольцо уклонения III",
+      "rarity": "rare",
+      "type": "accessory",
+      "slot": "ring",
+      "dodge_chance": 3,
+      "double_attack_chance": 2,
+      "description": "Увеличивает уклонение на 3%, двойную атаку на 2%."
+    },
+    {
+      "id": "ring_resist_rare",
+      "name": "Кольцо сопротивления",
+      "rarity": "rare",
+      "type": "accessory",
+      "slot": "ring",
+      "resistances": [
+        { "element": "fire", "value": 10 },
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "Увеличивает сопротивление огню на 10%, яду на 5%."
+    },
+    {
+      "id": "ring_vitality_rare",
+      "name": "Кольцо жизненной силы",
+      "rarity": "rare",
+      "type": "accessory",
+      "slot": "ring",
+      "health_bonus": 2,
+      "armor_bonus": 1,
+      "mana_bonus": 1,
+      "description": "Увеличивает здоровье на 2, броню на 1, ману на 1."
+    },
+    // Epic (6)
+    {
+      "id": "ring_health_epic",
+      "name": "Кольцо здоровья IV",
+      "rarity": "epic",
+      "type": "accessory",
+      "slot": "ring",
+      "health_bonus": 3,
+      "armor_bonus": 1,
+      "mana_bonus": 1,
+      "description": "Увеличивает здоровье на 3, броню на 1, ману на 1."
+    },
+    {
+      "id": "ring_damage_epic",
+      "name": "Кольцо силы IV",
+      "rarity": "epic",
+      "type": "accessory",
+      "slot": "ring",
+      "damage_bonus": 2,
+      "double_attack_chance": 3,
+      "dodge_chance": 2,
+      "description": "Увеличивает урон на 2, двойную атаку на 3%, уклонение на 2%."
+    },
+    {
+      "id": "ring_armor_epic",
+      "name": "Кольцо защиты IV",
+      "rarity": "epic",
+      "type": "accessory",
+      "slot": "ring",
+      "armor_bonus": 2,
+      "health_bonus": 2,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "Увеличивает броню на 2, здоровье на 2, сопротивление огню на 5%."
+    },
+    {
+      "id": "ring_mana_epic",
+      "name": "Кольцо маны IV",
+      "rarity": "epic",
+      "type": "accessory",
+      "slot": "ring",
+      "mana_bonus": 2,
+      "resistances": [
+        { "element": "cold", "value": 10 },
+        { "element": "madness", "value": 5 }
+      ],
+      "description": "Увеличивает ману на 2, сопротивление холоду на 10%, безумию на 5%."
+    },
+    {
+      "id": "ring_dodge_epic",
+      "name": "Кольцо уклонения IV",
+      "rarity": "epic",
+      "type": "accessory",
+      "slot": "ring",
+      "dodge_chance": 4,
+      "double_attack_chance": 3,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "Увеличивает уклонение на 4%, двойную атаку на 3%, сопротивление яду на 5%."
+    },
+    {
+      "id": "ring_resist_epic",
+      "name": "Кольцо стихий",
+      "rarity": "epic",
+      "type": "accessory",
+      "slot": "ring",
+      "resistances": [
+        { "element": "fire", "value": 15 },
+        { "element": "poison", "value": 10 },
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "Увеличивает сопротивление огню на 15%, яду на 10%, кровотечению на 5%."
+    },
+    // Legendary (6)
+    {
+      "id": "ring_health_legendary",
+      "name": "Кольцо здоровья V",
+      "rarity": "legendary",
+      "type": "accessory",
+      "slot": "ring",
+      "health_bonus": 4,
+      "armor_bonus": 2,
+      "mana_bonus": 2,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "Увеличивает здоровье на 4, броню на 2, ману на 2, сопротивление огню на 5%."
+    },
+    {
+      "id": "ring_damage_legendary",
+      "name": "Кольцо силы V",
+      "rarity": "legendary",
+      "type": "accessory",
+      "slot": "ring",
+      "damage_bonus": 3,
+      "double_attack_chance": 5,
+      "dodge_chance": 3,
+      "resistances": [
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "Увеличивает урон на 3, двойную атаку на 5%, уклонение на 3%, сопротивление кровотечению на 5%."
+    },
+    {
+      "id": "ring_armor_legendary",
+      "name": "Кольцо защиты V",
+      "rarity": "legendary",
+      "type": "accessory",
+      "slot": "ring",
+      "armor_bonus": 3,
+      "health_bonus": 3,
+      "resistances": [
+        { "element": "poison", "value": 10 },
+        { "element": "cold", "value": 5 }
+      ],
+      "description": "Увеличивает броню на 3, здоровье на 3, сопротивление яду на 10%, холоду на 5%."
+    },
+    {
+      "id": "ring_mana_legendary",
+      "name": "Кольцо маны V",
+      "rarity": "legendary",
+      "type": "accessory",
+      "slot": "ring",
+      "mana_bonus": 3,
+      "resistances": [
+        { "element": "madness", "value": 15 },
+        { "element": "fire", "value": 10 },
+        { "element": "cold", "value": 5 }
+      ],
+      "description": "Увеличивает ману на 3, сопротивление безумию на 15%, огню на 10%, холоду на 5%."
+    },
+    {
+      "id": "ring_dodge_legendary",
+      "name": "Кольцо уклонения V",
+      "rarity": "legendary",
+      "type": "accessory",
+      "slot": "ring",
+      "dodge_chance": 5,
+      "double_attack_chance": 4,
+      "resistances": [
+        { "element": "poison", "value": 10 },
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "Увеличивает уклонение на 5%, двойную атаку на 4%, сопротивление яду на 10%, кровотечению на 5%."
+    },
+    {
+      "id": "ring_hero_legendary",
+      "name": "Кольцо героя",
+      "rarity": "legendary",
+      "type": "accessory",
+      "slot": "ring",
+      "resistances": [
+        { "element": "fire", "value": 5 },
+        { "element": "poison", "value": 5 },
+        { "element": "bleed", "value": 5 },
+        { "element": "cold", "value": 5 },
+        { "element": "madness", "value": 5 }
+      ],
+      "description": "Увеличивает все сопротивления на 5%."
+    },
+
+    // ========== СЕРЬГИ ==========
+    // Common (4)
+    {
+      "id": "earring_health_common",
+      "name": "Серьга здоровья",
+      "rarity": "common",
+      "type": "accessory",
+      "slot": "earring",
+      "health_bonus": 1,
+      "description": "Увеличивает здоровье на 1."
+    },
+    {
+      "id": "earring_dodge_common",
+      "name": "Серьга уклонения",
+      "rarity": "common",
+      "type": "accessory",
+      "slot": "earring",
+      "dodge_chance": 2,
+      "description": "Увеличивает уклонение на 2%."
+    },
+    {
+      "id": "earring_double_common",
+      "name": "Серьга скорости",
+      "rarity": "common",
+      "type": "accessory",
+      "slot": "earring",
+      "double_attack_chance": 2,
+      "description": "Увеличивает шанс двойной атаки на 2%."
+    },
+    {
+      "id": "earring_resist_fire_common",
+      "name": "Серьга огня",
+      "rarity": "common",
+      "type": "accessory",
+      "slot": "earring",
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "Увеличивает сопротивление огню на 5%."
+    },
+    // Uncommon (4)
+    {
+      "id": "earring_health_uncommon",
+      "name": "Серьга здоровья II",
+      "rarity": "uncommon",
+      "type": "accessory",
+      "slot": "earring",
+      "health_bonus": 2,
+      "description": "Увеличивает здоровье на 2."
+    },
+    {
+      "id": "earring_dodge_uncommon",
+      "name": "Серьга уклонения II",
+      "rarity": "uncommon",
+      "type": "accessory",
+      "slot": "earring",
+      "dodge_chance": 3,
+      "description": "Увеличивает уклонение на 3%."
+    },
+    {
+      "id": "earring_double_uncommon",
+      "name": "Серьга скорости II",
+      "rarity": "uncommon",
+      "type": "accessory",
+      "slot": "earring",
+      "double_attack_chance": 3,
+      "description": "Увеличивает шанс двойной атаки на 3%."
+    },
+    {
+      "id": "earring_resist_fire_uncommon",
+      "name": "Серьга огня II",
+      "rarity": "uncommon",
+      "type": "accessory",
+      "slot": "earring",
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "Увеличивает сопротивление огню на 10%."
+    },
+    // Rare (4)
+    {
+      "id": "earring_health_rare",
+      "name": "Серьга здоровья III",
+      "rarity": "rare",
+      "type": "accessory",
+      "slot": "earring",
+      "health_bonus": 2,
+      "dodge_chance": 2,
+      "description": "Увеличивает здоровье на 2, уклонение на 2%."
+    },
+    {
+      "id": "earring_dodge_rare",
+      "name": "Серьга уклонения III",
+      "rarity": "rare",
+      "type": "accessory",
+      "slot": "earring",
+      "dodge_chance": 3,
+      "double_attack_chance": 2,
+      "description": "Увеличивает уклонение на 3%, двойную атаку на 2%."
+    },
+    {
+      "id": "earring_double_rare",
+      "name": "Серьга скорости III",
+      "rarity": "rare",
+      "type": "accessory",
+      "slot": "earring",
+      "double_attack_chance": 4,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "Увеличивает двойную атаку на 4%, сопротивление огню на 5%."
+    },
+    {
+      "id": "earring_resist_rare",
+      "name": "Серьга сопротивления",
+      "rarity": "rare",
+      "type": "accessory",
+      "slot": "earring",
+      "resistances": [
+        { "element": "fire", "value": 10 },
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "Увеличивает сопротивление огню на 10%, яду на 5%."
+    },
+    // Epic (4)
+    {
+      "id": "earring_health_epic",
+      "name": "Серьга здоровья IV",
+      "rarity": "epic",
+      "type": "accessory",
+      "slot": "earring",
+      "health_bonus": 3,
+      "dodge_chance": 2,
+      "double_attack_chance": 2,
+      "description": "Увеличивает здоровье на 3, уклонение на 2%, двойную атаку на 2%."
+    },
+    {
+      "id": "earring_dodge_epic",
+      "name": "Серьга уклонения IV",
+      "rarity": "epic",
+      "type": "accessory",
+      "slot": "earring",
+      "dodge_chance": 4,
+      "double_attack_chance": 3,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "Увеличивает уклонение на 4%, двойную атаку на 3%, сопротивление огню на 5%."
+    },
+    {
+      "id": "earring_double_epic",
+      "name": "Серьга скорости IV",
+      "rarity": "epic",
+      "type": "accessory",
+      "slot": "earring",
+      "double_attack_chance": 5,
+      "resistances": [
+        { "element": "fire", "value": 10 },
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "Увеличивает двойную атаку на 5%, сопротивление огню на 10%, яду на 5%."
+    },
+    {
+      "id": "earring_resist_epic",
+      "name": "Серьга стихий",
+      "rarity": "epic",
+      "type": "accessory",
+      "slot": "earring",
+      "resistances": [
+        { "element": "fire", "value": 15 },
+        { "element": "poison", "value": 10 },
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "Увеличивает сопротивление огню на 15%, яду на 10%, кровотечению на 5%."
+    },
+    // Legendary (4)
+    {
+      "id": "earring_health_legendary",
+      "name": "Серьга здоровья V",
+      "rarity": "legendary",
+      "type": "accessory",
+      "slot": "earring",
+      "health_bonus": 4,
+      "dodge_chance": 3,
+      "double_attack_chance": 3,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "Увеличивает здоровье на 4, уклонение на 3%, двойную атаку на 3%, сопротивление огню на 5%."
+    },
+    {
+      "id": "earring_dodge_legendary",
+      "name": "Серьга уклонения V",
+      "rarity": "legendary",
+      "type": "accessory",
+      "slot": "earring",
+      "dodge_chance": 5,
+      "double_attack_chance": 4,
+      "resistances": [
+        { "element": "poison", "value": 10 },
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "Увеличивает уклонение на 5%, двойную атаку на 4%, сопротивление яду на 10%, кровотечению на 5%."
+    },
+    {
+      "id": "earring_double_legendary",
+      "name": "Серьга скорости V",
+      "rarity": "legendary",
+      "type": "accessory",
+      "slot": "earring",
+      "double_attack_chance": 6,
+      "resistances": [
+        { "element": "fire", "value": 10 },
+        { "element": "cold", "value": 10 },
+        { "element": "madness", "value": 5 }
+      ],
+      "description": "Увеличивает двойную атаку на 6%, сопротивление огню на 10%, холоду на 10%, безумию на 5%."
+    },
+    {
+      "id": "earring_resist_legendary",
+      "name": "Серьга всех стихий",
+      "rarity": "legendary",
+      "type": "accessory",
+      "slot": "earring",
+      "resistances": [
+        { "element": "fire", "value": 15 },
+        { "element": "poison", "value": 15 },
+        { "element": "bleed", "value": 10 },
+        { "element": "cold", "value": 10 },
+        { "element": "madness", "value": 5 }
+      ],
+      "description": "Увеличивает сопротивление огню на 15%, яду на 15%, кровотечению на 10%, холоду на 10%, безумию на 5%."
+    },
+
+    // ========== ОЖЕРЕЛЬЯ ==========
+    // Common (3)
+    {
+      "id": "necklace_health_common",
+      "name": "Ожерелье здоровья",
+      "rarity": "common",
+      "type": "accessory",
+      "slot": "necklace",
+      "health_bonus": 1,
+      "description": "Увеличивает здоровье на 1."
+    },
+    {
+      "id": "necklace_armor_common",
+      "name": "Ожерелье защиты",
+      "rarity": "common",
+      "type": "accessory",
+      "slot": "necklace",
+      "armor_bonus": 1,
+      "description": "Увеличивает броню на 1."
+    },
+    {
+      "id": "necklace_damage_common",
+      "name": "Ожерелье силы",
+      "rarity": "common",
+      "type": "accessory",
+      "slot": "necklace",
+      "damage_bonus": 1,
+      "description": "Увеличивает урон на 1."
+    },
+    // Uncommon (3)
+    {
+      "id": "necklace_health_uncommon",
+      "name": "Ожерелье здоровья II",
+      "rarity": "uncommon",
+      "type": "accessory",
+      "slot": "necklace",
+      "health_bonus": 2,
+      "description": "Увеличивает здоровье на 2."
+    },
+    {
+      "id": "necklace_armor_uncommon",
+      "name": "Ожерелье защиты II",
+      "rarity": "uncommon",
+      "type": "accessory",
+      "slot": "necklace",
+      "armor_bonus": 2,
+      "description": "Увеличивает броню на 2."
+    },
+    {
+      "id": "necklace_damage_uncommon",
+      "name": "Ожерелье силы II",
+      "rarity": "uncommon",
+      "type": "accessory",
+      "slot": "necklace",
+      "damage_bonus": 2,
+      "description": "Увеличивает урон на 2."
+    },
+    // Rare (3)
+    {
+      "id": "necklace_health_rare",
+      "name": "Ожерелье здоровья III",
+      "rarity": "rare",
+      "type": "accessory",
+      "slot": "necklace",
+      "health_bonus": 2,
+      "armor_bonus": 1,
+      "description": "Увеличивает здоровье на 2, броню на 1."
+    },
+    {
+      "id": "necklace_armor_rare",
+      "name": "Ожерелье защиты III",
+      "rarity": "rare",
+      "type": "accessory",
+      "slot": "necklace",
+      "armor_bonus": 2,
+      "health_bonus": 1,
+      "description": "Увеличивает броню на 2, здоровье на 1."
+    },
+    {
+      "id": "necklace_damage_rare",
+      "name": "Ожерелье силы III",
+      "rarity": "rare",
+      "type": "accessory",
+      "slot": "necklace",
+      "damage_bonus": 2,
+      "double_attack_chance": 2,
+      "description": "Увеличивает урон на 2, двойную атаку на 2%."
+    },
+    // Epic (3)
+    {
+      "id": "necklace_health_epic",
+      "name": "Ожерелье здоровья IV",
+      "rarity": "epic",
+      "type": "accessory",
+      "slot": "necklace",
+      "health_bonus": 3,
+      "armor_bonus": 1,
+      "mana_bonus": 1,
+      "description": "Увеличивает здоровье на 3, броню на 1, ману на 1."
+    },
+    {
+      "id": "necklace_armor_epic",
+      "name": "Ожерелье защиты IV",
+      "rarity": "epic",
+      "type": "accessory",
+      "slot": "necklace",
+      "armor_bonus": 2,
+      "health_bonus": 2,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "Увеличивает броню на 2, здоровье на 2, сопротивление огню на 5%."
+    },
+    {
+      "id": "necklace_damage_epic",
+      "name": "Ожерелье силы IV",
+      "rarity": "epic",
+      "type": "accessory",
+      "slot": "necklace",
+      "damage_bonus": 2,
+      "double_attack_chance": 3,
+      "dodge_chance": 2,
+      "description": "Увеличивает урон на 2, двойную атаку на 3%, уклонение на 2%."
+    },
+    // Legendary (3)
+    {
+      "id": "necklace_health_legendary",
+      "name": "Ожерелье здоровья V",
+      "rarity": "legendary",
+      "type": "accessory",
+      "slot": "necklace",
+      "health_bonus": 4,
+      "armor_bonus": 2,
+      "mana_bonus": 2,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "Увеличивает здоровье на 4, броню на 2, ману на 2, сопротивление яду на 5%."
+    },
+    {
+      "id": "necklace_armor_legendary",
+      "name": "Ожерелье защиты V",
+      "rarity": "legendary",
+      "type": "accessory",
+      "slot": "necklace",
+      "armor_bonus": 3,
+      "health_bonus": 3,
+      "resistances": [
+        { "element": "fire", "value": 10 },
+        { "element": "cold", "value": 5 }
+      ],
+      "description": "Увеличивает броню на 3, здоровье на 3, сопротивление огню на 10%, холоду на 5%."
+    },
+    {
+      "id": "necklace_damage_legendary",
+      "name": "Ожерелье силы V",
+      "rarity": "legendary",
+      "type": "accessory",
+      "slot": "necklace",
+      "damage_bonus": 3,
+      "double_attack_chance": 5,
+      "dodge_chance": 3,
+      "resistances": [
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "Увеличивает урон на 3, двойную атаку на 5%, уклонение на 3%, сопротивление кровотечению на 5%."
+    }
+  ]
+}

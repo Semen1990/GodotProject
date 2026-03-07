@@ -1,0 +1,76 @@
+{
+  "sets": [
+    {
+      "id": "fire_set",
+      "name": "Огненный сет",
+      "items": ["fire_sword", "fire_helm", "fire_chest", "fire_ring"],
+      "full_bonus": {
+        "description": "Иммунитет к огню. Весь наносимый урон становится огненным (+2 огненного урона к каждой атаке).",
+        "effects": [
+          { "type": "immunity", "element": "fire" },
+          { "type": "convert_damage_to_fire", "bonus": 2 }
+        ]
+      }
+    },
+    {
+      "id": "ice_set",
+      "name": "Сет холода",
+      "items": ["ice_axe", "ice_gloves", "ice_boots", "ice_necklace"],
+      "full_bonus": {
+        "description": "Каждая атака накладывает 1 стак холода (замедление 10% на 3 сек, макс. 3 стака). При повторных атаках время действия стаков обновляется.",
+        "effects": [
+          { "type": "on_hit", "effect": "cold_stack", "power": 1, "duration": 3, "max_stacks": 3, "slow_per_stack": 10 }
+        ]
+      }
+    },
+    {
+      "id": "vampire_set",
+      "name": "Сет вампира",
+      "items": ["vampire_dagger", "vampire_belt", "vampire_bracers", "vampire_earring"],
+      "full_bonus": {
+        "description": "Шанс вампиризма увеличен на 10% (суммарно). Каждое срабатывание восстанавливает 2 HP вместо 1.",
+        "effects": [
+          { "type": "vampirism_chance_bonus", "value": 10 },
+          { "type": "vampirism_heal_bonus", "value": 1 }
+        ]
+      }
+    },
+    {
+      "id": "paladin_set",
+      "name": "Сет верховного паладина",
+      "items": ["paladin_shield", "paladin_helm", "paladin_chest", "paladin_legs"],
+      "class_restriction": "paladin",
+      "full_bonus": {
+        "description": "Паладин может использовать два активных навыка одновременно. Максимальная мана увеличивается на 5.",
+        "effects": [
+          { "type": "extra_skill_slot", "value": 1 },
+          { "type": "mana_bonus", "value": 5 }
+        ]
+      }
+    },
+    {
+      "id": "heavy_armor_set",
+      "name": "Бронированный сет",
+      "items": ["heavy_helm", "heavy_chest", "heavy_legs", "heavy_boots"],
+      "full_bonus": {
+        "description": "Дополнительно +5 брони и +10% к шансу блока.",
+        "effects": [
+          { "type": "armor_bonus", "value": 5 },
+          { "type": "block_chance_bonus", "value": 10 }
+        ]
+      }
+    },
+    {
+      "id": "shadow_set",
+      "name": "Сет невидимости",
+      "items": ["shadow_sword", "shadow_gloves", "shadow_bracers", "shadow_necklace"],
+      "full_bonus": {
+        "description": "Радиус обнаружения врагами уменьшен на 50%. Шанс уклонения увеличен дополнительно на 15%.",
+        "effects": [
+          { "type": "detection_radius_multiplier", "value": 0.5 },
+          { "type": "dodge_chance_bonus", "value": 15 }
+        ]
+      }
+    }
+  ]
+}

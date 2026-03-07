@@ -1,0 +1,1631 @@
+{
+  "armor": [
+    // ========== ГОЛОВА (ШЛЕМЫ) ==========
+    // Вариант А (защита + мана)
+    {
+      "id": "paladin_helm_a_common",
+      "name": "Железный шлем",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "mana_bonus": 1,
+      "description": "+1 маны."
+    },
+    {
+      "id": "paladin_helm_a_uncommon",
+      "name": "Стальной шлем",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "mana_bonus": 2,
+      "description": "+2 маны."
+    },
+    {
+      "id": "paladin_helm_a_rare",
+      "name": "Шлем стража",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "mana_bonus": 3,
+      "description": "+3 маны."
+    },
+    {
+      "id": "paladin_helm_a_epic",
+      "name": "Шлем света",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "mana_bonus": 4,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+4 маны, +5% огня."
+    },
+    {
+      "id": "paladin_helm_a_legendary",
+      "name": "Шлем небес",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["paladin"],
+      "armor": 4,
+      "mana_bonus": 5,
+      "resistances": [
+        { "element": "fire", "value": 10 },
+        { "element": "cold", "value": 5 }
+      ],
+      "description": "+5 маны, +10% огня, +5% холода."
+    },
+
+    // Вариант Б (здоровье/лечение)
+    {
+      "id": "paladin_helm_b_common",
+      "name": "Шлем здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "paladin_helm_b_uncommon",
+      "name": "Шлем здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "paladin_helm_b_rare",
+      "name": "Шлем здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "health_bonus": 2,
+      "healing_bonus": 1,
+      "description": "+2 здоровья, +1 к лечению."
+    },
+    {
+      "id": "paladin_helm_b_epic",
+      "name": "Шлем здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "health_bonus": 3,
+      "healing_bonus": 2,
+      "description": "+3 здоровья, +2 к лечению."
+    },
+    {
+      "id": "paladin_helm_b_legendary",
+      "name": "Шлем здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "health_bonus": 4,
+      "healing_bonus": 3,
+      "description": "+4 здоровья, +3 к лечению."
+    },
+
+    // Вариант В (блок)
+    {
+      "id": "paladin_helm_c_common",
+      "name": "Шлем с забралом",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "block_chance": 5,
+      "block_amount": 1,
+      "description": "5% блок 1."
+    },
+    {
+      "id": "paladin_helm_c_uncommon",
+      "name": "Шлем с забралом II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "block_chance": 7,
+      "block_amount": 1,
+      "mana_bonus": 1,
+      "description": "7% блок, +1 маны."
+    },
+    {
+      "id": "paladin_helm_c_rare",
+      "name": "Шлем с забралом III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "block_chance": 10,
+      "block_amount": 2,
+      "mana_bonus": 2,
+      "description": "10% блок 2, +2 маны."
+    },
+    {
+      "id": "paladin_helm_c_epic",
+      "name": "Шлем с забралом IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "block_chance": 12,
+      "block_amount": 2,
+      "mana_bonus": 3,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "12% блок, +3 маны, +5% огня."
+    },
+    {
+      "id": "paladin_helm_c_legendary",
+      "name": "Шлем с забралом V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "block_chance": 15,
+      "block_amount": 3,
+      "mana_bonus": 4,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "15% блок 3, +4 маны, +10% огня."
+    },
+
+    // ========== ПЛЕЧИ ==========
+    // Вариант А (мана)
+    {
+      "id": "paladin_shoulders_a_common",
+      "name": "Железные наплечники",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "mana_bonus": 1,
+      "description": "+1 маны."
+    },
+    {
+      "id": "paladin_shoulders_a_uncommon",
+      "name": "Стальные наплечники",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "mana_bonus": 2,
+      "description": "+2 маны."
+    },
+    {
+      "id": "paladin_shoulders_a_rare",
+      "name": "Наплечники стража",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "mana_bonus": 3,
+      "description": "+3 маны."
+    },
+    {
+      "id": "paladin_shoulders_a_epic",
+      "name": "Наплечники света",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "mana_bonus": 4,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+4 маны, +5% огня."
+    },
+    {
+      "id": "paladin_shoulders_a_legendary",
+      "name": "Наплечники небес",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "mana_bonus": 5,
+      "resistances": [
+        { "element": "fire", "value": 10 },
+        { "element": "cold", "value": 5 }
+      ],
+      "description": "+5 маны, +10% огня, +5% холода."
+    },
+
+    // Вариант Б (здоровье/лечение)
+    {
+      "id": "paladin_shoulders_b_common",
+      "name": "Наплечники здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "paladin_shoulders_b_uncommon",
+      "name": "Наплечники здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "paladin_shoulders_b_rare",
+      "name": "Наплечники здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "health_bonus": 2,
+      "healing_bonus": 1,
+      "description": "+2 здоровья, +1 к лечению."
+    },
+    {
+      "id": "paladin_shoulders_b_epic",
+      "name": "Наплечники здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "health_bonus": 3,
+      "healing_bonus": 2,
+      "resistances": [
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "+3 здоровья, +2 к лечению, +5% кровотечения."
+    },
+    {
+      "id": "paladin_shoulders_b_legendary",
+      "name": "Наплечники здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "health_bonus": 4,
+      "healing_bonus": 3,
+      "resistances": [
+        { "element": "bleed", "value": 10 }
+      ],
+      "description": "+4 здоровья, +3 к лечению, +10% кровотечения."
+    },
+
+    // Вариант В (блок)
+    {
+      "id": "paladin_shoulders_c_common",
+      "name": "Наплечники с шипами",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "block_chance": 5,
+      "block_amount": 1,
+      "description": "5% блок 1."
+    },
+    {
+      "id": "paladin_shoulders_c_uncommon",
+      "name": "Наплечники с шипами II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "block_chance": 7,
+      "block_amount": 1,
+      "mana_bonus": 1,
+      "description": "7% блок, +1 маны."
+    },
+    {
+      "id": "paladin_shoulders_c_rare",
+      "name": "Наплечники с шипами III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "block_chance": 10,
+      "block_amount": 2,
+      "mana_bonus": 2,
+      "description": "10% блок 2, +2 маны."
+    },
+    {
+      "id": "paladin_shoulders_c_epic",
+      "name": "Наплечники с шипами IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "block_chance": 12,
+      "block_amount": 2,
+      "mana_bonus": 3,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "12% блок, +3 маны, +5% огня."
+    },
+    {
+      "id": "paladin_shoulders_c_legendary",
+      "name": "Наплечники с шипами V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "block_chance": 15,
+      "block_amount": 3,
+      "mana_bonus": 4,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "15% блок 3, +4 маны, +10% огня."
+    },
+
+    // ========== ДОСПЕХ (НАГРУДНИК) ==========
+    // Вариант А (мана)
+    {
+      "id": "paladin_chest_a_common",
+      "name": "Железный доспех",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["paladin"],
+      "armor": 4,
+      "mana_bonus": 1,
+      "description": "+1 маны."
+    },
+    {
+      "id": "paladin_chest_a_uncommon",
+      "name": "Стальной доспех",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["paladin"],
+      "armor": 4,
+      "mana_bonus": 2,
+      "description": "+2 маны."
+    },
+    {
+      "id": "paladin_chest_a_rare",
+      "name": "Доспех стража",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["paladin"],
+      "armor": 5,
+      "mana_bonus": 3,
+      "description": "+3 маны."
+    },
+    {
+      "id": "paladin_chest_a_epic",
+      "name": "Доспех света",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["paladin"],
+      "armor": 5,
+      "mana_bonus": 4,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+4 маны, +5% огня."
+    },
+    {
+      "id": "paladin_chest_a_legendary",
+      "name": "Доспех небес",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["paladin"],
+      "armor": 6,
+      "mana_bonus": 5,
+      "resistances": [
+        { "element": "fire", "value": 10 },
+        { "element": "cold", "value": 5 }
+      ],
+      "description": "+5 маны, +10% огня, +5% холода."
+    },
+
+    // Вариант Б (здоровье/лечение)
+    {
+      "id": "paladin_chest_b_common",
+      "name": "Доспех здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "paladin_chest_b_uncommon",
+      "name": "Доспех здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "paladin_chest_b_rare",
+      "name": "Доспех здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["paladin"],
+      "armor": 4,
+      "health_bonus": 2,
+      "healing_bonus": 1,
+      "description": "+2 здоровья, +1 к лечению."
+    },
+    {
+      "id": "paladin_chest_b_epic",
+      "name": "Доспех здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["paladin"],
+      "armor": 4,
+      "health_bonus": 3,
+      "healing_bonus": 2,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+3 здоровья, +2 к лечению, +5% яда."
+    },
+    {
+      "id": "paladin_chest_b_legendary",
+      "name": "Доспех здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["paladin"],
+      "armor": 5,
+      "health_bonus": 4,
+      "healing_bonus": 3,
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+4 здоровья, +3 к лечению, +10% яда."
+    },
+
+    // Вариант В (блок)
+    {
+      "id": "paladin_chest_c_common",
+      "name": "Доспех с бляхами",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "block_chance": 5,
+      "block_amount": 1,
+      "description": "5% блок 1."
+    },
+    {
+      "id": "paladin_chest_c_uncommon",
+      "name": "Доспех с бляхами II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "block_chance": 7,
+      "block_amount": 1,
+      "mana_bonus": 1,
+      "description": "7% блок, +1 маны."
+    },
+    {
+      "id": "paladin_chest_c_rare",
+      "name": "Доспех с бляхами III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["paladin"],
+      "armor": 4,
+      "block_chance": 10,
+      "block_amount": 2,
+      "mana_bonus": 2,
+      "description": "10% блок 2, +2 маны."
+    },
+    {
+      "id": "paladin_chest_c_epic",
+      "name": "Доспех с бляхами IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["paladin"],
+      "armor": 4,
+      "block_chance": 12,
+      "block_amount": 2,
+      "mana_bonus": 3,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "12% блок, +3 маны, +5% огня."
+    },
+    {
+      "id": "paladin_chest_c_legendary",
+      "name": "Доспех с бляхами V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["paladin"],
+      "armor": 5,
+      "block_chance": 15,
+      "block_amount": 3,
+      "mana_bonus": 4,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "15% блок 3, +4 маны, +10% огня."
+    },
+
+    // ========== НАРУЧИ ==========
+    // Вариант А (мана)
+    {
+      "id": "paladin_bracers_a_common",
+      "name": "Железные наручи",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "mana_bonus": 1,
+      "description": "+1 маны."
+    },
+    {
+      "id": "paladin_bracers_a_uncommon",
+      "name": "Стальные наручи",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "mana_bonus": 2,
+      "description": "+2 маны."
+    },
+    {
+      "id": "paladin_bracers_a_rare",
+      "name": "Наручи стража",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "mana_bonus": 3,
+      "description": "+3 маны."
+    },
+    {
+      "id": "paladin_bracers_a_epic",
+      "name": "Наручи света",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "mana_bonus": 4,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+4 маны, +5% огня."
+    },
+    {
+      "id": "paladin_bracers_a_legendary",
+      "name": "Наручи небес",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "mana_bonus": 5,
+      "resistances": [
+        { "element": "fire", "value": 10 },
+        { "element": "cold", "value": 5 }
+      ],
+      "description": "+5 маны, +10% огня, +5% холода."
+    },
+
+    // Вариант Б (здоровье/лечение)
+    {
+      "id": "paladin_bracers_b_common",
+      "name": "Наручи здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "paladin_bracers_b_uncommon",
+      "name": "Наручи здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "paladin_bracers_b_rare",
+      "name": "Наручи здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "health_bonus": 2,
+      "healing_bonus": 1,
+      "description": "+2 здоровья, +1 к лечению."
+    },
+    {
+      "id": "paladin_bracers_b_epic",
+      "name": "Наручи здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "health_bonus": 3,
+      "healing_bonus": 2,
+      "resistances": [
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "+3 здоровья, +2 к лечению, +5% кровотечения."
+    },
+    {
+      "id": "paladin_bracers_b_legendary",
+      "name": "Наручи здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "health_bonus": 4,
+      "healing_bonus": 3,
+      "resistances": [
+        { "element": "bleed", "value": 10 }
+      ],
+      "description": "+4 здоровья, +3 к лечению, +10% кровотечения."
+    },
+
+    // Вариант В (блок)
+    {
+      "id": "paladin_bracers_c_common",
+      "name": "Наручи с шипами",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "block_chance": 5,
+      "block_amount": 1,
+      "description": "5% блок 1."
+    },
+    {
+      "id": "paladin_bracers_c_uncommon",
+      "name": "Наручи с шипами II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "block_chance": 7,
+      "block_amount": 1,
+      "mana_bonus": 1,
+      "description": "7% блок, +1 маны."
+    },
+    {
+      "id": "paladin_bracers_c_rare",
+      "name": "Наручи с шипами III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "block_chance": 10,
+      "block_amount": 2,
+      "mana_bonus": 2,
+      "description": "10% блок 2, +2 маны."
+    },
+    {
+      "id": "paladin_bracers_c_epic",
+      "name": "Наручи с шипами IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "block_chance": 12,
+      "block_amount": 2,
+      "mana_bonus": 3,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "12% блок, +3 маны, +5% огня."
+    },
+    {
+      "id": "paladin_bracers_c_legendary",
+      "name": "Наручи с шипами V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "block_chance": 15,
+      "block_amount": 3,
+      "mana_bonus": 4,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "15% блок 3, +4 маны, +10% огня."
+    },
+
+    // ========== ПЕРЧАТКИ ==========
+    // Вариант А (скорость атаки + мана)
+    {
+      "id": "paladin_gloves_a_common",
+      "name": "Кожаные перчатки",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "double_attack_chance": 2,
+      "mana_bonus": 1,
+      "description": "+2% двойной атаки, +1 маны."
+    },
+    {
+      "id": "paladin_gloves_a_uncommon",
+      "name": "Железные перчатки",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "double_attack_chance": 3,
+      "mana_bonus": 2,
+      "description": "+3% двойной атаки, +2 маны."
+    },
+    {
+      "id": "paladin_gloves_a_rare",
+      "name": "Перчатки стража",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "double_attack_chance": 4,
+      "mana_bonus": 3,
+      "description": "+4% двойной атаки, +3 маны."
+    },
+    {
+      "id": "paladin_gloves_a_epic",
+      "name": "Перчатки света",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "double_attack_chance": 5,
+      "mana_bonus": 4,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+5% двойной атаки, +4 маны, +5% огня."
+    },
+    {
+      "id": "paladin_gloves_a_legendary",
+      "name": "Перчатки небес",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "double_attack_chance": 7,
+      "mana_bonus": 5,
+      "resistances": [
+        { "element": "fire", "value": 10 },
+        { "element": "cold", "value": 5 }
+      ],
+      "description": "+7% двойной атаки, +5 маны, +10% огня, +5% холода."
+    },
+
+    // Вариант Б (здоровье + лечение)
+    {
+      "id": "paladin_gloves_b_common",
+      "name": "Перчатки здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "paladin_gloves_b_uncommon",
+      "name": "Перчатки здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "paladin_gloves_b_rare",
+      "name": "Перчатки здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "health_bonus": 2,
+      "healing_bonus": 1,
+      "double_attack_chance": 2,
+      "description": "+2 здоровья, +1 к лечению, +2% двойной атаки."
+    },
+    {
+      "id": "paladin_gloves_b_epic",
+      "name": "Перчатки здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "health_bonus": 3,
+      "healing_bonus": 2,
+      "double_attack_chance": 3,
+      "description": "+3 здоровья, +2 к лечению, +3% двойной атаки."
+    },
+    {
+      "id": "paladin_gloves_b_legendary",
+      "name": "Перчатки здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "health_bonus": 4,
+      "healing_bonus": 3,
+      "double_attack_chance": 4,
+      "description": "+4 здоровья, +3 к лечению, +4% двойной атаки."
+    },
+
+    // Вариант В (блок)
+    {
+      "id": "paladin_gloves_c_common",
+      "name": "Перчатки блока",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "block_chance": 5,
+      "block_amount": 1,
+      "description": "5% блок 1."
+    },
+    {
+      "id": "paladin_gloves_c_uncommon",
+      "name": "Перчатки блока II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "block_chance": 7,
+      "block_amount": 1,
+      "mana_bonus": 1,
+      "description": "7% блок, +1 маны."
+    },
+    {
+      "id": "paladin_gloves_c_rare",
+      "name": "Перчатки блока III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "block_chance": 10,
+      "block_amount": 2,
+      "mana_bonus": 2,
+      "description": "10% блок 2, +2 маны."
+    },
+    {
+      "id": "paladin_gloves_c_epic",
+      "name": "Перчатки блока IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "block_chance": 12,
+      "block_amount": 2,
+      "mana_bonus": 3,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "12% блок, +3 маны, +5% огня."
+    },
+    {
+      "id": "paladin_gloves_c_legendary",
+      "name": "Перчатки блока V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "block_chance": 15,
+      "block_amount": 3,
+      "mana_bonus": 4,
+      "double_attack_chance": 3,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "15% блок 3, +4 маны, +3% двойной атаки, +5% огня."
+    },
+
+    // ========== ПОЯС ==========
+    // Вариант А (мана)
+    {
+      "id": "paladin_belt_a_common",
+      "name": "Кожаный пояс",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "mana_bonus": 1,
+      "description": "+1 маны."
+    },
+    {
+      "id": "paladin_belt_a_uncommon",
+      "name": "Железный пояс",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "mana_bonus": 2,
+      "description": "+2 маны, 1 броня."
+    },
+    {
+      "id": "paladin_belt_a_rare",
+      "name": "Пояс стража",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "mana_bonus": 3,
+      "description": "+3 маны."
+    },
+    {
+      "id": "paladin_belt_a_epic",
+      "name": "Пояс света",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "mana_bonus": 4,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+4 маны, +5% огня."
+    },
+    {
+      "id": "paladin_belt_a_legendary",
+      "name": "Пояс небес",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "mana_bonus": 5,
+      "resistances": [
+        { "element": "fire", "value": 10 },
+        { "element": "cold", "value": 5 }
+      ],
+      "description": "+5 маны, +10% огня, +5% холода."
+    },
+
+    // Вариант Б (здоровье/лечение)
+    {
+      "id": "paladin_belt_b_common",
+      "name": "Пояс здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "paladin_belt_b_uncommon",
+      "name": "Пояс здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "paladin_belt_b_rare",
+      "name": "Пояс здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "health_bonus": 2,
+      "healing_bonus": 1,
+      "potion_slots": 1,
+      "description": "+2 здоровья, +1 к лечению, +1 слот зелий."
+    },
+    {
+      "id": "paladin_belt_b_epic",
+      "name": "Пояс здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "health_bonus": 3,
+      "healing_bonus": 2,
+      "potion_slots": 1,
+      "description": "+3 здоровья, +2 к лечению, +1 слот."
+    },
+    {
+      "id": "paladin_belt_b_legendary",
+      "name": "Пояс здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "health_bonus": 4,
+      "healing_bonus": 3,
+      "potion_slots": 2,
+      "description": "+4 здоровья, +3 к лечению, +2 слота."
+    },
+
+    // Вариант В (блок)
+    {
+      "id": "paladin_belt_c_common",
+      "name": "Пояс с пряжкой",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "block_chance": 5,
+      "block_amount": 1,
+      "description": "5% блок 1."
+    },
+    {
+      "id": "paladin_belt_c_uncommon",
+      "name": "Пояс с пряжкой II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "block_chance": 5,
+      "block_amount": 1,
+      "mana_bonus": 1,
+      "description": "1 броня, 5% блок, +1 маны."
+    },
+    {
+      "id": "paladin_belt_c_rare",
+      "name": "Пояс с пряжкой III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "block_chance": 8,
+      "block_amount": 2,
+      "mana_bonus": 2,
+      "description": "1 броня, 8% блок 2, +2 маны."
+    },
+    {
+      "id": "paladin_belt_c_epic",
+      "name": "Пояс с пряжкой IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "block_chance": 10,
+      "block_amount": 2,
+      "mana_bonus": 3,
+      "potion_slots": 1,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "1 броня, 10% блок, +3 маны, +1 слот, +5% огня."
+    },
+    {
+      "id": "paladin_belt_c_legendary",
+      "name": "Пояс с пряжкой V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "block_chance": 12,
+      "block_amount": 3,
+      "mana_bonus": 4,
+      "potion_slots": 1,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "2 брони, 12% блок 3, +4 маны, +1 слот, +10% огня."
+    },
+
+    // ========== ШТАНЫ ==========
+    // Вариант А (мана)
+    {
+      "id": "paladin_legs_a_common",
+      "name": "Железные штаны",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "mana_bonus": 1,
+      "description": "+1 маны."
+    },
+    {
+      "id": "paladin_legs_a_uncommon",
+      "name": "Стальные штаны",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "mana_bonus": 2,
+      "description": "+2 маны."
+    },
+    {
+      "id": "paladin_legs_a_rare",
+      "name": "Поножи стража",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["paladin"],
+      "armor": 4,
+      "mana_bonus": 3,
+      "description": "+3 маны."
+    },
+    {
+      "id": "paladin_legs_a_epic",
+      "name": "Поножи света",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["paladin"],
+      "armor": 4,
+      "mana_bonus": 4,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+4 маны, +5% огня."
+    },
+    {
+      "id": "paladin_legs_a_legendary",
+      "name": "Поножи небес",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["paladin"],
+      "armor": 5,
+      "mana_bonus": 5,
+      "resistances": [
+        { "element": "fire", "value": 10 },
+        { "element": "cold", "value": 5 }
+      ],
+      "description": "+5 маны, +10% огня, +5% холода."
+    },
+
+    // Вариант Б (здоровье/лечение)
+    {
+      "id": "paladin_legs_b_common",
+      "name": "Штаны здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "paladin_legs_b_uncommon",
+      "name": "Штаны здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "paladin_legs_b_rare",
+      "name": "Штаны здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "health_bonus": 2,
+      "healing_bonus": 1,
+      "description": "+2 здоровья, +1 к лечению."
+    },
+    {
+      "id": "paladin_legs_b_epic",
+      "name": "Штаны здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "health_bonus": 3,
+      "healing_bonus": 2,
+      "resistances": [
+        { "element": "madness", "value": 5 }
+      ],
+      "description": "+3 здоровья, +2 к лечению, +5% безумия."
+    },
+    {
+      "id": "paladin_legs_b_legendary",
+      "name": "Штаны здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["paladin"],
+      "armor": 4,
+      "health_bonus": 4,
+      "healing_bonus": 3,
+      "resistances": [
+        { "element": "madness", "value": 10 }
+      ],
+      "description": "+4 здоровья, +3 к лечению, +10% безумия."
+    },
+
+    // Вариант В (блок)
+    {
+      "id": "paladin_legs_c_common",
+      "name": "Штаны с наколенниками",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "block_chance": 5,
+      "block_amount": 1,
+      "description": "5% блок 1."
+    },
+    {
+      "id": "paladin_legs_c_uncommon",
+      "name": "Штаны с наколенниками II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "block_chance": 7,
+      "block_amount": 1,
+      "mana_bonus": 1,
+      "description": "7% блок, +1 маны."
+    },
+    {
+      "id": "paladin_legs_c_rare",
+      "name": "Штаны с наколенниками III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "block_chance": 10,
+      "block_amount": 2,
+      "mana_bonus": 2,
+      "description": "10% блок 2, +2 маны."
+    },
+    {
+      "id": "paladin_legs_c_epic",
+      "name": "Штаны с наколенниками IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "block_chance": 12,
+      "block_amount": 2,
+      "mana_bonus": 3,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "12% блок, +3 маны, +5% огня."
+    },
+    {
+      "id": "paladin_legs_c_legendary",
+      "name": "Штаны с наколенниками V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["paladin"],
+      "armor": 4,
+      "block_chance": 15,
+      "block_amount": 3,
+      "mana_bonus": 4,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "15% блок 3, +4 маны, +10% огня."
+    },
+
+    // ========== САПОГИ ==========
+    // Вариант А (мана)
+    {
+      "id": "paladin_boots_a_common",
+      "name": "Железные сапоги",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "mana_bonus": 1,
+      "description": "+1 маны."
+    },
+    {
+      "id": "paladin_boots_a_uncommon",
+      "name": "Стальные сапоги",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "mana_bonus": 2,
+      "description": "+2 маны."
+    },
+    {
+      "id": "paladin_boots_a_rare",
+      "name": "Сапоги стража",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "mana_bonus": 3,
+      "description": "+3 маны."
+    },
+    {
+      "id": "paladin_boots_a_epic",
+      "name": "Сапоги света",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "mana_bonus": 4,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+4 маны, +5% огня."
+    },
+    {
+      "id": "paladin_boots_a_legendary",
+      "name": "Сапоги небес",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["paladin"],
+      "armor": 3,
+      "mana_bonus": 5,
+      "resistances": [
+        { "element": "fire", "value": 10 },
+        { "element": "cold", "value": 5 }
+      ],
+      "description": "+5 маны, +10% огня, +5% холода."
+    },
+
+    // Вариант Б (здоровье/скорость)
+    {
+      "id": "paladin_boots_b_common",
+      "name": "Сапоги здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "paladin_boots_b_uncommon",
+      "name": "Сапоги здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "health_bonus": 3,
+      "speed_bonus": 5,
+      "description": "+3 здоровья, +5% скорости."
+    },
+    {
+      "id": "paladin_boots_b_rare",
+      "name": "Сапоги здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "health_bonus": 2,
+      "healing_bonus": 1,
+      "speed_bonus": 5,
+      "description": "+2 здоровья, +1 к лечению, +5% скорости."
+    },
+    {
+      "id": "paladin_boots_b_epic",
+      "name": "Сапоги здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "health_bonus": 3,
+      "healing_bonus": 2,
+      "speed_bonus": 5,
+      "resistances": [
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "+3 здоровья, +2 к лечению, +5% скорости, +5% кровотечения."
+    },
+    {
+      "id": "paladin_boots_b_legendary",
+      "name": "Сапоги здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "health_bonus": 4,
+      "healing_bonus": 3,
+      "speed_bonus": 10,
+      "resistances": [
+        { "element": "bleed", "value": 10 }
+      ],
+      "description": "+4 здоровья, +3 к лечению, +10% скорости, +10% кровотечения."
+    },
+
+    // Вариант В (блок/уклонение)
+    {
+      "id": "paladin_boots_c_common",
+      "name": "Сапоги с шипами",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["paladin"],
+      "armor": 0,
+      "block_chance": 5,
+      "block_amount": 1,
+      "description": "5% блок 1."
+    },
+    {
+      "id": "paladin_boots_c_uncommon",
+      "name": "Сапоги с шипами II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "block_chance": 5,
+      "block_amount": 1,
+      "mana_bonus": 1,
+      "description": "1 броня, 5% блок, +1 маны."
+    },
+    {
+      "id": "paladin_boots_c_rare",
+      "name": "Сапоги с шипами III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "block_chance": 8,
+      "block_amount": 2,
+      "mana_bonus": 2,
+      "dodge_chance": 3,
+      "description": "1 броня, 8% блок 2, +2 маны, +3% уклонения."
+    },
+    {
+      "id": "paladin_boots_c_epic",
+      "name": "Сапоги с шипами IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["paladin"],
+      "armor": 1,
+      "block_chance": 10,
+      "block_amount": 2,
+      "mana_bonus": 3,
+      "dodge_chance": 5,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "1 броня, 10% блок, +3 маны, +5% уклонения, +5% огня."
+    },
+    {
+      "id": "paladin_boots_c_legendary",
+      "name": "Сапоги с шипами V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["paladin"],
+      "armor": 2,
+      "block_chance": 12,
+      "block_amount": 3,
+      "mana_bonus": 4,
+      "dodge_chance": 5,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "immune": ["spikes"],
+      "description": "2 брони, 12% блок 3, +4 маны, +5% уклонения, +10% огня, иммунитет к шипам."
+    }
+  ]
+}

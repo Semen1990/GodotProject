@@ -1,0 +1,926 @@
+{
+  "potions": [
+    {
+      "id": "potion_health_common",
+      "name": "Малое зелье здоровья",
+      "rarity": "common",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "restore_health", "power": 2 }
+      ],
+      "description": "Восстанавливает 2 HP."
+    },
+    {
+      "id": "potion_health_uncommon",
+      "name": "Зелье здоровья",
+      "rarity": "uncommon",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "restore_health", "power": 3 }
+      ],
+      "description": "Восстанавливает 3 HP."
+    },
+    {
+      "id": "potion_health_rare",
+      "name": "Большое зелье здоровья",
+      "rarity": "rare",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "restore_health", "power": 4 }
+      ],
+      "description": "Восстанавливает 4 HP."
+    },
+    {
+      "id": "potion_health_epic",
+      "name": "Огромное зелье здоровья",
+      "rarity": "epic",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "restore_health", "power": 5 }
+      ],
+      "description": "Восстанавливает 5 HP."
+    },
+    {
+      "id": "potion_health_legendary",
+      "name": "Легендарное зелье здоровья",
+      "rarity": "legendary",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "restore_health", "power": 5 },
+        { "template": "buff_armor", "power": 2 }
+      ],
+      "description": "Восстанавливает 5 HP и увеличивает броню на 2 до конца комнаты."
+    },
+    {
+      "id": "potion_mana_common",
+      "name": "Малое зелье маны",
+      "rarity": "common",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "restore_mana", "power": 3 }
+      ],
+      "description": "Восстанавливает 3 MP."
+    },
+    {
+      "id": "potion_mana_uncommon",
+      "name": "Зелье маны",
+      "rarity": "uncommon",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "restore_mana", "power": 4 }
+      ],
+      "description": "Восстанавливает 4 MP."
+    },
+    {
+      "id": "potion_mana_rare",
+      "name": "Большое зелье маны",
+      "rarity": "rare",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "restore_mana", "power": 5 }
+      ],
+      "description": "Восстанавливает 5 MP."
+    },
+    {
+      "id": "potion_mana_epic",
+      "name": "Огромное зелье маны",
+      "rarity": "epic",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "restore_mana", "power": 6 }
+      ],
+      "description": "Восстанавливает 6 MP."
+    },
+    {
+      "id": "potion_mana_legendary",
+      "name": "Легендарное зелье маны",
+      "rarity": "legendary",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "restore_mana_full" },
+        { "template": "increase_max_mana", "power": 2 }
+      ],
+      "description": "Полностью восстанавливает ману и увеличивает максимальный запас маны на 2 до конца комнаты."
+    },
+    {
+      "id": "potion_damage_common",
+      "name": "Малое зелье ярости",
+      "rarity": "common",
+      "type": "potion",
+      "icon": "",
+      "class_effects": [
+        {
+          "classes": ["berserker"],
+          "effects": [{ "template": "buff_damage", "power": 1 }]
+        },
+        {
+          "classes": ["warrior", "paladin", "rogue"],
+          "effects": [
+            { "template": "buff_damage", "power": 1 },
+            { "template": "debuff_armor", "power": 1 }
+          ]
+        }
+      ],
+      "description": "Для берсерка: +1 урона. Для других: +1 урона, но -1 брони."
+    },
+    {
+      "id": "potion_damage_uncommon",
+      "name": "Зелье ярости",
+      "rarity": "uncommon",
+      "type": "potion",
+      "icon": "",
+      "class_effects": [
+        {
+          "classes": ["berserker"],
+          "effects": [{ "template": "buff_damage", "power": 2 }]
+        },
+        {
+          "classes": ["warrior", "paladin", "rogue"],
+          "effects": [
+            { "template": "buff_damage", "power": 2 },
+            { "template": "debuff_armor", "power": 1 }
+          ]
+        }
+      ],
+      "description": "Для берсерка: +2 урона. Для других: +2 урона, но -1 брони."
+    },
+    {
+      "id": "potion_damage_rare",
+      "name": "Большое зелье ярости",
+      "rarity": "rare",
+      "type": "potion",
+      "icon": "",
+      "class_effects": [
+        {
+          "classes": ["berserker"],
+          "effects": [{ "template": "buff_damage", "power": 3 }]
+        },
+        {
+          "classes": ["warrior", "paladin", "rogue"],
+          "effects": [
+            { "template": "buff_damage", "power": 3 },
+            { "template": "debuff_armor", "power": 2 }
+          ]
+        }
+      ],
+      "description": "Для берсерка: +3 урона. Для других: +3 урона, но -2 брони."
+    },
+    {
+      "id": "potion_damage_epic",
+      "name": "Огромное зелье ярости",
+      "rarity": "epic",
+      "type": "potion",
+      "icon": "",
+      "class_effects": [
+        {
+          "classes": ["berserker"],
+          "effects": [{ "template": "buff_damage", "power": 4 }]
+        },
+        {
+          "classes": ["warrior", "paladin", "rogue"],
+          "effects": [
+            { "template": "buff_damage", "power": 4 },
+            { "template": "debuff_armor", "power": 2 }
+          ]
+        }
+      ],
+      "description": "Для берсерка: +4 урона. Для других: +4 урона, но -2 брони."
+    },
+    {
+      "id": "potion_damage_legendary",
+      "name": "Легендарное зелье ярости",
+      "rarity": "legendary",
+      "type": "potion",
+      "icon": "",
+      "class_effects": [
+        {
+          "classes": ["berserker"],
+          "effects": [
+            { "template": "buff_damage", "power": 5 },
+            { "template": "life_steal_on_hit", "condition": "2nd", "power": 1 }
+          ]
+        },
+        {
+          "classes": ["warrior", "paladin", "rogue"],
+          "effects": [
+            { "template": "buff_damage", "power": 5 },
+            { "template": "debuff_armor", "power": 5 }
+          ]
+        }
+      ],
+      "description": "Для берсерка: +5 урона и каждая вторая атака восстанавливает 1 HP. Для других: +5 урона, но -5 брони."
+    },
+    {
+      "id": "potion_armor_common",
+      "name": "Малое зелье каменной кожи",
+      "rarity": "common",
+      "type": "potion",
+      "icon": "",
+      "class_effects": [
+        {
+          "classes": ["warrior", "paladin"],
+          "effects": [{ "template": "buff_armor", "power": 1 }]
+        },
+        {
+          "classes": ["berserker", "rogue"],
+          "effects": [
+            { "template": "buff_armor", "power": 1 },
+            { "template": "debuff_speed", "power": 10 }
+          ]
+        }
+      ],
+      "description": "Для воина/паладина: +1 брони. Для берсерка/разбойника: +1 брони, но -10% скорости и высоты прыжка."
+    },
+    {
+      "id": "potion_armor_uncommon",
+      "name": "Зелье каменной кожи",
+      "rarity": "uncommon",
+      "type": "potion",
+      "icon": "",
+      "class_effects": [
+        {
+          "classes": ["warrior", "paladin"],
+          "effects": [{ "template": "buff_armor", "power": 2 }]
+        },
+        {
+          "classes": ["berserker", "rogue"],
+          "effects": [
+            { "template": "buff_armor", "power": 2 },
+            { "template": "debuff_speed", "power": 15 }
+          ]
+        }
+      ],
+      "description": "Для воина/паладина: +2 брони. Для берсерка/разбойника: +2 брони, но -15% скорости и высоты прыжка."
+    },
+    {
+      "id": "potion_armor_rare",
+      "name": "Большое зелье каменной кожи",
+      "rarity": "rare",
+      "type": "potion",
+      "icon": "",
+      "class_effects": [
+        {
+          "classes": ["warrior", "paladin"],
+          "effects": [{ "template": "buff_armor", "power": 3 }]
+        },
+        {
+          "classes": ["berserker", "rogue"],
+          "effects": [
+            { "template": "buff_armor", "power": 3 },
+            { "template": "debuff_speed", "power": 20 }
+          ]
+        }
+      ],
+      "description": "Для воина/паладина: +3 брони. Для берсерка/разбойника: +3 брони, но -20% скорости и высоты прыжка."
+    },
+    {
+      "id": "potion_armor_epic",
+      "name": "Огромное зелье каменной кожи",
+      "rarity": "epic",
+      "type": "potion",
+      "icon": "",
+      "class_effects": [
+        {
+          "classes": ["warrior", "paladin"],
+          "effects": [{ "template": "buff_armor", "power": 4 }]
+        },
+        {
+          "classes": ["berserker", "rogue"],
+          "effects": [
+            { "template": "buff_armor", "power": 4 },
+            { "template": "debuff_speed", "power": 25 }
+          ]
+        }
+      ],
+      "description": "Для воина/паладина: +4 брони. Для берсерка/разбойника: +4 брони, но -25% скорости и высоты прыжка."
+    },
+    {
+      "id": "potion_armor_legendary",
+      "name": "Легендарное зелье каменной кожи",
+      "rarity": "legendary",
+      "type": "potion",
+      "icon": "",
+      "class_effects": [
+        {
+          "classes": ["warrior", "paladin"],
+          "effects": [
+            { "template": "buff_armor", "power": 5 },
+            { "template": "bonus_on_resist_cold" } 
+          ]
+        },
+        {
+          "classes": ["berserker", "rogue"],
+          "effects": [
+            { "template": "buff_armor", "power": 5 },
+            { "template": "debuff_speed", "power": 30 },
+            { "template": "bonus_on_resist_cold" }
+          ]
+        }
+      ],
+      "description": "Для всех: +5 брони. Для воина/паладина дополнительно: при получении урона 30% шанс заморозить атакующего на 2 сек. Для берсерка/разбойника: -30% скорости, но тоже есть шанс заморозки."
+    },
+    {
+      "id": "potion_vampire_rare",
+      "name": "Зелье вампиризма",
+      "rarity": "rare",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "life_steal_on_hit", "condition": "3rd", "power": 1 }
+      ],
+      "description": "Каждая третья атака восстанавливает 1 HP."
+    },
+    {
+      "id": "potion_vampire_epic",
+      "name": "Зелье великого вампира",
+      "rarity": "epic",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "life_steal_on_hit", "condition": "2nd", "power": 2 }
+      ],
+      "description": "Каждая вторая атака восстанавливает 2 HP."
+    },
+    {
+      "id": "potion_vampire_legendary",
+      "name": "Зелье древнего вампира",
+      "rarity": "legendary",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "life_steal_on_hit", "condition": "every", "power": 2 }
+      ],
+      "description": "Каждая атака восстанавливает 2 HP."
+    },
+    {
+      "id": "potion_speed_common",
+      "name": "Малое зелье скорости",
+      "rarity": "common",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "double_attack_chance", "power": 10 }
+      ],
+      "description": "10% шанс совершить двойную атаку."
+    },
+    {
+      "id": "potion_speed_uncommon",
+      "name": "Зелье скорости",
+      "rarity": "uncommon",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "double_attack_chance", "power": 20 }
+      ],
+      "description": "20% шанс двойной атаки."
+    },
+    {
+      "id": "potion_speed_rare",
+      "name": "Большое зелье скорости",
+      "rarity": "rare",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "double_attack_chance", "power": 30 }
+      ],
+      "description": "30% шанс двойной атаки."
+    },
+    {
+      "id": "potion_speed_epic",
+      "name": "Огромное зелье скорости",
+      "rarity": "epic",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "double_attack_chance", "power": 40 }
+      ],
+      "description": "40% шанс двойной атаки."
+    },
+    {
+      "id": "potion_speed_legendary",
+      "name": "Легендарное зелье скорости",
+      "rarity": "legendary",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "double_attack_chance", "power": 50 },
+        { "template": "life_steal_on_hit", "condition": "on_double", "power": 1 }
+      ],
+      "description": "50% шанс двойной атаки. Если сработала, восстановите 1 HP."
+    },
+    {
+      "id": "potion_shield_common",
+      "name": "Малое зелье защиты",
+      "rarity": "common",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "shield", "power": 3 }
+      ],
+      "description": "Создаёт щит на 3 HP."
+    },
+    {
+      "id": "potion_shield_uncommon",
+      "name": "Зелье защиты",
+      "rarity": "uncommon",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "shield", "power": 6 }
+      ],
+      "description": "Щит 6 HP."
+    },
+    {
+      "id": "potion_shield_rare",
+      "name": "Большое зелье защиты",
+      "rarity": "rare",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "shield", "power": 9 }
+      ],
+      "description": "Щит 9 HP."
+    },
+    {
+      "id": "potion_shield_epic",
+      "name": "Огромное зелье защиты",
+      "rarity": "epic",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "shield", "power": 12 }
+      ],
+      "description": "Щит 12 HP."
+    },
+    {
+      "id": "potion_shield_legendary",
+      "name": "Легендарное зелье защиты",
+      "rarity": "legendary",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "shield", "power": 15 },
+        { "template": "bonus_on_resist_fire" } 
+      ],
+      "description": "Щит 15 HP. При разрушении взрыв наносит 5 урона всем врагам (заложено в легендарный бонус, описание нужно уточнить)."
+    },
+    {
+      "id": "potion_poison_rare",
+      "name": "Малое зелье яда",
+      "rarity": "rare",
+      "type": "potion",
+      "icon": "",
+      "class_effects": [
+        {
+          "classes": ["rogue"],
+          "effects": [{ "template": "poison_on_hit", "power": 1, "duration": 5 }]
+        },
+        {
+          "classes": ["warrior", "paladin", "berserker"],
+          "effects": []
+        }
+      ],
+      "description": "Только для разбойника: атаки отравляют врага (1 урон/сек, 5 сек). Для других классов бесполезно."
+    },
+    {
+      "id": "potion_poison_epic",
+      "name": "Зелье яда",
+      "rarity": "epic",
+      "type": "potion",
+      "icon": "",
+      "class_effects": [
+        {
+          "classes": ["rogue"],
+          "effects": [{ "template": "poison_on_hit", "power": 2, "duration": 5 }]
+        },
+        {
+          "classes": ["warrior", "paladin", "berserker"],
+          "effects": []
+        }
+      ],
+      "description": "Только для разбойника: атаки отравляют врага (2 урон/сек, 5 сек)."
+    },
+    {
+      "id": "potion_poison_legendary",
+      "name": "Большое зелье яда",
+      "rarity": "legendary",
+      "type": "potion",
+      "icon": "",
+      "class_effects": [
+        {
+          "classes": ["rogue"],
+          "effects": [
+            { "template": "poison_on_hit", "power": 3, "duration": 5 },
+            { "template": "bonus_on_resist_poison" }
+          ]
+        },
+        {
+          "classes": ["warrior", "paladin", "berserker"],
+          "effects": []
+        }
+      ],
+      "description": "Только для разбойника: атаки отравляют врага (3 урон/сек, 5 сек). При избегании яда получаете +30% скорости на 5 сек."
+    },
+    {
+      "id": "potion_luck_common",
+      "name": "Малое зелье удачи",
+      "rarity": "common",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "luck_boost", "power": 5 }
+      ],
+      "description": "Увеличивает шанс найти предметы лучшего качества на 5%."
+    },
+    {
+      "id": "potion_luck_uncommon",
+      "name": "Зелье удачи",
+      "rarity": "uncommon",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "luck_boost", "power": 10 }
+      ],
+      "description": "Увеличивает шанс найти предметы лучшего качества на 10%."
+    },
+    {
+      "id": "potion_luck_rare",
+      "name": "Большое зелье удачи",
+      "rarity": "rare",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "luck_boost", "power": 15 }
+      ],
+      "description": "Увеличивает шанс найти предметы лучшего качества на 15%."
+    },
+    {
+      "id": "potion_luck_epic",
+      "name": "Огромное зелье удачи",
+      "rarity": "epic",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "luck_boost", "power": 20 }
+      ],
+      "description": "Увеличивает шанс найти предметы лучшего качества на 20%."
+    },
+    {
+      "id": "potion_luck_legendary",
+      "name": "Легендарное зелье удачи",
+      "rarity": "legendary",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "luck_boost", "power": 25 },
+        { "template": "guaranteed_better_loot" }
+      ],
+      "description": "Увеличивает шанс найти предметы лучшего качества на 25%. Один из выпавших предметов будет на один уровень редкости выше."
+    },
+    {
+      "id": "potion_resist_fire_common",
+      "name": "Малое зелье сопротивления огню",
+      "rarity": "common",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "fire", "chance": 10 }
+      ],
+      "description": "10% шанс полностью избежать эффектов огня."
+    },
+    {
+      "id": "potion_resist_fire_uncommon",
+      "name": "Зелье сопротивления огню",
+      "rarity": "uncommon",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "fire", "chance": 20 }
+      ],
+      "description": "20% шанс избежать огня."
+    },
+    {
+      "id": "potion_resist_fire_rare",
+      "name": "Большое зелье сопротивления огню",
+      "rarity": "rare",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "fire", "chance": 30 }
+      ],
+      "description": "30% шанс избежать огня."
+    },
+    {
+      "id": "potion_resist_fire_epic",
+      "name": "Огромное зелье сопротивления огню",
+      "rarity": "epic",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "fire", "chance": 40 }
+      ],
+      "description": "40% шанс избежать огня."
+    },
+    {
+      "id": "potion_resist_fire_legendary",
+      "name": "Легендарное зелье сопротивления огню",
+      "rarity": "legendary",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "fire", "chance": 50 },
+        { "template": "bonus_on_resist_fire" }
+      ],
+      "description": "50% шанс избежать огня. Если сработало, следующая способность не тратит кулдаун."
+    },
+    {
+      "id": "potion_resist_poison_common",
+      "name": "Малое зелье сопротивления яду",
+      "rarity": "common",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "poison", "chance": 10 }
+      ],
+      "description": "10% шанс полностью избежать эффектов яда."
+    },
+    {
+      "id": "potion_resist_poison_uncommon",
+      "name": "Зелье сопротивления яду",
+      "rarity": "uncommon",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "poison", "chance": 20 }
+      ],
+      "description": "20% шанс избежать яда."
+    },
+    {
+      "id": "potion_resist_poison_rare",
+      "name": "Большое зелье сопротивления яду",
+      "rarity": "rare",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "poison", "chance": 30 }
+      ],
+      "description": "30% шанс избежать яда."
+    },
+    {
+      "id": "potion_resist_poison_epic",
+      "name": "Огромное зелье сопротивления яду",
+      "rarity": "epic",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "poison", "chance": 40 }
+      ],
+      "description": "40% шанс избежать яда."
+    },
+    {
+      "id": "potion_resist_poison_legendary",
+      "name": "Легендарное зелье сопротивления яду",
+      "rarity": "legendary",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "poison", "chance": 50 },
+        { "template": "bonus_on_resist_poison" }
+      ],
+      "description": "50% шанс избежать яда. Если сработало, получаете +30% скорости на 5 сек."
+    },
+    {
+      "id": "potion_resist_bleed_common",
+      "name": "Малое зелье сопротивления кровотечению",
+      "rarity": "common",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "bleed", "chance": 10 }
+      ],
+      "description": "10% шанс полностью избежать эффектов кровотечения."
+    },
+    {
+      "id": "potion_resist_bleed_uncommon",
+      "name": "Зелье сопротивления кровотечению",
+      "rarity": "uncommon",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "bleed", "chance": 20 }
+      ],
+      "description": "20% шанс избежать кровотечения."
+    },
+    {
+      "id": "potion_resist_bleed_rare",
+      "name": "Большое зелье сопротивления кровотечению",
+      "rarity": "rare",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "bleed", "chance": 30 }
+      ],
+      "description": "30% шанс избежать кровотечения."
+    },
+    {
+      "id": "potion_resist_bleed_epic",
+      "name": "Огромное зелье сопротивления кровотечению",
+      "rarity": "epic",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "bleed", "chance": 40 }
+      ],
+      "description": "40% шанс избежать кровотечения."
+    },
+    {
+      "id": "potion_resist_bleed_legendary",
+      "name": "Легендарное зелье сопротивления кровотечению",
+      "rarity": "legendary",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "bleed", "chance": 50 },
+        { "template": "bonus_on_resist_bleed" }
+      ],
+      "description": "50% шанс избежать кровотечения. Если сработало, восстанавливаете 2 HP."
+    },
+    {
+      "id": "potion_resist_cold_common",
+      "name": "Малое зелье сопротивления холоду",
+      "rarity": "common",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "cold", "chance": 10 }
+      ],
+      "description": "10% шанс полностью избежать эффектов холода."
+    },
+    {
+      "id": "potion_resist_cold_uncommon",
+      "name": "Зелье сопротивления холоду",
+      "rarity": "uncommon",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "cold", "chance": 20 }
+      ],
+      "description": "20% шанс избежать холода."
+    },
+    {
+      "id": "potion_resist_cold_rare",
+      "name": "Большое зелье сопротивления холоду",
+      "rarity": "rare",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "cold", "chance": 30 }
+      ],
+      "description": "30% шанс избежать холода."
+    },
+    {
+      "id": "potion_resist_cold_epic",
+      "name": "Огромное зелье сопротивления холоду",
+      "rarity": "epic",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "cold", "chance": 40 }
+      ],
+      "description": "40% шанс избежать холода."
+    },
+    {
+      "id": "potion_resist_cold_legendary",
+      "name": "Легендарное зелье сопротивления холоду",
+      "rarity": "legendary",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "cold", "chance": 50 },
+        { "template": "bonus_on_resist_cold" }
+      ],
+      "description": "50% шанс избежать холода. Если сработало, замораживаете атакующего на 2 сек."
+    },
+    {
+      "id": "potion_resist_madness_common",
+      "name": "Малое зелье сопротивления безумию",
+      "rarity": "common",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "madness", "chance": 10 }
+      ],
+      "description": "10% шанс избежать получения стака безумия."
+    },
+    {
+      "id": "potion_resist_madness_uncommon",
+      "name": "Зелье сопротивления безумию",
+      "rarity": "uncommon",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "madness", "chance": 20 }
+      ],
+      "description": "20% шанс избежать стака безумия."
+    },
+    {
+      "id": "potion_resist_madness_rare",
+      "name": "Большое зелье сопротивления безумию",
+      "rarity": "rare",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "madness", "chance": 30 }
+      ],
+      "description": "30% шанс избежать стака безумия."
+    },
+    {
+      "id": "potion_resist_madness_epic",
+      "name": "Огромное зелье сопротивления безумию",
+      "rarity": "epic",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "madness", "chance": 40 }
+      ],
+      "description": "40% шанс избежать стака безумия."
+    },
+    {
+      "id": "potion_resist_madness_legendary",
+      "name": "Легендарное зелье сопротивления безумию",
+      "rarity": "legendary",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "resist_element", "element": "madness", "chance": 50 },
+        { "template": "bonus_on_resist_madness" }
+      ],
+      "description": "50% шанс избежать стака безумия. Если сработало, снимает 1 уже имеющийся стак безумия."
+    },
+    {
+      "id": "antidote_madness_common",
+      "name": "Малое успокаивающее зелье",
+      "rarity": "common",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "cure_madness", "power": 1 }
+      ],
+      "description": "Снимает 1 стак безумия."
+    },
+    {
+      "id": "antidote_madness_uncommon",
+      "name": "Успокаивающее зелье",
+      "rarity": "uncommon",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "cure_madness", "power": 2 }
+      ],
+      "description": "Снимает 2 стака безумия."
+    },
+    {
+      "id": "antidote_madness_rare",
+      "name": "Большое успокаивающее зелье",
+      "rarity": "rare",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "cure_madness", "power": 3 }
+      ],
+      "description": "Снимает 3 стака безумия."
+    },
+    {
+      "id": "antidote_madness_epic",
+      "name": "Огромное успокаивающее зелье",
+      "rarity": "epic",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "cure_madness", "power": 4 }
+      ],
+      "description": "Снимает 4 стака безумия."
+    },
+    {
+      "id": "antidote_madness_legendary",
+      "name": "Легендарное успокаивающее зелье",
+      "rarity": "legendary",
+      "type": "potion",
+      "icon": "",
+      "effects": [
+        { "template": "cure_madness", "power": 5 }
+      ],
+      "description": "Снимает 5 стаков безумия."
+    }
+  ]
+}

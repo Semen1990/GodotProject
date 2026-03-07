@@ -1,0 +1,1651 @@
+{
+  "armor": [
+    // ========== ГОЛОВА (ШЛЕМЫ) ==========
+    // Вариант А (урон/скорость)
+    {
+      "id": "berserker_helm_a_common",
+      "name": "Железный рогатый шлем",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "double_attack_chance": 2,
+      "description": "+2% двойной атаки."
+    },
+    {
+      "id": "berserker_helm_a_uncommon",
+      "name": "Стальной рогатый шлем",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "double_attack_chance": 3,
+      "description": "+3% двойной атаки."
+    },
+    {
+      "id": "berserker_helm_a_rare",
+      "name": "Шлем зверя",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "double_attack_chance": 4,
+      "description": "+4% двойной атаки."
+    },
+    {
+      "id": "berserker_helm_a_epic",
+      "name": "Шлем дракона",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "double_attack_chance": 5,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+5% двойной атаки, +5% огня."
+    },
+    {
+      "id": "berserker_helm_a_legendary",
+      "name": "Легендарный шлем зверя",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "double_attack_chance": 7,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "+7% двойной атаки, +10% огня."
+    },
+
+    // Вариант Б (здоровье/вампиризм)
+    {
+      "id": "berserker_helm_b_common",
+      "name": "Шлем здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "berserker_helm_b_uncommon",
+      "name": "Шлем здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "berserker_helm_b_rare",
+      "name": "Шлем здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "vampirism_chance", "value": 2 }
+      ],
+      "description": "+2 здоровья, +2% вампиризма."
+    },
+    {
+      "id": "berserker_helm_b_epic",
+      "name": "Шлем здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "health_bonus": 3,
+      "effects": [
+        { "type": "vampirism_chance", "value": 3 }
+      ],
+      "resistances": [
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "+3 здоровья, +3% вампиризма, +5% кровотечения."
+    },
+    {
+      "id": "berserker_helm_b_legendary",
+      "name": "Шлем здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "health_bonus": 4,
+      "effects": [
+        { "type": "vampirism_chance", "value": 4 }
+      ],
+      "resistances": [
+        { "element": "bleed", "value": 10 }
+      ],
+      "description": "+4 здоровья, +4% вампиризма, +10% кровотечения."
+    },
+
+    // Вариант В (ярость/усиление при низком HP)
+    {
+      "id": "berserker_helm_c_common",
+      "name": "Шлем ярости",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 1 }
+      ],
+      "description": "При HP<50% +1 урона."
+    },
+    {
+      "id": "berserker_helm_c_uncommon",
+      "name": "Шлем ярости II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 1 },
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 2 }
+      ],
+      "description": "При HP<50% +1 урона и +2% двойной атаки."
+    },
+    {
+      "id": "berserker_helm_c_rare",
+      "name": "Шлем ярости III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 2 }
+      ],
+      "description": "При HP<50% +2 урона."
+    },
+    {
+      "id": "berserker_helm_c_epic",
+      "name": "Шлем ярости IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "damage_bonus": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 5 }
+      ],
+      "description": "+1 урона всегда. При HP<50% дополнительно +5% двойной атаки."
+    },
+    {
+      "id": "berserker_helm_c_legendary",
+      "name": "Легендарный шлем ярости",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "damage_bonus": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 2 },
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 8 }
+      ],
+      "description": "+1 урона всегда. При HP<50% +2 урона и +8% двойной атаки."
+    },
+
+    // ========== ПЛЕЧИ ==========
+    // Вариант А (урон/скорость)
+    {
+      "id": "berserker_shoulders_a_common",
+      "name": "Железные наплечники",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "attack_speed": 1,
+      "description": "+1% скорости атаки."
+    },
+    {
+      "id": "berserker_shoulders_a_uncommon",
+      "name": "Стальные наплечники",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "attack_speed": 2,
+      "description": "+2% скорости атаки."
+    },
+    {
+      "id": "berserker_shoulders_a_rare",
+      "name": "Наплечники зверя",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "attack_speed": 3,
+      "description": "+3% скорости атаки."
+    },
+    {
+      "id": "berserker_shoulders_a_epic",
+      "name": "Наплечники дракона",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "attack_speed": 4,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+4% скорости атаки, +5% огня."
+    },
+    {
+      "id": "berserker_shoulders_a_legendary",
+      "name": "Легендарные наплечники зверя",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "attack_speed": 5,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "+5% скорости атаки, +10% огня."
+    },
+
+    // Вариант Б (здоровье/вампиризм)
+    {
+      "id": "berserker_shoulders_b_common",
+      "name": "Наплечники здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "berserker_shoulders_b_uncommon",
+      "name": "Наплечники здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "berserker_shoulders_b_rare",
+      "name": "Наплечники здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "vampirism_chance", "value": 2 }
+      ],
+      "description": "+2 здоровья, +2% вампиризма."
+    },
+    {
+      "id": "berserker_shoulders_b_epic",
+      "name": "Наплечники здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "health_bonus": 3,
+      "effects": [
+        { "type": "vampirism_chance", "value": 3 }
+      ],
+      "resistances": [
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "+3 здоровья, +3% вампиризма, +5% кровотечения."
+    },
+    {
+      "id": "berserker_shoulders_b_legendary",
+      "name": "Наплечники здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "health_bonus": 4,
+      "effects": [
+        { "type": "vampirism_chance", "value": 4 }
+      ],
+      "resistances": [
+        { "element": "bleed", "value": 10 }
+      ],
+      "description": "+4 здоровья, +4% вампиризма, +10% кровотечения."
+    },
+
+    // Вариант В (ярость/усиление при низком HP)
+    {
+      "id": "berserker_shoulders_c_common",
+      "name": "Наплечники ярости",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 1 }
+      ],
+      "description": "При HP<50% +1 урона."
+    },
+    {
+      "id": "berserker_shoulders_c_uncommon",
+      "name": "Наплечники ярости II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 2 }
+      ],
+      "description": "При HP<50% +2 урона."
+    },
+    {
+      "id": "berserker_shoulders_c_rare",
+      "name": "Наплечники ярости III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 3 }
+      ],
+      "description": "При HP<50% +3 урона."
+    },
+    {
+      "id": "berserker_shoulders_c_epic",
+      "name": "Наплечники ярости IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "damage_bonus": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 1 }
+      ],
+      "description": "+1 урона всегда. При HP<50% дополнительно +1 урона."
+    },
+    {
+      "id": "berserker_shoulders_c_legendary",
+      "name": "Легендарные наплечники ярости",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "damage_bonus": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 2 },
+        { "type": "when_hp_below", "threshold": 50, "effect": "attack_speed_bonus", "value": 5 }
+      ],
+      "description": "+1 урона всегда. При HP<50% +2 урона и +5% скорости атаки."
+    },
+
+    // ========== ДОСПЕХ ==========
+    // Вариант А (урон/скорость)
+    {
+      "id": "berserker_chest_a_common",
+      "name": "Железный доспех",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "double_attack_chance": 2,
+      "description": "+2% двойной атаки."
+    },
+    {
+      "id": "berserker_chest_a_uncommon",
+      "name": "Стальной доспех",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "double_attack_chance": 3,
+      "description": "+3% двойной атаки."
+    },
+    {
+      "id": "berserker_chest_a_rare",
+      "name": "Доспех зверя",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "double_attack_chance": 4,
+      "description": "+4% двойной атаки."
+    },
+    {
+      "id": "berserker_chest_a_epic",
+      "name": "Доспех дракона",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "double_attack_chance": 5,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+5% двойной атаки, +5% огня."
+    },
+    {
+      "id": "berserker_chest_a_legendary",
+      "name": "Легендарный доспех зверя",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["berserker"],
+      "armor": 4,
+      "double_attack_chance": 7,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "+7% двойной атаки, +10% огня."
+    },
+
+    // Вариант Б (здоровье/вампиризм)
+    {
+      "id": "berserker_chest_b_common",
+      "name": "Доспех здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "berserker_chest_b_uncommon",
+      "name": "Доспех здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "berserker_chest_b_rare",
+      "name": "Доспех здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "vampirism_chance", "value": 2 }
+      ],
+      "description": "+2 здоровья, +2% вампиризма."
+    },
+    {
+      "id": "berserker_chest_b_epic",
+      "name": "Доспех здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "health_bonus": 3,
+      "effects": [
+        { "type": "vampirism_chance", "value": 3 }
+      ],
+      "resistances": [
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "+3 здоровья, +3% вампиризма, +5% кровотечения."
+    },
+    {
+      "id": "berserker_chest_b_legendary",
+      "name": "Доспех здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "health_bonus": 4,
+      "effects": [
+        { "type": "vampirism_chance", "value": 4 }
+      ],
+      "resistances": [
+        { "element": "bleed", "value": 10 }
+      ],
+      "description": "+4 здоровья, +4% вампиризма, +10% кровотечения."
+    },
+
+    // Вариант В (ярость/усиление при низком HP)
+    {
+      "id": "berserker_chest_c_common",
+      "name": "Доспех ярости",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 2 }
+      ],
+      "description": "При HP<50% +2% двойной атаки."
+    },
+    {
+      "id": "berserker_chest_c_uncommon",
+      "name": "Доспех ярости II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 4 }
+      ],
+      "description": "При HP<50% +4% двойной атаки."
+    },
+    {
+      "id": "berserker_chest_c_rare",
+      "name": "Доспех ярости III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 6 }
+      ],
+      "description": "При HP<50% +6% двойной атаки."
+    },
+    {
+      "id": "berserker_chest_c_epic",
+      "name": "Доспех ярости IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "damage_bonus": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 8 }
+      ],
+      "description": "+1 урона всегда. При HP<50% +8% двойной атаки."
+    },
+    {
+      "id": "berserker_chest_c_legendary",
+      "name": "Легендарный доспех ярости",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["berserker"],
+      "armor": 4,
+      "damage_bonus": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 2 },
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 10 }
+      ],
+      "description": "+1 урона всегда. При HP<50% +2 урона и +10% двойной атаки."
+    },
+
+    // ========== НАРУЧИ ==========
+    // Вариант А (урон/скорость)
+    {
+      "id": "berserker_bracers_a_common",
+      "name": "Железные наручи",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "attack_speed": 1,
+      "description": "+1% скорости атаки."
+    },
+    {
+      "id": "berserker_bracers_a_uncommon",
+      "name": "Стальные наручи",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "attack_speed": 2,
+      "description": "+2% скорости атаки."
+    },
+    {
+      "id": "berserker_bracers_a_rare",
+      "name": "Наручи зверя",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "attack_speed": 3,
+      "description": "+3% скорости атаки."
+    },
+    {
+      "id": "berserker_bracers_a_epic",
+      "name": "Наручи дракона",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "attack_speed": 4,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+4% скорости атаки, +5% огня."
+    },
+    {
+      "id": "berserker_bracers_a_legendary",
+      "name": "Легендарные наручи зверя",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "attack_speed": 5,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "+5% скорости атаки, +10% огня."
+    },
+
+    // Вариант Б (здоровье/вампиризм)
+    {
+      "id": "berserker_bracers_b_common",
+      "name": "Наручи здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "berserker_bracers_b_uncommon",
+      "name": "Наручи здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "berserker_bracers_b_rare",
+      "name": "Наручи здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "vampirism_chance", "value": 2 }
+      ],
+      "description": "+2 здоровья, +2% вампиризма."
+    },
+    {
+      "id": "berserker_bracers_b_epic",
+      "name": "Наручи здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "health_bonus": 3,
+      "effects": [
+        { "type": "vampirism_chance", "value": 3 }
+      ],
+      "resistances": [
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "+3 здоровья, +3% вампиризма, +5% кровотечения."
+    },
+    {
+      "id": "berserker_bracers_b_legendary",
+      "name": "Наручи здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "health_bonus": 4,
+      "effects": [
+        { "type": "vampirism_chance", "value": 4 }
+      ],
+      "resistances": [
+        { "element": "bleed", "value": 10 }
+      ],
+      "description": "+4 здоровья, +4% вампиризма, +10% кровотечения."
+    },
+
+    // Вариант В (ярость/усиление при низком HP)
+    {
+      "id": "berserker_bracers_c_common",
+      "name": "Наручи ярости",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 1 }
+      ],
+      "description": "При HP<50% +1 урона."
+    },
+    {
+      "id": "berserker_bracers_c_uncommon",
+      "name": "Наручи ярости II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 2 }
+      ],
+      "description": "При HP<50% +2 урона."
+    },
+    {
+      "id": "berserker_bracers_c_rare",
+      "name": "Наручи ярости III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 3 }
+      ],
+      "description": "При HP<50% +3 урона."
+    },
+    {
+      "id": "berserker_bracers_c_epic",
+      "name": "Наручи ярости IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "damage_bonus": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 1 }
+      ],
+      "description": "+1 урона всегда. При HP<50% дополнительно +1 урона."
+    },
+    {
+      "id": "berserker_bracers_c_legendary",
+      "name": "Легендарные наручи ярости",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "damage_bonus": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 2 },
+        { "type": "when_hp_below", "threshold": 50, "effect": "attack_speed_bonus", "value": 5 }
+      ],
+      "description": "+1 урона всегда. При HP<50% +2 урона и +5% скорости атаки."
+    },
+
+    // ========== ПЕРЧАТКИ ==========
+    // Вариант А (скорость атаки/двойная атака)
+    {
+      "id": "berserker_gloves_a_common",
+      "name": "Кожаные перчатки",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "double_attack_chance": 2,
+      "attack_speed": 1,
+      "description": "+2% двойной атаки, +1% скорости атаки."
+    },
+    {
+      "id": "berserker_gloves_a_uncommon",
+      "name": "Железные перчатки",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "double_attack_chance": 3,
+      "attack_speed": 2,
+      "description": "+3% двойной атаки, +2% скорости атаки."
+    },
+    {
+      "id": "berserker_gloves_a_rare",
+      "name": "Перчатки зверя",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "double_attack_chance": 4,
+      "attack_speed": 3,
+      "description": "+4% двойной атаки, +3% скорости атаки."
+    },
+    {
+      "id": "berserker_gloves_a_epic",
+      "name": "Перчатки дракона",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "double_attack_chance": 5,
+      "attack_speed": 4,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+5% двойной атаки, +4% скорости атаки, +5% огня."
+    },
+    {
+      "id": "berserker_gloves_a_legendary",
+      "name": "Легендарные перчатки зверя",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "double_attack_chance": 7,
+      "attack_speed": 5,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "+7% двойной атаки, +5% скорости атаки, +10% огня."
+    },
+
+    // Вариант Б (здоровье/вампиризм)
+    {
+      "id": "berserker_gloves_b_common",
+      "name": "Перчатки здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "berserker_gloves_b_uncommon",
+      "name": "Перчатки здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "berserker_gloves_b_rare",
+      "name": "Перчатки здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "vampirism_chance", "value": 2 }
+      ],
+      "double_attack_chance": 2,
+      "description": "+2 здоровья, +2% вампиризма, +2% двойной атаки."
+    },
+    {
+      "id": "berserker_gloves_b_epic",
+      "name": "Перчатки здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 3,
+      "effects": [
+        { "type": "vampirism_chance", "value": 3 }
+      ],
+      "double_attack_chance": 3,
+      "resistances": [
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "+3 здоровья, +3% вампиризма, +3% двойной атаки, +5% кровотечения."
+    },
+    {
+      "id": "berserker_gloves_b_legendary",
+      "name": "Перчатки здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 4,
+      "effects": [
+        { "type": "vampirism_chance", "value": 4 }
+      ],
+      "double_attack_chance": 4,
+      "resistances": [
+        { "element": "bleed", "value": 10 }
+      ],
+      "description": "+4 здоровья, +4% вампиризма, +4% двойной атаки, +10% кровотечения."
+    },
+
+    // Вариант В (ярость/усиление при низком HP)
+    {
+      "id": "berserker_gloves_c_common",
+      "name": "Перчатки ярости",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 1 }
+      ],
+      "description": "При HP<50% +1 урона."
+    },
+    {
+      "id": "berserker_gloves_c_uncommon",
+      "name": "Перчатки ярости II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 1 },
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 2 }
+      ],
+      "description": "При HP<50% +1 урона и +2% двойной атаки."
+    },
+    {
+      "id": "berserker_gloves_c_rare",
+      "name": "Перчатки ярости III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 2 }
+      ],
+      "description": "При HP<50% +2 урона."
+    },
+    {
+      "id": "berserker_gloves_c_epic",
+      "name": "Перчатки ярости IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "damage_bonus": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 5 }
+      ],
+      "description": "+1 урона всегда. При HP<50% +5% двойной атаки."
+    },
+    {
+      "id": "berserker_gloves_c_legendary",
+      "name": "Легендарные перчатки ярости",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "damage_bonus": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 3 },
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 8 }
+      ],
+      "description": "+1 урона всегда. При HP<50% +3 урона и +8% двойной атаки."
+    },
+
+    // ========== ПОЯС ==========
+    // Вариант А (урон)
+    {
+      "id": "berserker_belt_a_common",
+      "name": "Кожаный пояс",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "double_attack_chance": 1,
+      "description": "+1% двойной атаки."
+    },
+    {
+      "id": "berserker_belt_a_uncommon",
+      "name": "Железный пояс",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "double_attack_chance": 2,
+      "description": "+2% двойной атаки."
+    },
+    {
+      "id": "berserker_belt_a_rare",
+      "name": "Пояс зверя",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "double_attack_chance": 3,
+      "description": "+3% двойной атаки."
+    },
+    {
+      "id": "berserker_belt_a_epic",
+      "name": "Пояс дракона",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "double_attack_chance": 4,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+4% двойной атаки, +5% огня."
+    },
+    {
+      "id": "berserker_belt_a_legendary",
+      "name": "Легендарный пояс зверя",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "double_attack_chance": 5,
+      "potion_slots": 1,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "+5% двойной атаки, +1 слот зелий, +10% огня."
+    },
+
+    // Вариант Б (здоровье/вампиризм)
+    {
+      "id": "berserker_belt_b_common",
+      "name": "Пояс здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "berserker_belt_b_uncommon",
+      "name": "Пояс здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "berserker_belt_b_rare",
+      "name": "Пояс здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 2,
+      "potion_slots": 1,
+      "effects": [
+        { "type": "vampirism_chance", "value": 2 }
+      ],
+      "description": "+2 здоровья, +1 слот, +2% вампиризма."
+    },
+    {
+      "id": "berserker_belt_b_epic",
+      "name": "Пояс здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 3,
+      "potion_slots": 1,
+      "effects": [
+        { "type": "vampirism_chance", "value": 3 }
+      ],
+      "resistances": [
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "+3 здоровья, +1 слот, +3% вампиризма, +5% кровотечения."
+    },
+    {
+      "id": "berserker_belt_b_legendary",
+      "name": "Пояс здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 4,
+      "potion_slots": 2,
+      "effects": [
+        { "type": "vampirism_chance", "value": 4 }
+      ],
+      "resistances": [
+        { "element": "bleed", "value": 10 }
+      ],
+      "description": "+4 здоровья, +2 слота, +4% вампиризма, +10% кровотечения."
+    },
+
+    // Вариант В (ярость/усиление при низком HP)
+    {
+      "id": "berserker_belt_c_common",
+      "name": "Пояс ярости",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 1 }
+      ],
+      "description": "При HP<50% +1 урона."
+    },
+    {
+      "id": "berserker_belt_c_uncommon",
+      "name": "Пояс ярости II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 2 }
+      ],
+      "description": "При HP<50% +2 урона."
+    },
+    {
+      "id": "berserker_belt_c_rare",
+      "name": "Пояс ярости III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "potion_slots": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 2 },
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 2 }
+      ],
+      "description": "+1 слот. При HP<50% +2 урона и +2% двойной атаки."
+    },
+    {
+      "id": "berserker_belt_c_epic",
+      "name": "Пояс ярости IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "damage_bonus": 1,
+      "potion_slots": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 1 },
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 3 }
+      ],
+      "description": "+1 урона всегда, +1 слот. При HP<50% дополнительно +1 урона и +3% двойной атаки."
+    },
+    {
+      "id": "berserker_belt_c_legendary",
+      "name": "Легендарный пояс ярости",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "damage_bonus": 1,
+      "potion_slots": 2,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 2 },
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 6 }
+      ],
+      "description": "+1 урона всегда, +2 слота. При HP<50% +2 урона и +6% двойной атаки."
+    },
+
+    // ========== ШТАНЫ ==========
+    // Вариант А (урон/скорость)
+    {
+      "id": "berserker_legs_a_common",
+      "name": "Железные штаны",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "double_attack_chance": 1,
+      "description": "+1% двойной атаки."
+    },
+    {
+      "id": "berserker_legs_a_uncommon",
+      "name": "Стальные штаны",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "double_attack_chance": 2,
+      "description": "+2% двойной атаки."
+    },
+    {
+      "id": "berserker_legs_a_rare",
+      "name": "Штаны зверя",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "double_attack_chance": 3,
+      "description": "+3% двойной атаки."
+    },
+    {
+      "id": "berserker_legs_a_epic",
+      "name": "Штаны дракона",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "double_attack_chance": 4,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "+4% двойной атаки, +5% огня."
+    },
+    {
+      "id": "berserker_legs_a_legendary",
+      "name": "Легендарные штаны зверя",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["berserker"],
+      "armor": 4,
+      "double_attack_chance": 5,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "+5% двойной атаки, +10% огня."
+    },
+
+    // Вариант Б (здоровье/вампиризм)
+    {
+      "id": "berserker_legs_b_common",
+      "name": "Штаны здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "berserker_legs_b_uncommon",
+      "name": "Штаны здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "berserker_legs_b_rare",
+      "name": "Штаны здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "vampirism_chance", "value": 2 }
+      ],
+      "description": "+2 здоровья, +2% вампиризма."
+    },
+    {
+      "id": "berserker_legs_b_epic",
+      "name": "Штаны здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "health_bonus": 3,
+      "effects": [
+        { "type": "vampirism_chance", "value": 3 }
+      ],
+      "resistances": [
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "+3 здоровья, +3% вампиризма, +5% кровотечения."
+    },
+    {
+      "id": "berserker_legs_b_legendary",
+      "name": "Штаны здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "health_bonus": 4,
+      "effects": [
+        { "type": "vampirism_chance", "value": 4 }
+      ],
+      "resistances": [
+        { "element": "bleed", "value": 10 }
+      ],
+      "description": "+4 здоровья, +4% вампиризма, +10% кровотечения."
+    },
+
+    // Вариант В (ярость/усиление при низком HP)
+    {
+      "id": "berserker_legs_c_common",
+      "name": "Штаны ярости",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 2 }
+      ],
+      "description": "При HP<50% +2% двойной атаки."
+    },
+    {
+      "id": "berserker_legs_c_uncommon",
+      "name": "Штаны ярости II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 3 }
+      ],
+      "description": "При HP<50% +3% двойной атаки."
+    },
+    {
+      "id": "berserker_legs_c_rare",
+      "name": "Штаны ярости III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 5 }
+      ],
+      "description": "При HP<50% +5% двойной атаки."
+    },
+    {
+      "id": "berserker_legs_c_epic",
+      "name": "Штаны ярости IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "damage_bonus": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 7 }
+      ],
+      "description": "+1 урона всегда. При HP<50% +7% двойной атаки."
+    },
+    {
+      "id": "berserker_legs_c_legendary",
+      "name": "Легендарные штаны ярости",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["berserker"],
+      "armor": 4,
+      "damage_bonus": 1,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 2 },
+        { "type": "when_hp_below", "threshold": 50, "effect": "double_attack_chance_bonus", "value": 8 }
+      ],
+      "description": "+1 урона всегда. При HP<50% +2 урона и +8% двойной атаки."
+    },
+
+    // ========== САПОГИ ==========
+    // Вариант А (скорость передвижения)
+    {
+      "id": "berserker_boots_a_common",
+      "name": "Железные сапоги",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "description": "1 броня."
+    },
+    {
+      "id": "berserker_boots_a_uncommon",
+      "name": "Стальные сапоги",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "description": "1 броня."
+    },
+    {
+      "id": "berserker_boots_a_rare",
+      "name": "Сапоги зверя",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "description": "2 брони."
+    },
+    {
+      "id": "berserker_boots_a_epic",
+      "name": "Сапоги дракона",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "2 брони, +5% огня."
+    },
+    {
+      "id": "berserker_boots_a_legendary",
+      "name": "Легендарные сапоги зверя",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "3 брони, +10% огня."
+    },
+
+    // Вариант Б (здоровье/скорость передвижения)
+    {
+      "id": "berserker_boots_b_common",
+      "name": "Сапоги здоровья",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 2,
+      "description": "+2 здоровья."
+    },
+    {
+      "id": "berserker_boots_b_uncommon",
+      "name": "Сапоги здоровья II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["berserker"],
+      "armor": 0,
+      "health_bonus": 3,
+      "description": "+3 здоровья."
+    },
+    {
+      "id": "berserker_boots_b_rare",
+      "name": "Сапоги здоровья III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "health_bonus": 2,
+      "speed_bonus": 5,
+      "description": "+2 здоровья, +5% скорости передвижения."
+    },
+    {
+      "id": "berserker_boots_b_epic",
+      "name": "Сапоги здоровья IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "health_bonus": 3,
+      "speed_bonus": 5,
+      "resistances": [
+        { "element": "bleed", "value": 5 }
+      ],
+      "description": "+3 здоровья, +5% скорости, +5% кровотечения."
+    },
+    {
+      "id": "berserker_boots_b_legendary",
+      "name": "Сапоги здоровья V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "health_bonus": 4,
+      "speed_bonus": 10,
+      "resistances": [
+        { "element": "bleed", "value": 10 }
+      ],
+      "description": "+4 здоровья, +10% скорости, +10% кровотечения."
+    },
+
+    // Вариант В (скорость передвижения/уклонение)
+    {
+      "id": "berserker_boots_c_common",
+      "name": "Сапоги ветра",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "speed_bonus": 5,
+      "description": "+5% скорости передвижения."
+    },
+    {
+      "id": "berserker_boots_c_uncommon",
+      "name": "Сапоги ветра II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["berserker"],
+      "armor": 1,
+      "speed_bonus": 5,
+      "dodge_chance": 2,
+      "description": "+5% скорости, +2% уклонения."
+    },
+    {
+      "id": "berserker_boots_c_rare",
+      "name": "Сапоги ветра III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "speed_bonus": 5,
+      "dodge_chance": 3,
+      "description": "+5% скорости, +3% уклонения."
+    },
+    {
+      "id": "berserker_boots_c_epic",
+      "name": "Сапоги ветра IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["berserker"],
+      "armor": 2,
+      "speed_bonus": 5,
+      "dodge_chance": 5,
+      "description": "+5% скорости, +5% уклонения."
+    },
+    {
+      "id": "berserker_boots_c_legendary",
+      "name": "Легендарные сапоги ветра",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["berserker"],
+      "armor": 3,
+      "speed_bonus": 10,
+      "dodge_chance": 5,
+      "immune": ["spikes"],
+      "description": "+10% скорости, +5% уклонения, иммунитет к шипам."
+    }
+  ]
+}

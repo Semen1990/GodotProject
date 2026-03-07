@@ -21,7 +21,6 @@ offset_left = -40.0
 offset_top = -50.0
 offset_right = 8.0
 offset_bottom = -27.0
-text = "Зелье"
 horizontal_alignment = 1
 
 [node name="HintLabel" type="Label" parent="." unique_id=1592193791]
@@ -31,4 +30,4 @@ offset_top = -70.0
 offset_right = 41.0
 offset_bottom = -47.0
 theme_override_font_sizes/font_size = 14
-text = "Нажми F"
+text = "Press F"

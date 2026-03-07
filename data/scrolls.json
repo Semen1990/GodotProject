@@ -1,0 +1,258 @@
+{
+  "scrolls": [
+    // ========== АТАКУЮЩИЕ ==========
+    {
+      "id": "scroll_fireball_common",
+      "name": "Свиток фаербола",
+      "rarity": "common",
+      "type": "scroll",
+      "effect": {
+        "type": "damage_single",
+        "power": 3,
+        "description": "Наносит 3 урона выбранному врагу."
+      }
+    },
+    {
+      "id": "scroll_ice_arrow_common",
+      "name": "Свиток ледяной стрелы",
+      "rarity": "common",
+      "type": "scroll",
+      "effect": {
+        "type": "damage_and_slow",
+        "power": 2,
+        "slow": 30,
+        "duration": 3,
+        "description": "Наносит 2 урона и замедляет врага на 30% на 3 сек."
+      }
+    },
+    {
+      "id": "scroll_spear_uncommon",
+      "name": "Свиток копья",
+      "rarity": "uncommon",
+      "type": "scroll",
+      "effect": {
+        "type": "damage_ignore_armor",
+        "power": 4,
+        "ignore_armor": 2,
+        "description": "Наносит 4 урона, игнорирует 2 брони."
+      }
+    },
+    {
+      "id": "scroll_lightning_rare",
+      "name": "Свиток молнии",
+      "rarity": "rare",
+      "type": "scroll",
+      "effect": {
+        "type": "damage_stun",
+        "power": 5,
+        "stun_chance": 25,
+        "stun_duration": 1,
+        "description": "Наносит 5 урона, 25% шанс оглушить на 1 сек."
+      }
+    },
+    {
+      "id": "scroll_poison_cloud_epic",
+      "name": "Свиток ядовитого облака",
+      "rarity": "epic",
+      "type": "scroll",
+      "effect": {
+        "type": "damage_and_poison",
+        "power": 2,
+        "poison_power": 1,
+        "poison_duration": 4,
+        "description": "Наносит 2 урона сразу и отравляет врага (1 урон/сек, 4 сек)."
+      }
+    },
+
+    // ========== ЗАЩИТНЫЕ ==========
+    {
+      "id": "scroll_shield_common",
+      "name": "Свиток щита",
+      "rarity": "common",
+      "type": "scroll",
+      "effect": {
+        "type": "shield",
+        "power": 3,
+        "duration": "room",
+        "description": "Даёт щит, поглощающий 3 урона, на комнату."
+      }
+    },
+    {
+      "id": "scroll_magic_resist_uncommon",
+      "name": "Свиток сопротивления магии",
+      "rarity": "uncommon",
+      "type": "scroll",
+      "effect": {
+        "type": "buff_magic_resist",
+        "value": 10,
+        "duration": "room",
+        "description": "Увеличивает сопротивление магии на 10% на комнату."
+      }
+    },
+    {
+      "id": "scroll_invisibility_rare",
+      "name": "Свиток невидимости",
+      "rarity": "rare",
+      "type": "scroll",
+      "effect": {
+        "type": "invisibility",
+        "duration": "room",
+        "description": "Делает игрока невидимым для врагов на комнату (атака снимает)."
+      }
+    },
+    {
+      "id": "scroll_stoneskin_epic",
+      "name": "Свиток каменной кожи",
+      "rarity": "epic",
+      "type": "scroll",
+      "effect": {
+        "type": "buff_armor",
+        "power": 3,
+        "duration": "room",
+        "description": "Даёт +3 брони на комнату."
+      }
+    },
+    {
+      "id": "scroll_reflection_legendary",
+      "name": "Свиток отражения",
+      "rarity": "legendary",
+      "type": "scroll",
+      "effect": {
+        "type": "reflect",
+        "chance": 30,
+        "duration": "room",
+        "description": "30% шанс отразить заклинание обратно во врага на комнату."
+      }
+    },
+
+    // ========== ВОССТАНАВЛИВАЮЩИЕ ==========
+    {
+      "id": "scroll_minor_heal_common",
+      "name": "Свиток малого исцеления",
+      "rarity": "common",
+      "type": "scroll",
+      "effect": {
+        "type": "restore_health",
+        "power": 2,
+        "description": "Восстанавливает 2 HP."
+      }
+    },
+    {
+      "id": "scroll_heal_uncommon",
+      "name": "Свиток исцеления",
+      "rarity": "uncommon",
+      "type": "scroll",
+      "effect": {
+        "type": "restore_health",
+        "power": 4,
+        "description": "Восстанавливает 4 HP."
+      }
+    },
+    {
+      "id": "scroll_mana_rare",
+      "name": "Свиток восстановления маны",
+      "rarity": "rare",
+      "type": "scroll",
+      "effect": {
+        "type": "restore_mana",
+        "power": 3,
+        "description": "Восстанавливает 3 MP."
+      }
+    },
+    {
+      "id": "scroll_greater_heal_epic",
+      "name": "Свиток большого исцеления",
+      "rarity": "epic",
+      "type": "scroll",
+      "effect": {
+        "type": "restore_health",
+        "power": 6,
+        "description": "Восстанавливает 6 HP."
+      }
+    },
+    {
+      "id": "scroll_full_heal_legendary",
+      "name": "Свиток полного исцеления",
+      "rarity": "legendary",
+      "type": "scroll",
+      "effect": {
+        "type": "restore_health_and_cure",
+        "power": 8,
+        "description": "Восстанавливает 8 HP и снимает все отрицательные эффекты."
+      }
+    },
+
+    // ========== УТИЛИТНЫЕ ==========
+    {
+      "id": "scroll_flame_weapon_common",
+      "name": "Свиток огненного клинка",
+      "rarity": "common",
+      "type": "scroll",
+      "effect": {
+        "type": "buff_weapon",
+        "element": "fire",
+        "damage": 1,
+        "ignite_chance": 5,
+        "ignite_power": 1,
+        "ignite_duration": 3,
+        "duration": "room",
+        "description": "На комнату оружие получает +1 огненного урона и 5% шанс поджечь (1 урон/сек, 3 сек)."
+      }
+    },
+    {
+      "id": "scroll_ice_weapon_uncommon",
+      "name": "Свиток ледяного клинка",
+      "rarity": "uncommon",
+      "type": "scroll",
+      "effect": {
+        "type": "buff_weapon",
+        "element": "cold",
+        "damage": 1,
+        "slow_chance": 5,
+        "slow": 20,
+        "slow_duration": 3,
+        "duration": "room",
+        "description": "На комнату оружие получает +1 холода и 5% шанс заморозить (замедление 20% на 3 сек)."
+      }
+    },
+    {
+      "id": "scroll_slow_rare",
+      "name": "Свиток замедления",
+      "rarity": "rare",
+      "type": "scroll",
+      "effect": {
+        "type": "slow_single",
+        "power": 50,
+        "duration": 5,
+        "description": "Замедляет одного врага на 50% на 5 сек."
+      }
+    },
+    {
+      "id": "scroll_fear_epic",
+      "name": "Свиток страха",
+      "rarity": "epic",
+      "type": "scroll",
+      "effect": {
+        "type": "fear_single",
+        "duration": 3,
+        "description": "Один враг в страхе убегает на 3 сек."
+      }
+    },
+    {
+      "id": "scroll_blessing_legendary",
+      "name": "Свиток благословения",
+      "rarity": "legendary",
+      "type": "scroll",
+      "effect": {
+        "type": "blessing",
+        "damage": 1,
+        "armor": 1,
+        "health": 1,
+        "mana": 1,
+        "speed": 1,
+        "duration": "room",
+        "description": "На комнату все характеристики увеличены на 1 (урон, броня, здоровье, мана, скорость)."
+      }
+    }
+  ]
+}

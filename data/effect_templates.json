@@ -1,0 +1,151 @@
+{
+  "effect_templates": [
+    {
+      "id": "restore_health",
+      "type": "restore_health",
+      "description": "Восстанавливает {power} HP.",
+      "duration": null,
+      "value_type": "flat"
+    },
+    {
+      "id": "restore_mana",
+      "type": "restore_mana",
+      "description": "Восстанавливает {power} MP.",
+      "duration": null,
+      "value_type": "flat"
+    },
+    {
+      "id": "buff_damage",
+      "type": "buff_damage",
+      "description": "Увеличивает урон на {power} до конца комнаты.",
+      "duration": "room",
+      "value_type": "flat"
+    },
+    {
+      "id": "buff_armor",
+      "type": "buff_armor",
+      "description": "Увеличивает броню на {power} до конца комнаты.",
+      "duration": "room",
+      "value_type": "flat"
+    },
+    {
+      "id": "debuff_armor",
+      "type": "debuff_armor",
+      "description": "Уменьшает броню на {power} до конца комнаты.",
+      "duration": "room",
+      "value_type": "flat"
+    },
+    {
+      "id": "debuff_speed",
+      "type": "debuff_speed",
+      "description": "Уменьшает скорость передвижения и высоту прыжка на {power}% до конца комнаты.",
+      "duration": "room",
+      "value_type": "percent"
+    },
+    {
+      "id": "life_steal_on_hit",
+      "type": "life_steal_on_hit",
+      "description": "Каждая {condition} атака восстанавливает {power} HP.",
+      "duration": "room",
+      "value_type": "special"
+    },
+    {
+      "id": "double_attack_chance",
+      "type": "double_attack_chance",
+      "description": "{power}% шанс совершить двойную атаку.",
+      "duration": "room",
+      "value_type": "percent"
+    },
+    {
+      "id": "shield",
+      "type": "shield",
+      "description": "Создаёт щит, поглощающий {power} HP урона.",
+      "duration": "room",
+      "value_type": "flat"
+    },
+    {
+      "id": "poison_on_hit",
+      "type": "poison_on_hit",
+      "description": "Атаки отравляют врага, нанося {power} урона каждую секунду в течение {duration} сек.",
+      "duration": 5,
+      "value_type": "flat"
+    },
+    {
+      "id": "luck_boost",
+      "type": "luck_boost",
+      "description": "Увеличивает шанс найти предметы лучшего качества на {power}%.",
+      "duration": "room",
+      "value_type": "percent"
+    },
+    {
+      "id": "resist_element",
+      "type": "resist_element",
+      "description": "{chance}% шанс полностью избежать эффектов {element}.",
+      "duration": "room",
+      "value_type": "special"
+    },
+    {
+      "id": "cure_madness",
+      "type": "cure_madness",
+      "description": "Снимает {power} стаков безумия.",
+      "duration": null,
+      "value_type": "flat"
+    },
+    {
+      "id": "bonus_on_resist_fire",
+      "type": "bonus_on_resist",
+      "description": "При избегании огня следующая способность не тратит кулдаун.",
+      "duration": "special",
+      "value_type": "special"
+    },
+    {
+      "id": "bonus_on_resist_poison",
+      "type": "bonus_on_resist",
+      "description": "При избегании яда получаете +30% скорости на 5 сек.",
+      "duration": 5,
+      "value_type": "special"
+    },
+    {
+      "id": "bonus_on_resist_bleed",
+      "type": "bonus_on_resist",
+      "description": "При избегании кровотечения восстанавливаете 2 HP.",
+      "duration": null,
+      "value_type": "flat"
+    },
+    {
+      "id": "bonus_on_resist_cold",
+      "type": "bonus_on_resist",
+      "description": "При избегании холода замораживаете атакующего на 2 сек.",
+      "duration": 2,
+      "value_type": "special"
+    },
+    {
+      "id": "bonus_on_resist_madness",
+      "type": "bonus_on_resist",
+      "description": "При избегании безумия снимает 1 стак безумия.",
+      "duration": null,
+      "value_type": "flat"
+    },
+    {
+      "id": "restore_mana_full",
+      "type": "restore_mana_full",
+      "description": "Полностью восстанавливает ману.",
+      "duration": null,
+      "value_type": "special"
+    },
+    {
+      "id": "increase_max_mana",
+      "type": "increase_max_mana",
+      "description": "Увеличивает максимальный запас маны на {power} до конца комнаты.",
+      "duration": "room",
+      "value_type": "flat"
+    },
+    {
+      "id": "guaranteed_better_loot",
+      "type": "guaranteed_better_loot",
+      "description": "Один из выпавших предметов будет на один уровень редкости выше.",
+      "duration": "room",
+      "value_type": "special"
+    }
+  ]
+}

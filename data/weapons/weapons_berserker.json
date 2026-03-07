@@ -1,0 +1,508 @@
+{
+  "weapons": [
+    // ========== ОДНОРУЧНЫЕ ТОПОРЫ ==========
+    // Линейка "Берсерк" (двойная атака)
+    {
+      "id": "berserker_axe_berserk_common",
+      "name": "Топор берсерка",
+      "rarity": "common",
+      "type": "weapon",
+      "subtype": "axe",
+      "slot": "main_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 2,
+      "damage_max": 4,
+      "speed": 1.0,
+      "double_attack_chance": 5,
+      "description": "Обычный топор берсерка: +5% двойной атаки."
+    },
+    {
+      "id": "berserker_axe_berserk_uncommon",
+      "name": "Боевой топор",
+      "rarity": "uncommon",
+      "type": "weapon",
+      "subtype": "axe",
+      "slot": "main_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 2,
+      "damage_max": 5,
+      "speed": 1.0,
+      "double_attack_chance": 7,
+      "description": "Боевой топор: +7% двойной атаки."
+    },
+    {
+      "id": "berserker_axe_berserk_rare",
+      "name": "Секира берсерка",
+      "rarity": "rare",
+      "type": "weapon",
+      "subtype": "axe",
+      "slot": "main_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 3,
+      "damage_max": 5,
+      "speed": 0.9,
+      "double_attack_chance": 10,
+      "description": "Секира: +10% двойной атаки."
+    },
+    {
+      "id": "berserker_axe_berserk_epic",
+      "name": "Топор ярости",
+      "rarity": "epic",
+      "type": "weapon",
+      "subtype": "axe",
+      "slot": "main_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 3,
+      "damage_max": 6,
+      "speed": 0.9,
+      "double_attack_chance": 12,
+      "description": "Топор ярости: +12% двойной атаки."
+    },
+    {
+      "id": "berserker_axe_berserk_legendary",
+      "name": "Легендарный топор берсерка",
+      "rarity": "legendary",
+      "type": "weapon",
+      "subtype": "axe",
+      "slot": "main_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 4,
+      "damage_max": 7,
+      "speed": 0.8,
+      "double_attack_chance": 15,
+      "effects": [
+        {
+          "type": "when_hp_below",
+          "threshold": 30,
+          "effect": "double_attack_chance_bonus",
+          "value": 10,
+          "description": "При здоровье ниже 30% дополнительно +10% двойной атаки."
+        }
+      ],
+      "description": "Легендарный топор: +15% двойной атаки, при низком здоровье +10%."
+    },
+
+    // Линейка "Кровотечение"
+    {
+      "id": "berserker_axe_bleed_common",
+      "name": "Топор с шипами",
+      "rarity": "common",
+      "type": "weapon",
+      "subtype": "axe",
+      "slot": "main_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 2,
+      "damage_max": 4,
+      "speed": 1.0,
+      "effects": [
+        { "type": "on_hit", "effect": "bleed", "chance": 10, "power": 1, "duration": 3 }
+      ],
+      "description": "10% шанс наложить кровотечение (1 урон/сек, 3 сек)."
+    },
+    {
+      "id": "berserker_axe_bleed_uncommon",
+      "name": "Кровавый топор",
+      "rarity": "uncommon",
+      "type": "weapon",
+      "subtype": "axe",
+      "slot": "main_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 2,
+      "damage_max": 5,
+      "speed": 1.0,
+      "effects": [
+        { "type": "on_hit", "effect": "bleed", "chance": 12, "power": 1, "duration": 3 }
+      ],
+      "description": "12% шанс кровотечения."
+    },
+    {
+      "id": "berserker_axe_bleed_rare",
+      "name": "Топор вампира",
+      "rarity": "rare",
+      "type": "weapon",
+      "subtype": "axe",
+      "slot": "main_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 3,
+      "damage_max": 5,
+      "speed": 0.9,
+      "effects": [
+        { "type": "on_hit", "effect": "bleed", "chance": 15, "power": 2, "duration": 3 }
+      ],
+      "description": "15% шанс кровотечения (2 урон/сек, 3 сек)."
+    },
+    {
+      "id": "berserker_axe_bleed_epic",
+      "name": "Топор безумца",
+      "rarity": "epic",
+      "type": "weapon",
+      "subtype": "axe",
+      "slot": "main_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 3,
+      "damage_max": 6,
+      "speed": 0.9,
+      "double_attack_chance": 5,
+      "effects": [
+        { "type": "on_hit", "effect": "bleed", "chance": 18, "power": 2, "duration": 3 }
+      ],
+      "description": "18% кровотечение, +5% двойной атаки."
+    },
+    {
+      "id": "berserker_axe_bleed_legendary",
+      "name": "Легендарный кровавый топор",
+      "rarity": "legendary",
+      "type": "weapon",
+      "subtype": "axe",
+      "slot": "main_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 4,
+      "damage_max": 7,
+      "speed": 0.8,
+      "double_attack_chance": 8,
+      "effects": [
+        { "type": "on_hit", "effect": "bleed", "chance": 20, "power": 2, "duration": 4 },
+        { "type": "on_bleed", "effect": "heal", "value": 1 }
+      ],
+      "description": "20% кровотечение (2 урон/сек, 4 сек), +8% двойной атаки. При наложении кровотечения восстанавливает 1 HP."
+    },
+
+    // Линейка "Пробитие" (разрушение брони)
+    {
+      "id": "berserker_axe_armorbreak_common",
+      "name": "Топор-колун",
+      "rarity": "common",
+      "type": "weapon",
+      "subtype": "axe",
+      "slot": "main_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 2,
+      "damage_max": 4,
+      "speed": 1.0,
+      "armor_break_chance": 10,
+      "armor_break_amount": 1,
+      "description": "10% шанс пробить 1 брони."
+    },
+    {
+      "id": "berserker_axe_armorbreak_uncommon",
+      "name": "Боевой топор",
+      "rarity": "uncommon",
+      "type": "weapon",
+      "subtype": "axe",
+      "slot": "main_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 2,
+      "damage_max": 5,
+      "speed": 0.9,
+      "armor_break_chance": 15,
+      "armor_break_amount": 2,
+      "description": "15% шанс пробить 2 брони."
+    },
+    {
+      "id": "berserker_axe_armorbreak_rare",
+      "name": "Тяжёлый топор",
+      "rarity": "rare",
+      "type": "weapon",
+      "subtype": "axe",
+      "slot": "main_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 3,
+      "damage_max": 5,
+      "speed": 0.9,
+      "armor_break_chance": 18,
+      "armor_break_amount": 2,
+      "description": "18% шанс пробить 2 брони."
+    },
+    {
+      "id": "berserker_axe_armorbreak_epic",
+      "name": "Топор крушитель",
+      "rarity": "epic",
+      "type": "weapon",
+      "subtype": "axe",
+      "slot": "main_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 3,
+      "damage_max": 6,
+      "speed": 0.8,
+      "armor_break_chance": 22,
+      "armor_break_amount": 2,
+      "armor_bonus": 1,
+      "description": "22% шанс пробить 2 брони, +1 брони."
+    },
+    {
+      "id": "berserker_axe_armorbreak_legendary",
+      "name": "Легендарный топор сокрушитель",
+      "rarity": "legendary",
+      "type": "weapon",
+      "subtype": "axe",
+      "slot": "main_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 4,
+      "damage_max": 8,
+      "speed": 0.8,
+      "double_attack_chance": 5,
+      "armor_break_chance": 28,
+      "armor_break_amount": 3,
+      "armor_bonus": 2,
+      "effects": [
+        { "type": "on_armor_break", "effect": "extra_damage", "value": 2 }
+      ],
+      "description": "28% шанс пробить 3 брони, +2 брони, +5% двойной атаки. При пробитии +2 урона."
+    },
+
+    // ========== ДВУРУЧНЫЕ ТОПОРЫ ==========
+    // Линейка "Сокрушитель" (пробитие)
+    {
+      "id": "berserker_greataxe_breaker_common",
+      "name": "Двуручный топор",
+      "rarity": "common",
+      "type": "weapon",
+      "subtype": "greataxe",
+      "slot": "two_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 3,
+      "damage_max": 5,
+      "speed": 0.8,
+      "armor_break_chance": 10,
+      "armor_break_amount": 1,
+      "description": "10% шанс пробить 1 брони."
+    },
+    {
+      "id": "berserker_greataxe_breaker_uncommon",
+      "name": "Тяжёлый двуручный топор",
+      "rarity": "uncommon",
+      "type": "weapon",
+      "subtype": "greataxe",
+      "slot": "two_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 3,
+      "damage_max": 6,
+      "speed": 0.8,
+      "armor_break_chance": 15,
+      "armor_break_amount": 2,
+      "description": "15% пробить 2 брони."
+    },
+    {
+      "id": "berserker_greataxe_breaker_rare",
+      "name": "Топор великана",
+      "rarity": "rare",
+      "type": "weapon",
+      "subtype": "greataxe",
+      "slot": "two_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 4,
+      "damage_max": 7,
+      "speed": 0.7,
+      "armor_break_chance": 20,
+      "armor_break_amount": 2,
+      "description": "20% пробить 2 брони."
+    },
+    {
+      "id": "berserker_greataxe_breaker_epic",
+      "name": "Сокрушитель",
+      "rarity": "epic",
+      "type": "weapon",
+      "subtype": "greataxe",
+      "slot": "two_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 5,
+      "damage_max": 8,
+      "speed": 0.7,
+      "double_attack_chance": 5,
+      "armor_break_chance": 25,
+      "armor_break_amount": 3,
+      "description": "25% пробить 3 брони, +5% двойной атаки."
+    },
+    {
+      "id": "berserker_greataxe_breaker_legendary",
+      "name": "Легендарный сокрушитель",
+      "rarity": "legendary",
+      "type": "weapon",
+      "subtype": "greataxe",
+      "slot": "two_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 6,
+      "damage_max": 10,
+      "speed": 0.6,
+      "double_attack_chance": 8,
+      "armor_break_chance": 30,
+      "armor_break_amount": 4,
+      "effects": [
+        { "type": "on_armor_break", "effect": "extra_damage", "value": 2 }
+      ],
+      "description": "30% пробить 4 брони, +8% двойной атаки. При пробитии +2 урона."
+    },
+
+    // Линейка "Ярость" (усиление при низком HP)
+    {
+      "id": "berserker_greataxe_fury_common",
+      "name": "Топор ярости",
+      "rarity": "common",
+      "type": "weapon",
+      "subtype": "greataxe",
+      "slot": "two_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 3,
+      "damage_max": 5,
+      "speed": 0.8,
+      "description": "Нет бонуса, пока здоровье не упадёт."
+    },
+    {
+      "id": "berserker_greataxe_fury_uncommon",
+      "name": "Топор безумца",
+      "rarity": "uncommon",
+      "type": "weapon",
+      "subtype": "greataxe",
+      "slot": "two_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 3,
+      "damage_max": 6,
+      "speed": 0.8,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 1 }
+      ],
+      "description": "При здоровье ниже 50% урон +1."
+    },
+    {
+      "id": "berserker_greataxe_fury_rare",
+      "name": "Топор ярости",
+      "rarity": "rare",
+      "type": "weapon",
+      "subtype": "greataxe",
+      "slot": "two_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 4,
+      "damage_max": 7,
+      "speed": 0.7,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 2 }
+      ],
+      "description": "При HP<50% урон +2."
+    },
+    {
+      "id": "berserker_greataxe_fury_epic",
+      "name": "Топор неистовства",
+      "rarity": "epic",
+      "type": "weapon",
+      "subtype": "greataxe",
+      "slot": "two_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 5,
+      "damage_max": 8,
+      "speed": 0.7,
+      "effects": [
+        { "type": "when_hp_below", "threshold": 50, "effect": "damage_bonus", "value": 3 }
+      ],
+      "description": "При HP<50% урон +3."
+    },
+    {
+      "id": "berserker_greataxe_fury_legendary",
+      "name": "Легендарный топор ярости",
+      "rarity": "legendary",
+      "type": "weapon",
+      "subtype": "greataxe",
+      "slot": "two_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 6,
+      "damage_max": 10,
+      "speed": 0.6,
+      "double_attack_chance": 8,
+      "effects": [
+        {
+          "type": "when_hp_below",
+          "threshold": 50,
+          "effect": "damage_bonus_and_double",
+          "damage": 1,
+          "double_bonus": 5,
+          "description": "При HP<50% урон +1 и дополнительно +5% двойной атаки."
+        }
+      ],
+      "description": "Всегда +8% двойной атаки. При здоровье ниже 50% урон увеличивается на 1 и даётся ещё +5% двойной атаки."
+    },
+
+    // Линейка "Кровь дракона" (вампиризм)
+    {
+      "id": "berserker_greataxe_vampire_common",
+      "name": "Топор вампира",
+      "rarity": "common",
+      "type": "weapon",
+      "subtype": "greataxe",
+      "slot": "two_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 3,
+      "damage_max": 5,
+      "speed": 0.8,
+      "effects": [
+        { "type": "vampirism", "chance": 5, "value": 1 }
+      ],
+      "description": "5% шанс восстановить 1 HP при ударе."
+    },
+    {
+      "id": "berserker_greataxe_vampire_uncommon",
+      "name": "Кровавый топор",
+      "rarity": "uncommon",
+      "type": "weapon",
+      "subtype": "greataxe",
+      "slot": "two_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 3,
+      "damage_max": 6,
+      "speed": 0.8,
+      "effects": [
+        { "type": "vampirism", "chance": 8, "value": 1 }
+      ],
+      "description": "8% шанс вампиризма."
+    },
+    {
+      "id": "berserker_greataxe_vampire_rare",
+      "name": "Топор кровопийцы",
+      "rarity": "rare",
+      "type": "weapon",
+      "subtype": "greataxe",
+      "slot": "two_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 4,
+      "damage_max": 7,
+      "speed": 0.7,
+      "effects": [
+        { "type": "vampirism", "chance": 10, "value": 1 }
+      ],
+      "description": "10% шанс вампиризма."
+    },
+    {
+      "id": "berserker_greataxe_vampire_epic",
+      "name": "Топор дракона",
+      "rarity": "epic",
+      "type": "weapon",
+      "subtype": "greataxe",
+      "slot": "two_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 5,
+      "damage_max": 8,
+      "speed": 0.7,
+      "double_attack_chance": 5,
+      "effects": [
+        { "type": "vampirism", "chance": 12, "value": 1 }
+      ],
+      "description": "12% вампиризма, +5% двойной атаки."
+    },
+    {
+      "id": "berserker_greataxe_vampire_legendary",
+      "name": "Легендарный топор крови дракона",
+      "rarity": "legendary",
+      "type": "weapon",
+      "subtype": "greataxe",
+      "slot": "two_hand",
+      "class_restrictions": ["berserker"],
+      "damage_min": 6,
+      "damage_max": 10,
+      "speed": 0.6,
+      "double_attack_chance": 8,
+      "effects": [
+        { "type": "vampirism", "chance": 15, "value": 1 },
+        { "type": "on_vampirism", "effect": "extra_damage", "value": 1 }
+      ],
+      "description": "15% вампиризма, +8% двойной атаки. При срабатывании вампиризма наносит дополнительно 1 урона цели."
+    }
+  ]
+}

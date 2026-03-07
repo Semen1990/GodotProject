@@ -1,0 +1,436 @@
+{
+  "shields": [
+    // ========== COMMON ==========
+    // Лёгкие щиты (берсерк, разбойник)
+    {
+      "id": "shield_light_wood_common",
+      "name": "Лёгкий деревянный щит",
+      "rarity": "common",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["berserker", "rogue"],
+      "armor": 0,
+      "block_chance": 12,
+      "block_amount": 1,
+      "description": "Простой деревянный щит: 12% шанс заблокировать 1 урон."
+    },
+    {
+      "id": "shield_hide_common",
+      "name": "Щит из шкуры",
+      "rarity": "common",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["berserker", "rogue"],
+      "armor": 1,
+      "block_chance": 10,
+      "block_amount": 1,
+      "description": "Щит из толстой шкуры: 1 броня, 10% шанс заблокировать 1 урон."
+    },
+    {
+      "id": "shield_woven_common",
+      "name": "Плетёный щит",
+      "rarity": "common",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["berserker", "rogue"],
+      "armor": 0,
+      "block_chance": 15,
+      "block_amount": 1,
+      "dodge_chance": 2,
+      "description": "Плетёный щит: 15% блок, +2% уклонения."
+    },
+    // Тяжёлые щиты (воин, паладин)
+    {
+      "id": "shield_iron_common",
+      "name": "Железный щит",
+      "rarity": "common",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["warrior", "paladin"],
+      "armor": 2,
+      "block_chance": 10,
+      "block_amount": 1,
+      "description": "Железный щит: 2 брони, 10% шанс заблокировать 1 урон."
+    },
+    {
+      "id": "shield_health_common",
+      "name": "Щит здоровья",
+      "rarity": "common",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["warrior", "paladin"],
+      "armor": 1,
+      "block_chance": 10,
+      "block_amount": 1,
+      "health_bonus": 2,
+      "description": "Щит здоровья: 1 броня, 10% блок, +2 здоровья."
+    },
+    {
+      "id": "shield_spikes_common",
+      "name": "Щит с шипами",
+      "rarity": "common",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["warrior", "paladin"],
+      "armor": 1,
+      "block_chance": 10,
+      "block_amount": 1,
+      "effects": [
+        { "type": "on_block", "effect": "thorns", "chance": 5, "damage": 1 }
+      ],
+      "description": "1 броня, 10% блок. При блоке 5% шанс нанести 1 урон."
+    },
+
+    // ========== UNCOMMON ==========
+    // Лёгкие щиты
+    {
+      "id": "shield_reinforced_wood_uncommon",
+      "name": "Укреплённый деревянный щит",
+      "rarity": "uncommon",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["berserker", "rogue"],
+      "armor": 1,
+      "block_chance": 15,
+      "block_amount": 1,
+      "description": "Укреплённый щит: 1 броня, 15% блок."
+    },
+    {
+      "id": "shield_metal_rim_uncommon",
+      "name": "Щит с металлической окантовкой",
+      "rarity": "uncommon",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["berserker", "rogue"],
+      "armor": 1,
+      "block_chance": 12,
+      "block_amount": 2,
+      "attack_speed": 2,
+      "description": "Металлический щит: 1 броня, 12% блок (2 урона), +2% скорости атаки."
+    },
+    {
+      "id": "shield_thick_hide_uncommon",
+      "name": "Щит из толстой шкуры",
+      "rarity": "uncommon",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["berserker", "rogue"],
+      "armor": 0,
+      "block_chance": 18,
+      "block_amount": 1,
+      "dodge_chance": 3,
+      "description": "Толстая шкура: 18% блок, +3% уклонения."
+    },
+    // Тяжёлые щиты
+    {
+      "id": "shield_steel_uncommon",
+      "name": "Стальной щит",
+      "rarity": "uncommon",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["warrior", "paladin"],
+      "armor": 2,
+      "block_chance": 12,
+      "block_amount": 1,
+      "description": "Стальной щит: 2 брони, 12% блок."
+    },
+    {
+      "id": "shield_health_2_uncommon",
+      "name": "Щит здоровья II",
+      "rarity": "uncommon",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["warrior", "paladin"],
+      "armor": 1,
+      "block_chance": 12,
+      "block_amount": 1,
+      "health_bonus": 3,
+      "description": "1 броня, 12% блок, +3 здоровья."
+    },
+    {
+      "id": "shield_spikes_2_uncommon",
+      "name": "Щит с шипами II",
+      "rarity": "uncommon",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["warrior", "paladin"],
+      "armor": 1,
+      "block_chance": 12,
+      "block_amount": 1,
+      "effects": [
+        { "type": "on_block", "effect": "thorns", "chance": 7, "damage": 1 }
+      ],
+      "description": "1 броня, 12% блок. При блоке 7% шанс нанести 1 урон."
+    },
+
+    // ========== RARE ==========
+    // Лёгкие щиты
+    {
+      "id": "shield_light_steel_rare",
+      "name": "Стальной лёгкий щит",
+      "rarity": "rare",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["berserker", "rogue"],
+      "armor": 2,
+      "block_chance": 15,
+      "block_amount": 2,
+      "description": "Стальной щит: 2 брони, 15% блок (2 урона)."
+    },
+    {
+      "id": "shield_spiked_rare",
+      "name": "Щит с шипами",
+      "rarity": "rare",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["berserker", "rogue"],
+      "armor": 1,
+      "block_chance": 15,
+      "block_amount": 2,
+      "effects": [
+        { "type": "on_block", "effect": "thorns", "chance": 10, "damage": 1 }
+      ],
+      "description": "1 броня, 15% блок (2 урона). При блоке 10% шанс нанести 1 урон."
+    },
+    {
+      "id": "shield_agility_rare",
+      "name": "Щит проворства",
+      "rarity": "rare",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["berserker", "rogue"],
+      "armor": 1,
+      "block_chance": 18,
+      "block_amount": 1,
+      "dodge_chance": 5,
+      "attack_speed": 2,
+      "description": "1 броня, 18% блок, +5% уклонения, +2% скорости атаки."
+    },
+    // Тяжёлые щиты
+    {
+      "id": "shield_heavy_steel_rare",
+      "name": "Тяжёлый стальной щит",
+      "rarity": "rare",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["warrior", "paladin"],
+      "armor": 3,
+      "block_chance": 15,
+      "block_amount": 2,
+      "description": "Тяжёлый щит: 3 брони, 15% блок (2 урона)."
+    },
+    {
+      "id": "shield_health_3_rare",
+      "name": "Щит здоровья III",
+      "rarity": "rare",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["warrior", "paladin"],
+      "armor": 2,
+      "block_chance": 15,
+      "block_amount": 2,
+      "health_bonus": 2,
+      "mana_bonus": 1,
+      "description": "2 брони, 15% блок, +2 здоровья, +1 маны."
+    },
+    {
+      "id": "shield_spiked_rare_heavy",
+      "name": "Шипастый щит",
+      "rarity": "rare",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["warrior", "paladin"],
+      "armor": 2,
+      "block_chance": 15,
+      "block_amount": 2,
+      "effects": [
+        { "type": "on_block", "effect": "thorns", "chance": 10, "damage": 2 }
+      ],
+      "description": "2 брони, 15% блок. При блоке 10% шанс нанести 2 урона."
+    },
+
+    // ========== EPIC ==========
+    // Лёгкие щиты
+    {
+      "id": "shield_mithril_epic",
+      "name": "Мифриловый щит",
+      "rarity": "epic",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["berserker", "rogue"],
+      "armor": 2,
+      "block_chance": 18,
+      "block_amount": 2,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "2 брони, 18% блок (2 урона), +5% сопротивления огню."
+    },
+    {
+      "id": "shield_wind_epic",
+      "name": "Щит ветра",
+      "rarity": "epic",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["berserker", "rogue"],
+      "armor": 1,
+      "block_chance": 20,
+      "block_amount": 2,
+      "speed_bonus": 5,
+      "dodge_chance": 3,
+      "description": "1 броня, 20% блок (2 урона), +5% скорости, +3% уклонения."
+    },
+    {
+      "id": "shield_spiked_epic",
+      "name": "Шипастый щит",
+      "rarity": "epic",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["berserker", "rogue"],
+      "armor": 1,
+      "block_chance": 20,
+      "block_amount": 2,
+      "effects": [
+        { "type": "on_block", "effect": "thorns_and_ignite", "chance": 15, "damage": 2, "ignite_power": 1, "ignite_duration": 3 }
+      ],
+      "description": "1 броня, 20% блок. При блоке 15% шанс нанести 2 урона и поджечь."
+    },
+    // Тяжёлые щиты
+    {
+      "id": "shield_mithril_heavy_epic",
+      "name": "Мифриловый тяжёлый щит",
+      "rarity": "epic",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["warrior", "paladin"],
+      "armor": 3,
+      "block_chance": 18,
+      "block_amount": 2,
+      "resistances": [
+        { "element": "fire", "value": 5 }
+      ],
+      "description": "3 брони, 18% блок, +5% огня."
+    },
+    {
+      "id": "shield_health_4_epic",
+      "name": "Щит здоровья IV",
+      "rarity": "epic",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["warrior", "paladin"],
+      "armor": 2,
+      "block_chance": 18,
+      "block_amount": 2,
+      "health_bonus": 3,
+      "mana_bonus": 2,
+      "description": "2 брони, 18% блок, +3 здоровья, +2 маны."
+    },
+    {
+      "id": "shield_reflection_epic",
+      "name": "Щит отражения",
+      "rarity": "epic",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["warrior", "paladin"],
+      "armor": 2,
+      "block_chance": 18,
+      "block_amount": 2,
+      "effects": [
+        { "type": "on_block", "effect": "reflect_spell", "chance": 15 }
+      ],
+      "description": "2 брони, 18% блок. При блоке 15% шанс отразить заклинание."
+    },
+
+    // ========== LEGENDARY ==========
+    // Лёгкие щиты
+    {
+      "id": "shield_legendary_light",
+      "name": "Легендарный лёгкий щит",
+      "rarity": "legendary",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["berserker", "rogue"],
+      "armor": 2,
+      "block_chance": 22,
+      "block_amount": 3,
+      "dodge_chance": 5,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "2 брони, 22% блок (3 урона), +5% уклонения, +10% огня."
+    },
+    {
+      "id": "shield_hero_legendary",
+      "name": "Щит героя",
+      "rarity": "legendary",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["berserker", "rogue"],
+      "armor": 2,
+      "block_chance": 20,
+      "block_amount": 2,
+      "attack_speed": 8,
+      "speed_bonus": 5,
+      "description": "2 брони, 20% блок, +8% скорости атаки, +5% скорости."
+    },
+    {
+      "id": "shield_shadow_legendary",
+      "name": "Теневой щит",
+      "rarity": "legendary",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["berserker", "rogue"],
+      "armor": 1,
+      "block_chance": 25,
+      "block_amount": 2,
+      "dodge_chance": 10,
+      "magic_dodge": 10,
+      "description": "1 броня, 25% блок, +10% уклонения, +10% шанс увернуться от магии."
+    },
+    // Тяжёлые щиты
+    {
+      "id": "shield_legendary_heavy",
+      "name": "Легендарный тяжёлый щит",
+      "rarity": "legendary",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["warrior", "paladin"],
+      "armor": 4,
+      "block_chance": 22,
+      "block_amount": 3,
+      "resistances": [
+        { "element": "fire", "value": 10 }
+      ],
+      "description": "4 брони, 22% блок (3 урона), +10% огня."
+    },
+    {
+      "id": "shield_health_5_legendary",
+      "name": "Щит здоровья V",
+      "rarity": "legendary",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["warrior", "paladin"],
+      "armor": 3,
+      "block_chance": 22,
+      "block_amount": 3,
+      "health_bonus": 4,
+      "mana_bonus": 3,
+      "description": "3 брони, 22% блок, +4 здоровья, +3 маны."
+    },
+    {
+      "id": "shield_justice_legendary",
+      "name": "Щит правосудия",
+      "rarity": "legendary",
+      "type": "shield",
+      "slot": "off_hand",
+      "class_restrictions": ["warrior", "paladin"],
+      "armor": 3,
+      "block_chance": 22,
+      "block_amount": 3,
+      "effects": [
+        { "type": "on_block", "effect": "heal_and_thorns", "heal": 1, "damage": 2 }
+      ],
+      "description": "3 брони, 22% блок. При блоке восстанавливает 1 HP и наносит 2 урона."
+    }
+  ]
+}

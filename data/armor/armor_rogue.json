@@ -1,0 +1,1705 @@
+{
+  "armor": [
+    // ========== ГОЛОВА (ШАПКИ/КАПЮШОНЫ) ==========
+    // Вариант А (уклонение)
+    {
+      "id": "rogue_helm_a_common",
+      "name": "Кожаный капюшон",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 1,
+      "description": "+1% уклонения."
+    },
+    {
+      "id": "rogue_helm_a_uncommon",
+      "name": "Тёмный капюшон",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 2,
+      "description": "+2% уклонения."
+    },
+    {
+      "id": "rogue_helm_a_rare",
+      "name": "Капюшон тени",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 3,
+      "double_attack_chance": 1,
+      "description": "+3% уклонения, +1% двойной атаки."
+    },
+    {
+      "id": "rogue_helm_a_epic",
+      "name": "Капюшон призрака",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 4,
+      "double_attack_chance": 2,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+4% уклонения, +2% двойной атаки, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_helm_a_legendary",
+      "name": "Капюшон невидимки",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 5,
+      "double_attack_chance": 3,
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+5% уклонения, +3% двойной атаки, +10% сопротивления яду."
+    },
+
+    // Вариант Б (яд/здоровье)
+    {
+      "id": "rogue_helm_b_common",
+      "name": "Бандана отравителя",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 1,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 2 }
+      ],
+      "description": "+1 здоровья, +2% к шансу отравления."
+    },
+    {
+      "id": "rogue_helm_b_uncommon",
+      "name": "Бандана отравителя II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 3 }
+      ],
+      "description": "+2 здоровья, +3% к шансу отравления."
+    },
+    {
+      "id": "rogue_helm_b_rare",
+      "name": "Бандана отравителя III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 4 }
+      ],
+      "description": "+2 здоровья, +4% к шансу отравления."
+    },
+    {
+      "id": "rogue_helm_b_epic",
+      "name": "Бандана отравителя IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "health_bonus": 3,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 5 }
+      ],
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+3 здоровья, +5% к шансу отравления, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_helm_b_legendary",
+      "name": "Бандана отравителя V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "health_bonus": 4,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 6 }
+      ],
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+4 здоровья, +6% к шансу отравления, +10% сопротивления яду."
+    },
+
+    // Вариант В (скорость атаки/двойная атака)
+    {
+      "id": "rogue_helm_c_common",
+      "name": "Повязка скорохода",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 1,
+      "double_attack_chance": 1,
+      "description": "+1% скорости атаки, +1% двойной атаки."
+    },
+    {
+      "id": "rogue_helm_c_uncommon",
+      "name": "Повязка скорохода II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 2,
+      "double_attack_chance": 1,
+      "description": "+2% скорости атаки, +1% двойной атаки."
+    },
+    {
+      "id": "rogue_helm_c_rare",
+      "name": "Повязка скорохода III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 2,
+      "double_attack_chance": 2,
+      "dodge_chance": 1,
+      "description": "+2% скорости атаки, +2% двойной атаки, +1% уклонения."
+    },
+    {
+      "id": "rogue_helm_c_epic",
+      "name": "Повязка скорохода IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 3,
+      "double_attack_chance": 2,
+      "dodge_chance": 2,
+      "description": "+3% скорости атаки, +2% двойной атаки, +2% уклонения."
+    },
+    {
+      "id": "rogue_helm_c_legendary",
+      "name": "Повязка скорохода V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "head",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 4,
+      "double_attack_chance": 3,
+      "dodge_chance": 2,
+      "description": "+4% скорости атаки, +3% двойной атаки, +2% уклонения."
+    },
+
+    // ========== ПЛЕЧИ ==========
+    // Вариант А (уклонение)
+    {
+      "id": "rogue_shoulders_a_common",
+      "name": "Кожаные наплечники",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 1,
+      "description": "+1% уклонения."
+    },
+    {
+      "id": "rogue_shoulders_a_uncommon",
+      "name": "Тёмные наплечники",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 2,
+      "description": "+2% уклонения."
+    },
+    {
+      "id": "rogue_shoulders_a_rare",
+      "name": "Наплечники тени",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 2,
+      "double_attack_chance": 2,
+      "description": "+2% уклонения, +2% двойной атаки."
+    },
+    {
+      "id": "rogue_shoulders_a_epic",
+      "name": "Наплечники призрака",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 3,
+      "double_attack_chance": 2,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+3% уклонения, +2% двойной атаки, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_shoulders_a_legendary",
+      "name": "Наплечники невидимки",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 4,
+      "double_attack_chance": 3,
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+4% уклонения, +3% двойной атаки, +10% сопротивления яду."
+    },
+
+    // Вариант Б (яд/здоровье)
+    {
+      "id": "rogue_shoulders_b_common",
+      "name": "Наплечники отравителя",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 1,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 2 }
+      ],
+      "description": "+1 здоровья, +2% к шансу отравления."
+    },
+    {
+      "id": "rogue_shoulders_b_uncommon",
+      "name": "Наплечники отравителя II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 3 }
+      ],
+      "description": "+2 здоровья, +3% к шансу отравления."
+    },
+    {
+      "id": "rogue_shoulders_b_rare",
+      "name": "Наплечники отравителя III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 4 }
+      ],
+      "description": "+2 здоровья, +4% к шансу отравления."
+    },
+    {
+      "id": "rogue_shoulders_b_epic",
+      "name": "Наплечники отравителя IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "health_bonus": 3,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 5 }
+      ],
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+3 здоровья, +5% к шансу отравления, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_shoulders_b_legendary",
+      "name": "Наплечники отравителя V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "health_bonus": 4,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 6 }
+      ],
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+4 здоровья, +6% к шансу отравления, +10% сопротивления яду."
+    },
+
+    // Вариант В (скорость атаки/двойная атака)
+    {
+      "id": "rogue_shoulders_c_common",
+      "name": "Наплечники ветра",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 1,
+      "double_attack_chance": 1,
+      "description": "+1% скорости атаки, +1% двойной атаки."
+    },
+    {
+      "id": "rogue_shoulders_c_uncommon",
+      "name": "Наплечники ветра II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 2,
+      "double_attack_chance": 1,
+      "description": "+2% скорости атаки, +1% двойной атаки."
+    },
+    {
+      "id": "rogue_shoulders_c_rare",
+      "name": "Наплечники ветра III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 2,
+      "double_attack_chance": 2,
+      "dodge_chance": 1,
+      "description": "+2% скорости атаки, +2% двойной атаки, +1% уклонения."
+    },
+    {
+      "id": "rogue_shoulders_c_epic",
+      "name": "Наплечники ветра IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 3,
+      "double_attack_chance": 2,
+      "dodge_chance": 2,
+      "description": "+3% скорости атаки, +2% двойной атаки, +2% уклонения."
+    },
+    {
+      "id": "rogue_shoulders_c_legendary",
+      "name": "Наплечники ветра V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "shoulders",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 4,
+      "double_attack_chance": 3,
+      "dodge_chance": 2,
+      "description": "+4% скорости атаки, +3% двойной атаки, +2% уклонения."
+    },
+
+    // ========== ДОСПЕХ (КУРТКА/БРОНЯ) ==========
+    // Вариант А (уклонение)
+    {
+      "id": "rogue_chest_a_common",
+      "name": "Кожаная куртка",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["rogue"],
+      "armor": 2,
+      "dodge_chance": 1,
+      "description": "+1% уклонения."
+    },
+    {
+      "id": "rogue_chest_a_uncommon",
+      "name": "Тёмная куртка",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["rogue"],
+      "armor": 2,
+      "dodge_chance": 2,
+      "description": "+2% уклонения."
+    },
+    {
+      "id": "rogue_chest_a_rare",
+      "name": "Куртка тени",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["rogue"],
+      "armor": 2,
+      "dodge_chance": 2,
+      "double_attack_chance": 2,
+      "description": "+2% уклонения, +2% двойной атаки."
+    },
+    {
+      "id": "rogue_chest_a_epic",
+      "name": "Куртка призрака",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["rogue"],
+      "armor": 2,
+      "dodge_chance": 3,
+      "double_attack_chance": 2,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+3% уклонения, +2% двойной атаки, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_chest_a_legendary",
+      "name": "Куртка невидимки",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["rogue"],
+      "armor": 2,
+      "dodge_chance": 4,
+      "double_attack_chance": 3,
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+4% уклонения, +3% двойной атаки, +10% сопротивления яду."
+    },
+
+    // Вариант Б (яд/здоровье)
+    {
+      "id": "rogue_chest_b_common",
+      "name": "Куртка отравителя",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "health_bonus": 1,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 2 }
+      ],
+      "description": "+1 здоровья, +2% к шансу отравления."
+    },
+    {
+      "id": "rogue_chest_b_uncommon",
+      "name": "Куртка отравителя II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 3 }
+      ],
+      "description": "+2 здоровья, +3% к шансу отравления."
+    },
+    {
+      "id": "rogue_chest_b_rare",
+      "name": "Куртка отравителя III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["rogue"],
+      "armor": 2,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 4 }
+      ],
+      "description": "+2 здоровья, +4% к шансу отравления."
+    },
+    {
+      "id": "rogue_chest_b_epic",
+      "name": "Куртка отравителя IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["rogue"],
+      "armor": 2,
+      "health_bonus": 3,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 5 }
+      ],
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+3 здоровья, +5% к шансу отравления, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_chest_b_legendary",
+      "name": "Куртка отравителя V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["rogue"],
+      "armor": 2,
+      "health_bonus": 4,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 6 }
+      ],
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+4 здоровья, +6% к шансу отравления, +10% сопротивления яду."
+    },
+
+    // Вариант В (скорость атаки/двойная атака)
+    {
+      "id": "rogue_chest_c_common",
+      "name": "Куртка ветра",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "attack_speed": 1,
+      "double_attack_chance": 1,
+      "description": "+1% скорости атаки, +1% двойной атаки."
+    },
+    {
+      "id": "rogue_chest_c_uncommon",
+      "name": "Куртка ветра II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "attack_speed": 2,
+      "double_attack_chance": 1,
+      "description": "+2% скорости атаки, +1% двойной атаки."
+    },
+    {
+      "id": "rogue_chest_c_rare",
+      "name": "Куртка ветра III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "attack_speed": 2,
+      "double_attack_chance": 2,
+      "dodge_chance": 1,
+      "description": "+2% скорости атаки, +2% двойной атаки, +1% уклонения."
+    },
+    {
+      "id": "rogue_chest_c_epic",
+      "name": "Куртка ветра IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "attack_speed": 3,
+      "double_attack_chance": 2,
+      "dodge_chance": 2,
+      "description": "+3% скорости атаки, +2% двойной атаки, +2% уклонения."
+    },
+    {
+      "id": "rogue_chest_c_legendary",
+      "name": "Куртка ветра V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "chest",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "attack_speed": 4,
+      "double_attack_chance": 3,
+      "dodge_chance": 2,
+      "description": "+4% скорости атаки, +3% двойной атаки, +2% уклонения."
+    },
+
+    // ========== НАРУЧИ ==========
+    // Вариант А (уклонение)
+    {
+      "id": "rogue_bracers_a_common",
+      "name": "Кожаные наручи",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 1,
+      "description": "+1% уклонения."
+    },
+    {
+      "id": "rogue_bracers_a_uncommon",
+      "name": "Тёмные наручи",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 2,
+      "description": "+2% уклонения."
+    },
+    {
+      "id": "rogue_bracers_a_rare",
+      "name": "Наручи тени",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 2,
+      "double_attack_chance": 2,
+      "description": "+2% уклонения, +2% двойной атаки."
+    },
+    {
+      "id": "rogue_bracers_a_epic",
+      "name": "Наручи призрака",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 3,
+      "double_attack_chance": 2,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+3% уклонения, +2% двойной атаки, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_bracers_a_legendary",
+      "name": "Наручи невидимки",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 4,
+      "double_attack_chance": 3,
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+4% уклонения, +3% двойной атаки, +10% сопротивления яду."
+    },
+
+    // Вариант Б (яд/здоровье)
+    {
+      "id": "rogue_bracers_b_common",
+      "name": "Наручи отравителя",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 1,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 2 }
+      ],
+      "description": "+1 здоровья, +2% к шансу отравления."
+    },
+    {
+      "id": "rogue_bracers_b_uncommon",
+      "name": "Наручи отравителя II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 3 }
+      ],
+      "description": "+2 здоровья, +3% к шансу отравления."
+    },
+    {
+      "id": "rogue_bracers_b_rare",
+      "name": "Наручи отравителя III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 4 }
+      ],
+      "description": "+2 здоровья, +4% к шансу отравления."
+    },
+    {
+      "id": "rogue_bracers_b_epic",
+      "name": "Наручи отравителя IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "health_bonus": 3,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 5 }
+      ],
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+3 здоровья, +5% к шансу отравления, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_bracers_b_legendary",
+      "name": "Наручи отравителя V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "health_bonus": 4,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 6 }
+      ],
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+4 здоровья, +6% к шансу отравления, +10% сопротивления яду."
+    },
+
+    // Вариант В (скорость атаки/двойная атака)
+    {
+      "id": "rogue_bracers_c_common",
+      "name": "Наручи ветра",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 1,
+      "double_attack_chance": 1,
+      "description": "+1% скорости атаки, +1% двойной атаки."
+    },
+    {
+      "id": "rogue_bracers_c_uncommon",
+      "name": "Наручи ветра II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 2,
+      "double_attack_chance": 1,
+      "description": "+2% скорости атаки, +1% двойной атаки."
+    },
+    {
+      "id": "rogue_bracers_c_rare",
+      "name": "Наручи ветра III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 2,
+      "double_attack_chance": 2,
+      "dodge_chance": 1,
+      "description": "+2% скорости атаки, +2% двойной атаки, +1% уклонения."
+    },
+    {
+      "id": "rogue_bracers_c_epic",
+      "name": "Наручи ветра IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 3,
+      "double_attack_chance": 2,
+      "dodge_chance": 2,
+      "description": "+3% скорости атаки, +2% двойной атаки, +2% уклонения."
+    },
+    {
+      "id": "rogue_bracers_c_legendary",
+      "name": "Наручи ветра V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "bracers",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 4,
+      "double_attack_chance": 3,
+      "dodge_chance": 2,
+      "description": "+4% скорости атаки, +3% двойной атаки, +2% уклонения."
+    },
+
+    // ========== ПЕРЧАТКИ ==========
+    // Вариант А (уклонение)
+    {
+      "id": "rogue_gloves_a_common",
+      "name": "Кожаные перчатки",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "dodge_chance": 1,
+      "description": "+1% уклонения."
+    },
+    {
+      "id": "rogue_gloves_a_uncommon",
+      "name": "Тёмные перчатки",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "dodge_chance": 2,
+      "description": "+2% уклонения."
+    },
+    {
+      "id": "rogue_gloves_a_rare",
+      "name": "Перчатки тени",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "dodge_chance": 2,
+      "double_attack_chance": 2,
+      "description": "+2% уклонения, +2% двойной атаки."
+    },
+    {
+      "id": "rogue_gloves_a_epic",
+      "name": "Перчатки призрака",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "dodge_chance": 3,
+      "double_attack_chance": 2,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+3% уклонения, +2% двойной атаки, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_gloves_a_legendary",
+      "name": "Перчатки невидимки",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "dodge_chance": 4,
+      "double_attack_chance": 3,
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+4% уклонения, +3% двойной атаки, +10% сопротивления яду."
+    },
+
+    // Вариант Б (яд/здоровье)
+    {
+      "id": "rogue_gloves_b_common",
+      "name": "Перчатки отравителя",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 1,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 2 }
+      ],
+      "description": "+1 здоровья, +2% к шансу отравления."
+    },
+    {
+      "id": "rogue_gloves_b_uncommon",
+      "name": "Перчатки отравителя II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 3 }
+      ],
+      "description": "+2 здоровья, +3% к шансу отравления."
+    },
+    {
+      "id": "rogue_gloves_b_rare",
+      "name": "Перчатки отравителя III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 4 }
+      ],
+      "double_attack_chance": 1,
+      "description": "+2 здоровья, +4% к шансу отравления, +1% двойной атаки."
+    },
+    {
+      "id": "rogue_gloves_b_epic",
+      "name": "Перчатки отравителя IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 3,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 5 }
+      ],
+      "double_attack_chance": 1,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+3 здоровья, +5% к шансу отравления, +1% двойной атаки, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_gloves_b_legendary",
+      "name": "Перчатки отравителя V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 4,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 6 }
+      ],
+      "double_attack_chance": 2,
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+4 здоровья, +6% к шансу отравления, +2% двойной атаки, +10% сопротивления яду."
+    },
+
+    // Вариант В (скорость атаки/двойная атака)
+    {
+      "id": "rogue_gloves_c_common",
+      "name": "Перчатки ветра",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 1,
+      "double_attack_chance": 1,
+      "description": "+1% скорости атаки, +1% двойной атаки."
+    },
+    {
+      "id": "rogue_gloves_c_uncommon",
+      "name": "Перчатки ветра II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 2,
+      "double_attack_chance": 1,
+      "description": "+2% скорости атаки, +1% двойной атаки."
+    },
+    {
+      "id": "rogue_gloves_c_rare",
+      "name": "Перчатки ветра III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 2,
+      "double_attack_chance": 2,
+      "dodge_chance": 1,
+      "description": "+2% скорости атаки, +2% двойной атаки, +1% уклонения."
+    },
+    {
+      "id": "rogue_gloves_c_epic",
+      "name": "Перчатки ветра IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 3,
+      "double_attack_chance": 2,
+      "dodge_chance": 2,
+      "description": "+3% скорости атаки, +2% двойной атаки, +2% уклонения."
+    },
+    {
+      "id": "rogue_gloves_c_legendary",
+      "name": "Перчатки ветра V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "gloves",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 4,
+      "double_attack_chance": 3,
+      "dodge_chance": 2,
+      "description": "+4% скорости атаки, +3% двойной атаки, +2% уклонения."
+    },
+
+    // ========== ПОЯС ==========
+    // Вариант А (уклонение)
+    {
+      "id": "rogue_belt_a_common",
+      "name": "Кожаный пояс",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "dodge_chance": 1,
+      "description": "+1% уклонения."
+    },
+    {
+      "id": "rogue_belt_a_uncommon",
+      "name": "Тёмный пояс",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "dodge_chance": 2,
+      "description": "+2% уклонения."
+    },
+    {
+      "id": "rogue_belt_a_rare",
+      "name": "Пояс тени",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "dodge_chance": 2,
+      "double_attack_chance": 2,
+      "description": "+2% уклонения, +2% двойной атаки."
+    },
+    {
+      "id": "rogue_belt_a_epic",
+      "name": "Пояс призрака",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "dodge_chance": 3,
+      "double_attack_chance": 2,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+3% уклонения, +2% двойной атаки, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_belt_a_legendary",
+      "name": "Пояс невидимки",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "dodge_chance": 4,
+      "double_attack_chance": 3,
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "potion_slots": 1,
+      "description": "+4% уклонения, +3% двойной атаки, +10% сопротивления яду, +1 слот зелий."
+    },
+
+    // Вариант Б (яд/здоровье)
+    {
+      "id": "rogue_belt_b_common",
+      "name": "Пояс отравителя",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 1,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 2 }
+      ],
+      "description": "+1 здоровья, +2% к шансу отравления."
+    },
+    {
+      "id": "rogue_belt_b_uncommon",
+      "name": "Пояс отравителя II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 3 }
+      ],
+      "description": "+2 здоровья, +3% к шансу отравления."
+    },
+    {
+      "id": "rogue_belt_b_rare",
+      "name": "Пояс отравителя III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 4 }
+      ],
+      "potion_slots": 1,
+      "description": "+2 здоровья, +4% к шансу отравления, +1 слот зелий."
+    },
+    {
+      "id": "rogue_belt_b_epic",
+      "name": "Пояс отравителя IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 3,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 5 }
+      ],
+      "potion_slots": 1,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+3 здоровья, +5% к шансу отравления, +1 слот, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_belt_b_legendary",
+      "name": "Пояс отравителя V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 4,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 6 }
+      ],
+      "potion_slots": 2,
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+4 здоровья, +6% к шансу отравления, +2 слота, +10% сопротивления яду."
+    },
+
+    // Вариант В (скорость атаки/двойная атака)
+    {
+      "id": "rogue_belt_c_common",
+      "name": "Пояс ветра",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 1,
+      "double_attack_chance": 1,
+      "description": "+1% скорости атаки, +1% двойной атаки."
+    },
+    {
+      "id": "rogue_belt_c_uncommon",
+      "name": "Пояс ветра II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 2,
+      "double_attack_chance": 1,
+      "description": "+2% скорости атаки, +1% двойной атаки."
+    },
+    {
+      "id": "rogue_belt_c_rare",
+      "name": "Пояс ветра III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 2,
+      "double_attack_chance": 2,
+      "dodge_chance": 1,
+      "description": "+2% скорости атаки, +2% двойной атаки, +1% уклонения."
+    },
+    {
+      "id": "rogue_belt_c_epic",
+      "name": "Пояс ветра IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 3,
+      "double_attack_chance": 2,
+      "dodge_chance": 2,
+      "description": "+3% скорости атаки, +2% двойной атаки, +2% уклонения."
+    },
+    {
+      "id": "rogue_belt_c_legendary",
+      "name": "Пояс ветра V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "belt",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 4,
+      "double_attack_chance": 3,
+      "dodge_chance": 2,
+      "potion_slots": 1,
+      "description": "+4% скорости атаки, +3% двойной атаки, +2% уклонения, +1 слот зелий."
+    },
+
+    // ========== ШТАНЫ ==========
+    // Вариант А (уклонение)
+    {
+      "id": "rogue_legs_a_common",
+      "name": "Кожаные штаны",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["rogue"],
+      "armor": 2,
+      "dodge_chance": 1,
+      "description": "+1% уклонения."
+    },
+    {
+      "id": "rogue_legs_a_uncommon",
+      "name": "Тёмные штаны",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["rogue"],
+      "armor": 2,
+      "dodge_chance": 2,
+      "description": "+2% уклонения."
+    },
+    {
+      "id": "rogue_legs_a_rare",
+      "name": "Штаны тени",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["rogue"],
+      "armor": 2,
+      "dodge_chance": 2,
+      "double_attack_chance": 2,
+      "description": "+2% уклонения, +2% двойной атаки."
+    },
+    {
+      "id": "rogue_legs_a_epic",
+      "name": "Штаны призрака",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["rogue"],
+      "armor": 2,
+      "dodge_chance": 3,
+      "double_attack_chance": 2,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+3% уклонения, +2% двойной атаки, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_legs_a_legendary",
+      "name": "Штаны невидимки",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["rogue"],
+      "armor": 2,
+      "dodge_chance": 4,
+      "double_attack_chance": 3,
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+4% уклонения, +3% двойной атаки, +10% сопротивления яду."
+    },
+
+    // Вариант Б (яд/здоровье)
+    {
+      "id": "rogue_legs_b_common",
+      "name": "Штаны отравителя",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "health_bonus": 1,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 2 }
+      ],
+      "description": "+1 здоровья, +2% к шансу отравления."
+    },
+    {
+      "id": "rogue_legs_b_uncommon",
+      "name": "Штаны отравителя II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 3 }
+      ],
+      "description": "+2 здоровья, +3% к шансу отравления."
+    },
+    {
+      "id": "rogue_legs_b_rare",
+      "name": "Штаны отравителя III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["rogue"],
+      "armor": 2,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 4 }
+      ],
+      "description": "+2 здоровья, +4% к шансу отравления."
+    },
+    {
+      "id": "rogue_legs_b_epic",
+      "name": "Штаны отравителя IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["rogue"],
+      "armor": 2,
+      "health_bonus": 3,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 5 }
+      ],
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+3 здоровья, +5% к шансу отравления, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_legs_b_legendary",
+      "name": "Штаны отравителя V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["rogue"],
+      "armor": 2,
+      "health_bonus": 4,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 6 }
+      ],
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "description": "+4 здоровья, +6% к шансу отравления, +10% сопротивления яду."
+    },
+
+    // Вариант В (скорость атаки/двойная атака)
+    {
+      "id": "rogue_legs_c_common",
+      "name": "Штаны ветра",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "attack_speed": 1,
+      "double_attack_chance": 1,
+      "description": "+1% скорости атаки, +1% двойной атаки."
+    },
+    {
+      "id": "rogue_legs_c_uncommon",
+      "name": "Штаны ветра II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "attack_speed": 2,
+      "double_attack_chance": 1,
+      "description": "+2% скорости атаки, +1% двойной атаки."
+    },
+    {
+      "id": "rogue_legs_c_rare",
+      "name": "Штаны ветра III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "attack_speed": 2,
+      "double_attack_chance": 2,
+      "dodge_chance": 1,
+      "description": "+2% скорости атаки, +2% двойной атаки, +1% уклонения."
+    },
+    {
+      "id": "rogue_legs_c_epic",
+      "name": "Штаны ветра IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "attack_speed": 3,
+      "double_attack_chance": 2,
+      "dodge_chance": 2,
+      "description": "+3% скорости атаки, +2% двойной атаки, +2% уклонения."
+    },
+    {
+      "id": "rogue_legs_c_legendary",
+      "name": "Штаны ветра V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "legs",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "attack_speed": 4,
+      "double_attack_chance": 3,
+      "dodge_chance": 2,
+      "description": "+4% скорости атаки, +3% двойной атаки, +2% уклонения."
+    },
+
+    // ========== САПОГИ ==========
+    // Вариант А (уклонение)
+    {
+      "id": "rogue_boots_a_common",
+      "name": "Кожаные сапоги",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 1,
+      "description": "+1% уклонения."
+    },
+    {
+      "id": "rogue_boots_a_uncommon",
+      "name": "Тёмные сапоги",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 2,
+      "description": "+2% уклонения."
+    },
+    {
+      "id": "rogue_boots_a_rare",
+      "name": "Сапоги тени",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 2,
+      "double_attack_chance": 2,
+      "speed_bonus": 5,
+      "description": "+2% уклонения, +2% двойной атаки, +5% скорости."
+    },
+    {
+      "id": "rogue_boots_a_epic",
+      "name": "Сапоги призрака",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 3,
+      "double_attack_chance": 2,
+      "speed_bonus": 5,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+3% уклонения, +2% двойной атаки, +5% скорости, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_boots_a_legendary",
+      "name": "Сапоги невидимки",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "dodge_chance": 4,
+      "double_attack_chance": 3,
+      "speed_bonus": 10,
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "immune": ["spikes"],
+      "description": "+4% уклонения, +3% двойной атаки, +10% скорости, +10% сопротивления яду, иммунитет к шипам."
+    },
+
+    // Вариант Б (яд/здоровье)
+    {
+      "id": "rogue_boots_b_common",
+      "name": "Сапоги отравителя",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 1,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 2 }
+      ],
+      "description": "+1 здоровья, +2% к шансу отравления."
+    },
+    {
+      "id": "rogue_boots_b_uncommon",
+      "name": "Сапоги отравителя II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 3 }
+      ],
+      "description": "+2 здоровья, +3% к шансу отравления."
+    },
+    {
+      "id": "rogue_boots_b_rare",
+      "name": "Сапоги отравителя III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "health_bonus": 2,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 4 }
+      ],
+      "speed_bonus": 5,
+      "description": "+2 здоровья, +4% к шансу отравления, +5% скорости."
+    },
+    {
+      "id": "rogue_boots_b_epic",
+      "name": "Сапоги отравителя IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "health_bonus": 3,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 5 }
+      ],
+      "speed_bonus": 5,
+      "resistances": [
+        { "element": "poison", "value": 5 }
+      ],
+      "description": "+3 здоровья, +5% к шансу отравления, +5% скорости, +5% сопротивления яду."
+    },
+    {
+      "id": "rogue_boots_b_legendary",
+      "name": "Сапоги отравителя V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["rogue"],
+      "armor": 1,
+      "health_bonus": 4,
+      "effects": [
+        { "type": "poison_chance_bonus", "value": 6 }
+      ],
+      "speed_bonus": 5,
+      "resistances": [
+        { "element": "poison", "value": 10 }
+      ],
+      "immune": ["spikes"],
+      "description": "+4 здоровья, +6% к шансу отравления, +5% скорости, +10% сопротивления яду, иммунитет к шипам."
+    },
+
+    // Вариант В (скорость атаки/двойная атака)
+    {
+      "id": "rogue_boots_c_common",
+      "name": "Сапоги ветра",
+      "rarity": "common",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 1,
+      "double_attack_chance": 1,
+      "speed_bonus": 5,
+      "description": "+1% скорости атаки, +1% двойной атаки, +5% скорости."
+    },
+    {
+      "id": "rogue_boots_c_uncommon",
+      "name": "Сапоги ветра II",
+      "rarity": "uncommon",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 2,
+      "double_attack_chance": 1,
+      "speed_bonus": 5,
+      "description": "+2% скорости атаки, +1% двойной атаки, +5% скорости."
+    },
+    {
+      "id": "rogue_boots_c_rare",
+      "name": "Сапоги ветра III",
+      "rarity": "rare",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 2,
+      "double_attack_chance": 2,
+      "dodge_chance": 1,
+      "speed_bonus": 5,
+      "description": "+2% скорости атаки, +2% двойной атаки, +1% уклонения, +5% скорости."
+    },
+    {
+      "id": "rogue_boots_c_epic",
+      "name": "Сапоги ветра IV",
+      "rarity": "epic",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 3,
+      "double_attack_chance": 2,
+      "dodge_chance": 2,
+      "speed_bonus": 5,
+      "description": "+3% скорости атаки, +2% двойной атаки, +2% уклонения, +5% скорости."
+    },
+    {
+      "id": "rogue_boots_c_legendary",
+      "name": "Сапоги ветра V",
+      "rarity": "legendary",
+      "type": "armor",
+      "slot": "boots",
+      "class_restrictions": ["rogue"],
+      "armor": 0,
+      "attack_speed": 4,
+      "double_attack_chance": 3,
+      "dodge_chance": 2,
+      "speed_bonus": 10,
+      "immune": ["spikes"],
+      "description": "+4% скорости атаки, +3% двойной атаки, +2% уклонения, +10% скорости, иммунитет к шипам."
+    }
+  ]
+}

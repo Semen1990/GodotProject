@@ -2,15 +2,18 @@ extends Area2D
 class_name Chest
 
 # ===========================================
-# CHEST v7.0 - ПРАВИЛЬНОЕ СОХРАНЕНИЕ СОСТОЯНИЯ
+# CHEST v7.0 - Р СџР В Р С’Р вЂ™Р ВР вЂєР В¬Р СњР С›Р вЂў Р РЋР С›Р ТђР В Р С’Р СњР вЂўР СњР ВР вЂў Р РЋР С›Р РЋР СћР С›Р Р‡Р СњР ВР Р‡
 # ===========================================
-# Логика:
-# - Закрытый сундук → при возврате сундук на месте
-# - Открытый сундук → при возврате сундука НЕТ, 
-#   но выпавшие не подобранные предметы лежат
+# Р вЂєР С•Р С–Р С‘Р С”Р В°:
+# - Р вЂ”Р В°Р С”РЎР‚РЎвЂ№РЎвЂљРЎвЂ№Р в„– РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С” РІвЂ вЂ™ Р С—РЎР‚Р С‘ Р Р†Р С•Р В·Р Р†РЎР‚Р В°РЎвЂљР Вµ РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С” Р Р…Р В° Р СР ВµРЎРѓРЎвЂљР Вµ
+# - Р С›РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљРЎвЂ№Р в„– РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С” РІвЂ вЂ™ Р С—РЎР‚Р С‘ Р Р†Р С•Р В·Р Р†РЎР‚Р В°РЎвЂљР Вµ РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С”Р В° Р СњР вЂўР Сћ,
+#   Р Р…Р С• Р Р†РЎвЂ№Р С—Р В°Р Р†РЎв‚¬Р С‘Р Вµ Р Р…Р Вµ Р С—Р С•Р Т‘Р С•Р В±РЎР‚Р В°Р Р…Р Р…РЎвЂ№Р Вµ Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљРЎвЂ№ Р В»Р ВµР В¶Р В°РЎвЂљ
 
 signal opened
 signal item_spawned(pickup_node: Node2D)
+
+const ITEM_PICKUP_SCENE := preload("res://scenes/items/item_pickup.tscn")
+const ARTIFACT_PICKUP_SCENE := preload("res://scenes/items/artifact_pickup.tscn")
 
 enum ChestType { ITEMS, ARTIFACTS, MIXED, RANDOM }
 
@@ -23,7 +26,7 @@ enum ChestType { ITEMS, ARTIFACTS, MIXED, RANDOM }
 
 @export var spawn_frame: int = 3
 
-@export_group("Размеры выпадающих предметов")
+@export_group("Р В Р В°Р В·Р СР ВµРЎР‚РЎвЂ№ Р Р†РЎвЂ№Р С—Р В°Р Т‘Р В°РЎР‹РЎвЂ°Р С‘РЎвЂ¦ Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљР С•Р Р†")
 @export var item_scale: float = 1.5
 @export var artifact_scale: float = 1.8
 @export var collision_radius: float = 40.0
@@ -43,26 +46,26 @@ func _ready():
 	animated_sprite = get_node_or_null("AnimatedSprite2D")
 	interaction_zone = get_node_or_null("InteractionZone")
 	hint_label = get_node_or_null("HintLabel")
-	
+
 	is_open = is_initially_open
-	
-	# === ПРОВЕРЯЕМ: БЫЛ ЛИ СУНДУК УЖЕ ОТКРЫТ? ===
+
+	# === Р СџР В Р С›Р вЂ™Р вЂўР В Р Р‡Р вЂўР Сљ: Р вЂР В«Р вЂє Р вЂєР В Р РЋР Р€Р СњР вЂќР Р€Р С™ Р Р€Р вЂ“Р вЂў Р С›Р СћР С™Р В Р В«Р Сћ? ===
 	if Global and Global.is_chest_opened(name):
-		print("📦 '%s' был открыт ранее → восстанавливаем предметы, удаляем сундук" % name)
-		# Сундук был открыт - восстанавливаем не подобранные предметы и удаляем сундук
+		print("СЂСџвЂњВ¦ '%s' Р В±РЎвЂ№Р В» Р С•РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљ РЎР‚Р В°Р Р…Р ВµР Вµ РІвЂ вЂ™ Р Р†Р С•РЎРѓРЎРѓРЎвЂљР В°Р Р…Р В°Р Р†Р В»Р С‘Р Р†Р В°Р ВµР С Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљРЎвЂ№, РЎС“Р Т‘Р В°Р В»РЎРЏР ВµР С РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С”" % name)
+		# Р РЋРЎС“Р Р…Р Т‘РЎС“Р С” Р В±РЎвЂ№Р В» Р С•РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљ - Р Р†Р С•РЎРѓРЎРѓРЎвЂљР В°Р Р…Р В°Р Р†Р В»Р С‘Р Р†Р В°Р ВµР С Р Р…Р Вµ Р С—Р С•Р Т‘Р С•Р В±РЎР‚Р В°Р Р…Р Р…РЎвЂ№Р Вµ Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљРЎвЂ№ Р С‘ РЎС“Р Т‘Р В°Р В»РЎРЏР ВµР С РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С”
 		call_deferred("_restore_items_and_delete")
 		return
-	
-	# Сундук НЕ был открыт - работаем как обычно
+
+	# Р РЋРЎС“Р Р…Р Т‘РЎС“Р С” Р СњР вЂў Р В±РЎвЂ№Р В» Р С•РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљ - РЎР‚Р В°Р В±Р С•РЎвЂљР В°Р ВµР С Р С”Р В°Р С” Р С•Р В±РЎвЂ№РЎвЂЎР Р…Р С•
 	_setup_signals()
 	_update_visual()
 	_setup_hint()
-	
-	print("📦 Сундук '%s': закрыт, ждёт открытия" % name)
+
+	print("СЂСџвЂњВ¦ Р РЋРЎС“Р Р…Р Т‘РЎС“Р С” '%s': Р В·Р В°Р С”РЎР‚РЎвЂ№РЎвЂљ, Р В¶Р Т‘РЎвЂРЎвЂљ Р С•РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљР С‘РЎРЏ" % name)
 
 
 func _setup_signals():
-	"""Настраивает сигналы для взаимодействия"""
+	"""Р СњР В°РЎРѓРЎвЂљРЎР‚Р В°Р С‘Р Р†Р В°Р ВµРЎвЂљ РЎРѓР С‘Р С–Р Р…Р В°Р В»РЎвЂ№ Р Т‘Р В»РЎРЏ Р Р†Р В·Р В°Р С‘Р СР С•Р Т‘Р ВµР в„–РЎРѓРЎвЂљР Р†Р С‘РЎРЏ"""
 	if interaction_zone:
 		if not interaction_zone.body_entered.is_connected(_on_body_entered):
 			interaction_zone.body_entered.connect(_on_body_entered)
@@ -73,7 +76,7 @@ func _setup_signals():
 			body_entered.connect(_on_body_entered)
 		if not body_exited.is_connected(_on_body_exited):
 			body_exited.connect(_on_body_exited)
-	
+
 	if animated_sprite:
 		if not animated_sprite.frame_changed.is_connected(_on_frame_changed):
 			animated_sprite.frame_changed.connect(_on_frame_changed)
@@ -84,13 +87,13 @@ func _setup_signals():
 func _setup_hint():
 	if hint_label:
 		hint_label.visible = false
-		hint_label.text = "[F] Открыть"
+		hint_label.text = "[F] Р С›РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљРЎРЉ"
 
 
 func _update_visual():
 	if not animated_sprite or not animated_sprite.sprite_frames:
 		return
-	
+
 	if is_open:
 		if animated_sprite.sprite_frames.has_animation("opened"):
 			animated_sprite.play("opened")
@@ -106,13 +109,13 @@ func _update_visual():
 
 
 # ===========================================
-# ВЗАИМОДЕЙСТВИЕ С ИГРОКОМ
+# Р вЂ™Р вЂ”Р С’Р ВР СљР С›Р вЂќР вЂўР в„ўР РЋР СћР вЂ™Р ВР вЂў Р РЋ Р ВР вЂњР В Р С›Р С™Р С›Р Сљ
 # ===========================================
 
 func _on_body_entered(body: Node2D):
 	if is_open or is_opening:
 		return
-	
+
 	if _is_player(body):
 		player_in_range = true
 		if hint_label:
@@ -133,7 +136,7 @@ func _is_player(body: Node2D) -> bool:
 func _process(_delta):
 	if is_open or is_opening or not player_in_range:
 		return
-	
+
 	if Input.is_action_just_pressed("interact"):
 		open_chest()
 
@@ -141,19 +144,19 @@ func _process(_delta):
 func open_chest():
 	if is_open or is_opening:
 		return
-	
+
 	is_opening = true
-	
-	# Регистрируем что сундук ОТКРЫТ
+
+	# Р В Р ВµР С–Р С‘РЎРѓРЎвЂљРЎР‚Р С‘РЎР‚РЎС“Р ВµР С РЎвЂЎРЎвЂљР С• РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С” Р С›Р СћР С™Р В Р В«Р Сћ
 	if Global:
 		Global.register_opened_chest(name)
-	
+
 	if hint_label:
 		hint_label.visible = false
-	
+
 	if animated_sprite and animated_sprite.sprite_frames:
 		if animated_sprite.sprite_frames.has_animation("opening"):
-			print("📦 '%s' - анимация opening" % name)
+			print("СЂСџвЂњВ¦ '%s' - Р В°Р Р…Р С‘Р СР В°РЎвЂ Р С‘РЎРЏ opening" % name)
 			animated_sprite.play("opening")
 		else:
 			_spawn_contents()
@@ -166,12 +169,12 @@ func open_chest():
 func _on_frame_changed():
 	if not is_opening or items_spawned:
 		return
-	
+
 	if animated_sprite.animation == "opening":
 		var current_frame = animated_sprite.frame
-		
+
 		if current_frame == spawn_frame:
-			print("📦 '%s' - СПАВН на кадре %d!" % [name, spawn_frame])
+			print("СЂСџвЂњВ¦ '%s' - Р РЋР СџР С’Р вЂ™Р Сњ Р Р…Р В° Р С”Р В°Р Т‘РЎР‚Р Вµ %d!" % [name, spawn_frame])
 			_spawn_contents()
 			items_spawned = true
 
@@ -185,9 +188,9 @@ func _finish_opening():
 	is_open = true
 	is_opening = false
 	opened.emit()
-	print("📦 '%s' открыт!" % name)
-	
-	# Плавно удаляем сундук
+	print("СЂСџвЂњВ¦ '%s' Р С•РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљ!" % name)
+
+	# Р СџР В»Р В°Р Р†Р Р…Р С• РЎС“Р Т‘Р В°Р В»РЎРЏР ВµР С РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С”
 	var tween = create_tween()
 	tween.tween_interval(0.3)
 	tween.tween_property(self, "modulate:a", 0.0, 0.3)
@@ -195,7 +198,7 @@ func _finish_opening():
 
 
 # ===========================================
-# СПАВН СОДЕРЖИМОГО
+# Р РЋР СџР С’Р вЂ™Р Сњ Р РЋР С›Р вЂќР вЂўР В Р вЂ“Р ВР СљР С›Р вЂњР С›
 # ===========================================
 
 func _spawn_contents():
@@ -215,7 +218,7 @@ func _spawn_items():
 	for i in range(item_ids.size()):
 		var item_id = item_ids[i]
 		var amount = item_amounts[i] if i < item_amounts.size() else 1
-		
+
 		for j in range(amount):
 			_create_item_pickup(item_id, i * 10 + j)
 
@@ -231,14 +234,14 @@ func _spawn_random():
 
 
 # ===========================================
-# ВОССТАНОВЛЕНИЕ ПРИ ВОЗВРАТЕ НА УРОВЕНЬ
+# Р вЂ™Р С›Р РЋР РЋР СћР С’Р СњР С›Р вЂ™Р вЂєР вЂўР СњР ВР вЂў Р СџР В Р В Р вЂ™Р С›Р вЂ”Р вЂ™Р В Р С’Р СћР вЂў Р СњР С’ Р Р€Р В Р С›Р вЂ™Р вЂўР СњР В¬
 # ===========================================
 
 func _restore_items_and_delete():
-	"""Восстанавливает НЕ подобранные предметы и удаляет сундук"""
+	"""Р вЂ™Р С•РЎРѓРЎРѓРЎвЂљР В°Р Р…Р В°Р Р†Р В»Р С‘Р Р†Р В°Р ВµРЎвЂљ Р СњР вЂў Р С—Р С•Р Т‘Р С•Р В±РЎР‚Р В°Р Р…Р Р…РЎвЂ№Р Вµ Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљРЎвЂ№ Р С‘ РЎС“Р Т‘Р В°Р В»РЎРЏР ВµРЎвЂљ РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С”"""
 	await get_tree().process_frame
-	
-	# Спавним только НЕ подобранные предметы
+
+	# Р РЋР С—Р В°Р Р†Р Р…Р С‘Р С РЎвЂљР С•Р В»РЎРЉР С”Р С• Р СњР вЂў Р С—Р С•Р Т‘Р С•Р В±РЎР‚Р В°Р Р…Р Р…РЎвЂ№Р Вµ Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљРЎвЂ№
 	match chest_type:
 		ChestType.ITEMS:
 			_restore_items()
@@ -249,317 +252,143 @@ func _restore_items_and_delete():
 			_restore_artifacts()
 		ChestType.RANDOM:
 			_restore_items()
-	
-	# Сразу удаляем сундук
+
+	# Р РЋРЎР‚Р В°Р В·РЎС“ РЎС“Р Т‘Р В°Р В»РЎРЏР ВµР С РЎРѓРЎС“Р Р…Р Т‘РЎС“Р С”
 	queue_free()
 
 
 func _restore_items():
-	"""Спавнит только НЕ подобранные предметы"""
+	"""Р РЋР С—Р В°Р Р†Р Р…Р С‘РЎвЂљ РЎвЂљР С•Р В»РЎРЉР С”Р С• Р СњР вЂў Р С—Р С•Р Т‘Р С•Р В±РЎР‚Р В°Р Р…Р Р…РЎвЂ№Р Вµ Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљРЎвЂ№"""
 	var restored_count = 0
-	
+
 	for i in range(item_ids.size()):
 		var item_id = item_ids[i]
 		var amount = item_amounts[i] if i < item_amounts.size() else 1
-		
+
 		for j in range(amount):
 			var pickup_name = "ItemPickup_%d_%d" % [item_id, i * 10 + j]
-			
-			# Проверяем - был ли подобран
+
+			# Р СџРЎР‚Р С•Р Р†Р ВµРЎР‚РЎРЏР ВµР С - Р В±РЎвЂ№Р В» Р В»Р С‘ Р С—Р С•Р Т‘Р С•Р В±РЎР‚Р В°Р Р…
 			if Global and Global.is_pickup_collected(pickup_name):
-				continue  # Пропускаем
-			
+				continue  # Р СџРЎР‚Р С•Р С—РЎС“РЎРѓР С”Р В°Р ВµР С
+
 			_create_item_pickup(item_id, i * 10 + j)
 			restored_count += 1
-	
+
 	if restored_count > 0:
-		print("   📦 Восстановлено предметов: %d" % restored_count)
+		print("   СЂСџвЂњВ¦ Р вЂ™Р С•РЎРѓРЎРѓРЎвЂљР В°Р Р…Р С•Р Р†Р В»Р ВµР Р…Р С• Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљР С•Р Р†: %d" % restored_count)
 
 
 func _restore_artifacts():
-	"""Спавнит только НЕ подобранные артефакты"""
+	"""Р РЋР С—Р В°Р Р†Р Р…Р С‘РЎвЂљ РЎвЂљР С•Р В»РЎРЉР С”Р С• Р СњР вЂў Р С—Р С•Р Т‘Р С•Р В±РЎР‚Р В°Р Р…Р Р…РЎвЂ№Р Вµ Р В°РЎР‚РЎвЂљР ВµРЎвЂћР В°Р С”РЎвЂљРЎвЂ№"""
 	var restored_count = 0
-	
+
 	for i in range(artifact_ids.size()):
 		var artifact_id = artifact_ids[i]
 		var pickup_name = "ArtifactPickup_%s" % artifact_id
-		
-		# Проверяем - был ли подобран
+
+		# Р СџРЎР‚Р С•Р Р†Р ВµРЎР‚РЎРЏР ВµР С - Р В±РЎвЂ№Р В» Р В»Р С‘ Р С—Р С•Р Т‘Р С•Р В±РЎР‚Р В°Р Р…
 		if Global and Global.is_pickup_collected(pickup_name):
-			continue  # Пропускаем
-		
+			continue  # Р СџРЎР‚Р С•Р С—РЎС“РЎРѓР С”Р В°Р ВµР С
+
 		_create_artifact_pickup(artifact_id, i)
 		restored_count += 1
-	
+
 	if restored_count > 0:
-		print("   📦 Восстановлено артефактов: %d" % restored_count)
+		print("   СЂСџвЂњВ¦ Р вЂ™Р С•РЎРѓРЎРѓРЎвЂљР В°Р Р…Р С•Р Р†Р В»Р ВµР Р…Р С• Р В°РЎР‚РЎвЂљР ВµРЎвЂћР В°Р С”РЎвЂљР С•Р Р†: %d" % restored_count)
 
 
 # ===========================================
-# СОЗДАНИЕ PICKUP
+# Р РЋР С›Р вЂ”Р вЂќР С’Р СњР ВР вЂў PICKUP
 # ===========================================
 
 func _create_item_pickup(item_id: int, index: int):
-	"""Создаёт pickup предмета"""
-	var pickup = Area2D.new()
+	"""Create an item pickup from the reusable scene."""
+	var pickup = ITEM_PICKUP_SCENE.instantiate() as ItemPickup
+	if pickup == null:
+		push_error("Chest: failed to instantiate item pickup scene")
+		return
+
 	pickup.name = "ItemPickup_%d_%d" % [item_id, index]
-	
-	# Collision layers
-	pickup.set_collision_layer_value(1, false)
-	pickup.set_collision_layer_value(2, false)
-	pickup.set_collision_layer_value(3, false)
-	pickup.set_collision_layer_value(4, true)
-	pickup.set_collision_mask_value(1, false)
-	pickup.set_collision_mask_value(2, true)  # Видит игрока
-	pickup.set_collision_mask_value(3, false)
-	pickup.set_collision_mask_value(4, false)
-	pickup.monitoring = true
-	pickup.monitorable = true
-	
-	# Sprite
-	var sprite = Sprite2D.new()
-	sprite.name = "Sprite2D"
-	_set_item_texture(sprite, item_id)
-	sprite.scale = Vector2(item_scale, item_scale)
-	pickup.add_child(sprite)
-	
-	# Collision
-	var collision = CollisionShape2D.new()
-	collision.name = "CollisionShape2D"
-	var shape = CircleShape2D.new()
-	shape.radius = collision_radius
-	collision.shape = shape
-	pickup.add_child(collision)
-	
-	# Hint
-	var hint = Label.new()
-	hint.name = "HintLabel"
-	hint.text = "[F] Подобрать"
-	hint.position = Vector2(-50, -30 * item_scale)
-	hint.visible = false
-	hint.add_theme_font_size_override("font_size", 14)
-	hint.add_theme_color_override("font_color", Color.WHITE)
-	pickup.add_child(hint)
-	
-	# Позиция
-	var offset_x = (index % 5 - 2) * item_spread
-	pickup.global_position = global_position + Vector2(offset_x, -10)
-	
-	# Добавляем на сцену
-	get_parent().add_child(pickup)
-	
-	# Metadata
-	pickup.set_meta("item_id", item_id)
-	pickup.set_meta("pickup_type", "item")
-	pickup.set_meta("collected", false)
-	
-	# Анимация
-	_animate_spawn(pickup)
-	
-	# Логика подбора
-	_attach_pickup_script(pickup, hint)
-	
-	print("   📦→ Предмет ID=%d" % item_id)
+	pickup.item_id = item_id
+	pickup.global_position = _get_item_pickup_position(index)
+	pickup.setup(item_id, _build_item_pickup_config())
+	_add_spawned_pickup(pickup)
+
+	print("   spawned item ID=%d" % item_id)
 
 
 func _create_artifact_pickup(artifact_id: String, index: int):
-	"""Создаёт pickup артефакта"""
-	var pickup = Area2D.new()
+	"""Create an artifact pickup from the reusable scene."""
+	var pickup = ARTIFACT_PICKUP_SCENE.instantiate() as ArtifactPickup
+	if pickup == null:
+		push_error("Chest: failed to instantiate artifact pickup scene")
+		return
+
 	pickup.name = "ArtifactPickup_%s" % artifact_id
-	
-	# Collision layers
-	pickup.set_collision_layer_value(1, false)
-	pickup.set_collision_layer_value(2, false)
-	pickup.set_collision_layer_value(3, false)
-	pickup.set_collision_layer_value(4, true)
-	pickup.set_collision_mask_value(1, false)
-	pickup.set_collision_mask_value(2, true)  # Видит игрока
-	pickup.set_collision_mask_value(3, false)
-	pickup.set_collision_mask_value(4, false)
-	pickup.monitoring = true
-	pickup.monitorable = true
-	
-	# Sprite
-	var sprite = Sprite2D.new()
-	sprite.name = "Sprite2D"
-	var tex_path = "res://assets/items/artifacts/%s.png" % artifact_id
-	if ResourceLoader.exists(tex_path):
-		sprite.texture = load(tex_path)
-	sprite.scale = Vector2(artifact_scale, artifact_scale)
-	pickup.add_child(sprite)
-	
-	# Collision
-	var collision = CollisionShape2D.new()
-	collision.name = "CollisionShape2D"
-	var shape = CircleShape2D.new()
-	shape.radius = collision_radius
-	collision.shape = shape
-	pickup.add_child(collision)
-	
-	# Hint
-	var hint = Label.new()
-	hint.name = "HintLabel"
-	hint.text = "[F] Подобрать"
-	hint.position = Vector2(-50, -35 * artifact_scale)
-	hint.visible = false
-	hint.add_theme_font_size_override("font_size", 14)
-	hint.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
-	pickup.add_child(hint)
-	
-	# Позиция
+	pickup.artifact_id = artifact_id
+	pickup.global_position = _get_artifact_pickup_position(index)
+	pickup.setup(artifact_id, _build_artifact_pickup_config())
+	_add_spawned_pickup(pickup)
+
+	print("   spawned artifact %s" % artifact_id)
+
+
+func _get_item_pickup_position(index: int) -> Vector2:
+	var offset_x = (index % 5 - 2) * item_spread
+	return global_position + Vector2(offset_x, -10)
+
+
+func _get_artifact_pickup_position(index: int) -> Vector2:
 	var offset_x = (index - artifact_ids.size() / 2.0) * item_spread * 1.2
-	pickup.global_position = global_position + Vector2(offset_x, -10)
-	
-	# Добавляем на сцену
-	get_parent().add_child(pickup)
-	
-	# Metadata
-	pickup.set_meta("artifact_id", artifact_id)
-	pickup.set_meta("pickup_type", "artifact")
-	pickup.set_meta("collected", false)
-	
-	# Анимация
-	_animate_spawn(pickup)
-	
-	# Логика подбора
-	_attach_pickup_script(pickup, hint)
-	
-	print("   📦→ Артефакт: %s" % artifact_id)
+	return global_position + Vector2(offset_x, -10)
 
 
-func _attach_pickup_script(pickup: Area2D, hint: Label):
-	"""Прикрепляет скрипт обработки подбора к pickup"""
-	var script = GDScript.new()
-	script.source_code = """
-extends Area2D
-
-var hint_label: Label = null
-var is_collected: bool = false
-
-func _ready():
-	set_process(true)
-
-func setup(hint: Label):
-	hint_label = hint
-
-func _process(_delta):
-	if is_collected:
-		return
-	
-	var player_near = false
-	for body in get_overlapping_bodies():
-		if body.is_in_group(\"player\") or body.has_method(\"take_damage\"):
-			player_near = true
-			break
-	
-	if hint_label:
-		hint_label.visible = player_near
-	
-	if player_near and Input.is_action_just_pressed(\"interact\"):
-		_collect()
-
-func _collect():
-	if is_collected:
-		return
-	is_collected = true
-	
-	if hint_label:
-		hint_label.visible = false
-	
-	var pickup_type = get_meta(\"pickup_type\", \"\")
-	
-	if pickup_type == \"item\":
-		var item_id = get_meta(\"item_id\", 0)
-		if Inventory:
-			var remaining = Inventory.add_item_by_id(item_id, 1)
-			if remaining > 0:
-				print(\"⚠️ Инвентарь полон!\")
-				is_collected = false
-				return
-		if Global:
-			Global.register_collected_pickup(name)
-			Global.add_item_collected()
-		print(\"✅ Подобран предмет ID=%d\" % item_id)
-	
-	elif pickup_type == \"artifact\":
-		var artifact_id = get_meta(\"artifact_id\", \"\")
-		var artifact_item_ids = {
-			\"hermes_wings\": 201,
-			\"phoenix_feather\": 202,
-			\"vampire_ring\": 203,
-			\"berserker_amulet\": 204,
-		}
-		var item_id = artifact_item_ids.get(artifact_id, 0)
-		if item_id > 0 and Inventory:
-			var remaining = Inventory.add_item_by_id(item_id, 1)
-			if remaining > 0:
-				print(\"⚠️ Инвентарь полон!\")
-				is_collected = false
-				return
-			print(\"✅ Артефакт '%s' добавлен в инвентарь\" % artifact_id)
-		else:
-			if Global:
-				Global.collect_artifact(artifact_id)
-			print(\"✅ Артефакт '%s' подобран\" % artifact_id)
-		if Global:
-			Global.register_collected_pickup(name)
-	
-	# Эффект исчезновения
-	var sprite = get_node_or_null(\"Sprite2D\")
-	monitoring = false
-	
-	var tween = create_tween()
-	tween.set_parallel(true)
-	if sprite:
-		tween.tween_property(sprite, \"scale\", sprite.scale * 1.5, 0.15)
-		tween.tween_property(sprite, \"modulate:a\", 0.0, 0.15)
-		tween.tween_property(sprite, \"position:y\", sprite.position.y - 25, 0.15)
-	tween.chain().tween_callback(queue_free)
-"""
-	script.reload()
-	pickup.set_script(script)
-	pickup.call("setup", hint)
-
-
-func _set_item_texture(sprite: Sprite2D, item_id: int):
-	"""Устанавливает текстуру предмета"""
-	var paths = {
-		1: "res://assets/items/potions/Small Health Potion.png",
-		2: "res://assets/items/potions/Small Mana Potion.png",
-		3: "res://assets/items/potions/Small Stone Skin Potion.png",
-		4: "res://assets/items/potions/Potion of Rage.png",
-		101: "res://assets/items/weapons/Iron Sword.png",
-		102: "res://assets/items/shields/Wooden Shield.png",
-		103: "res://assets/items/armor/Steel Helmet.png",
-		104: "res://assets/items/armor/Leather Armor.png",
-		105: "res://assets/items/armor/Combat Gloves.png",
+func _build_item_pickup_config() -> Dictionary:
+	return {
+		"display_scale": item_scale,
+		"collision_radius": collision_radius,
+		"hint_offset": Vector2(-50, -30 * item_scale),
 	}
-	
-	var path = paths.get(item_id, "")
-	if path != "" and ResourceLoader.exists(path):
-		sprite.texture = load(path)
+
+
+func _build_artifact_pickup_config() -> Dictionary:
+	return {
+		"display_scale": artifact_scale,
+		"collision_radius": collision_radius,
+		"hint_offset": Vector2(-50, -35 * artifact_scale),
+	}
+
+
+func _add_spawned_pickup(pickup: Node2D):
+	if get_parent() == null:
+		push_error("Chest: parent is missing, cannot spawn pickup")
+		pickup.queue_free()
+		return
+
+	get_parent().add_child(pickup)
+	if pickup.has_method("start_floating_after"):
+		pickup.start_floating_after(0.6)
+	_animate_spawn(pickup)
+	item_spawned.emit(pickup)
 
 
 func _animate_spawn(pickup: Node2D):
-	"""Анимация появления"""
+	"""Spawn animation."""
 	var start_y = pickup.global_position.y
 	var random_offset_x = randf_range(-20, 20)
-	
+
 	pickup.global_position.y -= 50
 	pickup.global_position.x += random_offset_x
 	pickup.scale = Vector2(0.2, 0.2)
 	pickup.modulate.a = 0.0
-	
+
 	var tween = create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(pickup, "global_position:y", start_y + 5, 0.6).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BOUNCE)
 	tween.tween_property(pickup, "scale", Vector2(1, 1), 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	tween.tween_property(pickup, "modulate:a", 1.0, 0.25)
 
-
-# ===========================================
-# НАСТРОЙКА СОДЕРЖИМОГО
-# ===========================================
 
 func setup_items(ids: Array, amounts: Array = []):
 	chest_type = ChestType.ITEMS

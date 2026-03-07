@@ -1,0 +1,486 @@
+{
+  "ingredients": [
+    // Базовые
+    {
+      "id": "empty_flask",
+      "name": "Пустая колба",
+      "rarity": "common",
+      "type": "base",
+      "description": "Стеклянная колба для смешивания."
+    },
+    {
+      "id": "water",
+      "name": "Очищенная вода",
+      "rarity": "common",
+      "type": "base",
+      "description": "Чистая вода из источника."
+    },
+
+    // Здоровье
+    {
+      "id": "healing_herb",
+      "name": "Целебная трава",
+      "rarity": "common",
+      "type": "health",
+      "description": "Обычная трава, слабо восстанавливает здоровье."
+    },
+    {
+      "id": "healing_root",
+      "name": "Целебный корень",
+      "rarity": "uncommon",
+      "type": "health",
+      "description": "Корень с более сильным эффектом."
+    },
+    {
+      "id": "healing_flower",
+      "name": "Целебный цветок",
+      "rarity": "rare",
+      "type": "health",
+      "description": "Редкий цветок, усиливает регенерацию."
+    },
+    {
+      "id": "life_resin",
+      "name": "Живительная смола",
+      "rarity": "epic",
+      "type": "health",
+      "description": "Смола древнего дерева, дающая жизненную силу."
+    },
+    {
+      "id": "life_essence",
+      "name": "Эликсир жизни",
+      "rarity": "legendary",
+      "type": "health",
+      "description": "Концентрат жизненной энергии."
+    },
+
+    // Мана
+    {
+      "id": "mana_herb",
+      "name": "Трава маны",
+      "rarity": "common",
+      "type": "mana",
+      "description": "Трава, слабо восстанавливающая ману."
+    },
+    {
+      "id": "mana_root",
+      "name": "Корень маны",
+      "rarity": "uncommon",
+      "type": "mana",
+      "description": "Корень, дающий больше маны."
+    },
+    {
+      "id": "mana_flower",
+      "name": "Цветок маны",
+      "rarity": "rare",
+      "type": "mana",
+      "description": "Цветок, концентрирующий магическую энергию."
+    },
+    {
+      "id": "mana_crystal",
+      "name": "Кристалл маны",
+      "rarity": "epic",
+      "type": "mana",
+      "description": "Осколок кристалла, наполненный маной."
+    },
+    {
+      "id": "ethereal_essence",
+      "name": "Эфирная эссенция",
+      "rarity": "legendary",
+      "type": "mana",
+      "description": "Сгусток чистой магии из эфирного плана."
+    },
+
+    // Урон (ярость)
+    {
+      "id": "hot_pepper",
+      "name": "Жгучий перец",
+      "rarity": "common",
+      "type": "damage",
+      "description": "Жгучий перец, временно повышает агрессию."
+    },
+    {
+      "id": "fire_resin",
+      "name": "Огненная смола",
+      "rarity": "uncommon",
+      "type": "damage",
+      "description": "Смола, излучающая тепло и ярость."
+    },
+    {
+      "id": "fury_dust",
+      "name": "Пыль ярости",
+      "rarity": "rare",
+      "type": "damage",
+      "description": "Пыль, остающаяся после ритуалов берсерков."
+    },
+    {
+      "id": "berserker_blood",
+      "name": "Кровь берсерка",
+      "rarity": "epic",
+      "type": "damage",
+      "description": "Капля крови, пропитанная боевым безумием."
+    },
+    {
+      "id": "chaos_spark",
+      "name": "Искра хаоса",
+      "rarity": "legendary",
+      "type": "damage",
+      "description": "Искра чистой разрушительной энергии."
+    },
+
+    // Броня (каменная кожа)
+    {
+      "id": "stone_crumb",
+      "name": "Каменная крошка",
+      "rarity": "common",
+      "type": "armor",
+      "description": "Мелкая каменная пыль, немного укрепляет кожу."
+    },
+    {
+      "id": "iron_dust",
+      "name": "Железная пыль",
+      "rarity": "uncommon",
+      "type": "armor",
+      "description": "Пыль из перемолотой железной руды."
+    },
+    {
+      "id": "mithril_shard",
+      "name": "Мифриловая крошка",
+      "rarity": "rare",
+      "type": "armor",
+      "description": "Крошка лёгкого, но прочного металла."
+    },
+    {
+      "id": "adamantite_dust",
+      "name": "Адамантитовая пыль",
+      "rarity": "epic",
+      "type": "armor",
+      "description": "Пыль адамантита – крепчайшего металла."
+    },
+    {
+      "id": "meteor_shard",
+      "name": "Осколок метеорита",
+      "rarity": "legendary",
+      "type": "armor",
+      "description": "Осколок упавшей звезды, несущий небесную защиту."
+    },
+
+    // Яд
+    {
+      "id": "poison_mushroom",
+      "name": "Ядовитый гриб",
+      "rarity": "common",
+      "type": "poison",
+      "description": "Гриб с лёгким ядом."
+    },
+    {
+      "id": "poison_ivy",
+      "name": "Ядовитый плющ",
+      "rarity": "uncommon",
+      "type": "poison",
+      "description": "Растение, вызывающее раздражение."
+    },
+    {
+      "id": "poison_gland",
+      "name": "Ядовитая железа",
+      "rarity": "rare",
+      "type": "poison",
+      "description": "Железа ядовитого существа."
+    },
+    {
+      "id": "concentrated_poison",
+      "name": "Концентрированный яд",
+      "rarity": "epic",
+      "type": "poison",
+      "description": "Сильно концентрированный яд."
+    },
+    {
+      "id": "necrotic_essence",
+      "name": "Некротическая эссенция",
+      "rarity": "legendary",
+      "type": "poison",
+      "description": "Эссенция, несущая смерть."
+    },
+
+    // Вампиризм
+    {
+      "id": "blood_dew",
+      "name": "Кровавая роса",
+      "rarity": "rare",
+      "type": "vampirism",
+      "description": "Роса, собранная на кровавых полях."
+    },
+    {
+      "id": "vampire_dust",
+      "name": "Вампирская пыль",
+      "rarity": "epic",
+      "type": "vampirism",
+      "description": "Пыль из останков ночных созданий."
+    },
+    {
+      "id": "night_heart",
+      "name": "Сердце ночи",
+      "rarity": "legendary",
+      "type": "vampirism",
+      "description": "Сердце, бьющееся только в темноте."
+    },
+
+    // Скорость (двойная атака)
+    {
+      "id": "wind_pollen",
+      "name": "Ветряная пыльца",
+      "rarity": "common",
+      "type": "speed",
+      "description": "Пыльца, танцующая на ветру."
+    },
+    {
+      "id": "wind_feather",
+      "name": "Перо ветра",
+      "rarity": "uncommon",
+      "type": "speed",
+      "description": "Перо птицы, летящей быстрее ветра."
+    },
+    {
+      "id": "speed_crystal",
+      "name": "Скоростной кристалл",
+      "rarity": "rare",
+      "type": "speed",
+      "description": "Кристалл, ускоряющий движения."
+    },
+    {
+      "id": "time_essence",
+      "name": "Временная эссенция",
+      "rarity": "epic",
+      "type": "speed",
+      "description": "Эссенция, искажающая течение времени."
+    },
+    {
+      "id": "ethereal_wing",
+      "name": "Эфирное крыло",
+      "rarity": "legendary",
+      "type": "speed",
+      "description": "Крыло существа из эфирного плана."
+    },
+
+    // Щит
+    {
+      "id": "oak_bark",
+      "name": "Кора дуба",
+      "rarity": "common",
+      "type": "shield",
+      "description": "Кора старого дуба, дающая защиту."
+    },
+    {
+      "id": "iron_filing",
+      "name": "Железная стружка",
+      "rarity": "uncommon",
+      "type": "shield",
+      "description": "Стружка от обработки железа."
+    },
+    {
+      "id": "crystal_shard",
+      "name": "Кристальная крошка",
+      "rarity": "rare",
+      "type": "shield",
+      "description": "Осколки кристалла, отражающие урон."
+    },
+    {
+      "id": "magic_barrier",
+      "name": "Магический барьер",
+      "rarity": "epic",
+      "type": "shield",
+      "description": "Сгусток защитной магии."
+    },
+    {
+      "id": "divine_tear",
+      "name": "Божественная слеза",
+      "rarity": "legendary",
+      "type": "shield",
+      "description": "Слеза, упавшая с небес."
+    },
+
+    // Огонь (сопротивление)
+    {
+      "id": "fire_resin_resist",
+      "name": "Огненная смола",
+      "rarity": "common",
+      "type": "fire",
+      "description": "Смола, впитывающая жар."
+    },
+    {
+      "id": "heat_stone",
+      "name": "Жар-камень",
+      "rarity": "uncommon",
+      "type": "fire",
+      "description": "Камень, всегда тёплый на ощупь."
+    },
+    {
+      "id": "fire_crystal",
+      "name": "Огненный кристалл",
+      "rarity": "rare",
+      "type": "fire",
+      "description": "Кристалл, светящийся алым."
+    },
+    {
+      "id": "flame_essence",
+      "name": "Пламенная эссенция",
+      "rarity": "epic",
+      "type": "fire",
+      "description": "Сгусток пламени в жидкой форме."
+    },
+    {
+      "id": "volcano_heart",
+      "name": "Сердце вулкана",
+      "rarity": "legendary",
+      "type": "fire",
+      "description": "Остывшая лава из самого сердца вулкана."
+    },
+
+    // Яд (сопротивление)
+    {
+      "id": "antidote_herb",
+      "name": "Противоядие трава",
+      "rarity": "common",
+      "type": "poison_resist",
+      "description": "Трава, нейтрализующая слабые яды."
+    },
+    {
+      "id": "neutralizing_root",
+      "name": "Нейтрализующий корень",
+      "rarity": "uncommon",
+      "type": "poison_resist",
+      "description": "Корень, подавляющий токсины."
+    },
+    {
+      "id": "antidote_flower",
+      "name": "Антидот цветок",
+      "rarity": "rare",
+      "type": "poison_resist",
+      "description": "Цветок, цветущий только в чистых местах."
+    },
+    {
+      "id": "purifying_essence",
+      "name": "Очищающая эссенция",
+      "rarity": "epic",
+      "type": "poison_resist",
+      "description": "Эссенция, вычищающая любые яды."
+    },
+    {
+      "id": "panacea",
+      "name": "Панацея",
+      "rarity": "legendary",
+      "type": "poison_resist",
+      "description": "Универсальное противоядие."
+    },
+
+    // Кровотечение (сопротивление)
+    {
+      "id": "styptic_herb",
+      "name": "Кровоостанавливающая трава",
+      "rarity": "common",
+      "type": "bleed_resist",
+      "description": "Трава, помогающая свёртыванию крови."
+    },
+    {
+      "id": "clotting_root",
+      "name": "Свёртывающий корень",
+      "rarity": "uncommon",
+      "type": "bleed_resist",
+      "description": "Корень, ускоряющий заживление."
+    },
+    {
+      "id": "iron_moss",
+      "name": "Железный мох",
+      "rarity": "rare",
+      "type": "bleed_resist",
+      "description": "Мох, растущий на скалах, останавливает кровь."
+    },
+    {
+      "id": "regenerating_essence",
+      "name": "Регенерирующая эссенция",
+      "rarity": "epic",
+      "type": "bleed_resist",
+      "description": "Эссенция, ускоряющая регенерацию."
+    },
+    {
+      "id": "immortality_elixir",
+      "name": "Эликсир бессмертия",
+      "rarity": "legendary",
+      "type": "bleed_resist",
+      "description": "Легендарное средство от любых ран."
+    },
+
+    // Холод (сопротивление)
+    {
+      "id": "cold_dust",
+      "name": "Холодная пыль",
+      "rarity": "common",
+      "type": "cold_resist",
+      "description": "Пыль, всегда холодная на ощупь."
+    },
+    {
+      "id": "ice_crystal",
+      "name": "Ледяной кристалл",
+      "rarity": "uncommon",
+      "type": "cold_resist",
+      "description": "Кристалл, покрытый инеем."
+    },
+    {
+      "id": "permafrost",
+      "name": "Вечная мерзлота",
+      "rarity": "rare",
+      "type": "cold_resist",
+      "description": "Кусочек вечной мерзлоты."
+    },
+    {
+      "id": "winter_essence",
+      "name": "Эссенция зимы",
+      "rarity": "epic",
+      "type": "cold_resist",
+      "description": "Сгусток холода из северных земель."
+    },
+    {
+      "id": "winter_heart",
+      "name": "Сердце зимы",
+      "rarity": "legendary",
+      "type": "cold_resist",
+      "description": "Замерзшее сердце зимы."
+    },
+
+    // Безумие (сопротивление и лечение)
+    {
+      "id": "calming_herb",
+      "name": "Успокаивающая трава",
+      "rarity": "common",
+      "type": "madness",
+      "description": "Трава, снимающая лёгкое волнение."
+    },
+    {
+      "id": "mint_root",
+      "name": "Мятный корень",
+      "rarity": "uncommon",
+      "type": "madness",
+      "description": "Корень с освежающим запахом."
+    },
+    {
+      "id": "lotus_of_peace",
+      "name": "Лотос покоя",
+      "rarity": "rare",
+      "type": "madness",
+      "description": "Цветок, растущий в тихих водоёмах."
+    },
+    {
+      "id": "clarity_essence",
+      "name": "Эссенция ясности",
+      "rarity": "epic",
+      "type": "madness",
+      "description": "Эссенция, проясняющая разум."
+    },
+    {
+      "id": "mind_crystal",
+      "name": "Кристалл разума",
+      "rarity": "legendary",
+      "type": "madness",
+      "description": "Кристалл, дарующий абсолютную ясность."
+    }
+  ]
+}

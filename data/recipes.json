@@ -1,0 +1,499 @@
+{
+  "recipes": [
+    // ========== ЗЕЛЬЯ ЗДОРОВЬЯ ==========
+    {
+      "id": "recipe_potion_health_common",
+      "result_id": "potion_health_common",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "healing_herb", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_health_uncommon",
+      "result_id": "potion_health_uncommon",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "healing_root", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_health_rare",
+      "result_id": "potion_health_rare",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "healing_flower", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_health_epic",
+      "result_id": "potion_health_epic",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "life_resin", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_health_legendary",
+      "result_id": "potion_health_legendary",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "life_essence", "quantity": 1 },
+        { "id": "meteor_shard", "quantity": 1 }
+      ]
+    },
+
+    // ========== ЗЕЛЬЯ МАНЫ ==========
+    {
+      "id": "recipe_potion_mana_common",
+      "result_id": "potion_mana_common",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "mana_herb", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_mana_uncommon",
+      "result_id": "potion_mana_uncommon",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "mana_root", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_mana_rare",
+      "result_id": "potion_mana_rare",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "mana_flower", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_mana_epic",
+      "result_id": "potion_mana_epic",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "mana_crystal", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_mana_legendary",
+      "result_id": "potion_mana_legendary",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "ethereal_essence", "quantity": 1 },
+        { "id": "mana_crystal", "quantity": 1 }
+      ]
+    },
+
+    // ========== ЗЕЛЬЯ ЯРОСТИ (УРОН) ==========
+    {
+      "id": "recipe_potion_damage_common",
+      "result_id": "potion_damage_common",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "hot_pepper", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_damage_uncommon",
+      "result_id": "potion_damage_uncommon",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "fire_resin", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_damage_rare",
+      "result_id": "potion_damage_rare",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "fury_dust", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_damage_epic",
+      "result_id": "potion_damage_epic",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "berserker_blood", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_damage_legendary",
+      "result_id": "potion_damage_legendary",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "chaos_spark", "quantity": 1 },
+        { "id": "vampire_dust", "quantity": 1 }
+      ]
+    },
+
+    // ========== ЗЕЛЬЯ КАМЕННОЙ КОЖИ (БРОНЯ) ==========
+    {
+      "id": "recipe_potion_armor_common",
+      "result_id": "potion_armor_common",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "stone_crumb", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_armor_uncommon",
+      "result_id": "potion_armor_uncommon",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "iron_dust", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_armor_rare",
+      "result_id": "potion_armor_rare",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "mithril_shard", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_armor_epic",
+      "result_id": "potion_armor_epic",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "adamantite_dust", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_armor_legendary",
+      "result_id": "potion_armor_legendary",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "meteor_shard", "quantity": 1 },
+        { "id": "ice_crystal", "quantity": 1 }
+      ]
+    },
+
+    // ========== ЗЕЛЬЯ ВАМПИРИЗМА ==========
+    {
+      "id": "recipe_potion_vampire_rare",
+      "result_id": "potion_vampire_rare",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "blood_dew", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_vampire_epic",
+      "result_id": "potion_vampire_epic",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "vampire_dust", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_vampire_legendary",
+      "result_id": "potion_vampire_legendary",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "night_heart", "quantity": 1 },
+        { "id": "vampire_dust", "quantity": 1 }
+      ]
+    },
+
+    // ========== ЗЕЛЬЯ СКОРОСТИ (ДВОЙНАЯ АТАКА) ==========
+    {
+      "id": "recipe_potion_speed_common",
+      "result_id": "potion_speed_common",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "wind_pollen", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_speed_uncommon",
+      "result_id": "potion_speed_uncommon",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "wind_feather", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_speed_rare",
+      "result_id": "potion_speed_rare",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "speed_crystal", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_speed_epic",
+      "result_id": "potion_speed_epic",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "time_essence", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_speed_legendary",
+      "result_id": "potion_speed_legendary",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "ethereal_wing", "quantity": 1 },
+        { "id": "speed_crystal", "quantity": 1 }
+      ]
+    },
+
+    // ========== ЗЕЛЬЯ ЩИТА ==========
+    {
+      "id": "recipe_potion_shield_common",
+      "result_id": "potion_shield_common",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "oak_bark", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_shield_uncommon",
+      "result_id": "potion_shield_uncommon",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "iron_filing", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_shield_rare",
+      "result_id": "potion_shield_rare",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "crystal_shard", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_shield_epic",
+      "result_id": "potion_shield_epic",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "magic_barrier", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_shield_legendary",
+      "result_id": "potion_shield_legendary",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "divine_tear", "quantity": 1 },
+        { "id": "crystal_shard", "quantity": 1 }
+      ]
+    },
+
+    // ========== ЗЕЛЬЯ ЯДА ==========
+    {
+      "id": "recipe_potion_poison_rare",
+      "result_id": "potion_poison_rare",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "poison_mushroom", "quantity": 1 },
+        { "id": "poison_ivy", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_poison_epic",
+      "result_id": "potion_poison_epic",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "poison_gland", "quantity": 1 },
+        { "id": "concentrated_poison", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_poison_legendary",
+      "result_id": "potion_poison_legendary",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "necrotic_essence", "quantity": 1 },
+        { "id": "vampire_dust", "quantity": 1 }
+      ]
+    },
+
+    // ========== ЗЕЛЬЯ УДАЧИ ==========
+    // Примечание: для зелий удачи нужны ингредиенты удачи, но мы их не ввели. Для простоты используем clover_leaf, который нужно добавить в ingredients.json. Здесь мы покажем пример.
+    {
+      "id": "recipe_potion_luck_common",
+      "result_id": "potion_luck_common",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "clover_leaf", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_luck_uncommon",
+      "result_id": "potion_luck_uncommon",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "four_leaf_clover", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_luck_rare",
+      "result_id": "potion_luck_rare",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "golden_clover", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_luck_epic",
+      "result_id": "potion_luck_epic",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "lucky_rabbit_foot", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_luck_legendary",
+      "result_id": "potion_luck_legendary",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "rainbow_feather", "quantity": 1 },
+        { "id": "golden_clover", "quantity": 1 }
+      ]
+    },
+
+    // ========== ЗЕЛЬЯ СОПРОТИВЛЕНИЯ ОГНЮ ==========
+    {
+      "id": "recipe_potion_resist_fire_common",
+      "result_id": "potion_resist_fire_common",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "fire_resin_resist", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_resist_fire_uncommon",
+      "result_id": "potion_resist_fire_uncommon",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "heat_stone", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_resist_fire_rare",
+      "result_id": "potion_resist_fire_rare",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "fire_crystal", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_resist_fire_epic",
+      "result_id": "potion_resist_fire_epic",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "flame_essence", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_potion_resist_fire_legendary",
+      "result_id": "potion_resist_fire_legendary",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "volcano_heart", "quantity": 1 },
+        { "id": "flame_essence", "quantity": 1 }
+      ]
+    },
+
+    // Аналогично для других стихий (poison, bleed, cold, madness) можно добавить по аналогии.
+
+    // ========== АНТИДОТЫ БЕЗУМИЯ ==========
+    {
+      "id": "recipe_antidote_madness_common",
+      "result_id": "antidote_madness_common",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "calming_herb", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_antidote_madness_uncommon",
+      "result_id": "antidote_madness_uncommon",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "mint_root", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_antidote_madness_rare",
+      "result_id": "antidote_madness_rare",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "lotus_of_peace", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_antidote_madness_epic",
+      "result_id": "antidote_madness_epic",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "clarity_essence", "quantity": 1 }
+      ]
+    },
+    {
+      "id": "recipe_antidote_madness_legendary",
+      "result_id": "antidote_madness_legendary",
+      "ingredients": [
+        { "id": "empty_flask", "quantity": 1 },
+        { "id": "water", "quantity": 1 },
+        { "id": "mind_crystal", "quantity": 1 }
+      ]
+    }
+  ]
+}
