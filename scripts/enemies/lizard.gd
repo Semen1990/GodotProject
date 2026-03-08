@@ -1,9 +1,12 @@
-﻿extends CharacterBody2D
+extends CharacterBody2D
 
 signal died()
 signal health_changed(new_health)
+signal repeat_potion_blocking_changed(is_blocking)
 
 @export_enum("simple", "elite", "boss") var enemy_type: String = "simple"
+@export var blocks_repeat_potions: bool = true
+@export var require_engagement_to_block_repeat_potions: bool = false
 
 @export var max_health: int = 6
 @export var current_health: int = 6
@@ -34,6 +37,7 @@ var gravity: int = int(ProjectSettings.get_setting("physics/2d/default_gravity")
 var is_alive: bool = true
 var is_active: bool = true
 var persistence: PersistenceComponent = null
+var has_engaged_player: bool = false
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -42,6 +46,7 @@ var persistence: PersistenceComponent = null
 
 func _ready() -> void:
 	start_position = global_position
+	add_to_group("encounter_enemy")
 
 	if detection_area:
 		if not detection_area.body_entered.is_connected(_on_detection_entered):
@@ -112,6 +117,7 @@ func _load_persistent_state() -> Dictionary:
 				"current_health": 0,
 				"current_state": State.DEAD,
 				"start_position": start_position,
+		"has_engaged_player": has_engaged_player,
 			})
 
 	return saved_state
@@ -156,6 +162,7 @@ func save_state() -> Dictionary:
 		"current_state": current_state,
 		"patrol_direction": patrol_direction,
 		"start_position": start_position,
+		"has_engaged_player": has_engaged_player,
 	}
 
 
@@ -169,6 +176,7 @@ func load_state(state: Dictionary) -> void:
 		global_position = state["global_position"]
 	if state.has("patrol_direction"):
 		patrol_direction = int(state["patrol_direction"])
+	has_engaged_player = bool(state.get("has_engaged_player", false))
 
 	if not is_alive:
 		_set_dead_state()
@@ -192,8 +200,18 @@ func load_state(state: Dictionary) -> void:
 	_change_state(saved_state)
 
 
+
+func is_repeat_potion_blocker() -> bool:
+	if not blocks_repeat_potions or not is_alive:
+		return false
+	if require_engagement_to_block_repeat_potions and not has_engaged_player:
+		return false
+	return true
+
+
 func _set_dead_state() -> void:
 	is_alive = false
+	repeat_potion_blocking_changed.emit(false)
 	is_active = false
 	current_state = State.DEAD
 	visible = false
@@ -320,6 +338,9 @@ func _on_detection_entered(body: Node2D) -> void:
 		if body.get("is_dead") == true:
 			return
 		target = body
+		if not has_engaged_player:
+			has_engaged_player = true
+			repeat_potion_blocking_changed.emit(is_repeat_potion_blocker())
 		_change_state(State.CHASE)
 
 
@@ -445,6 +466,7 @@ func _die() -> void:
 	if persistence:
 		persistence.mark_consumed(capture_persistent_state())
 
+	repeat_potion_blocking_changed.emit(false)
 	died.emit()
 
 

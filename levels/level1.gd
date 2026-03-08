@@ -7,8 +7,9 @@ func _setup_level_after_player_spawn() -> void:
 
 func _setup_chests() -> void:
 	var chest_index: int = 0
+	var objects_root: Node = get_objects_root()
 
-	for child in get_children():
+	for child in objects_root.get_children():
 		if child is Chest:
 			chest_index += 1
 			_configure_chest(child as Chest, chest_index)

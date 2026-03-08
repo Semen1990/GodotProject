@@ -16,13 +16,13 @@ enum KeyColor {
 
 const PERSISTENCE_COMPONENT := preload("res://scripts/persistence/persistence_component.gd")
 const COLOR_NAMES := {
-	KeyColor.GOLD: "золотой",
-	KeyColor.SILVER: "серебряный",
-	KeyColor.RED: "красный",
-	KeyColor.BLUE: "синий",
-	KeyColor.GREEN: "зелёный",
-	KeyColor.PURPLE: "фиолетовый",
-	KeyColor.NONE: "нет",
+	KeyColor.GOLD: "Р·РѕР»РѕС‚РѕР№",
+	KeyColor.SILVER: "СЃРµСЂРµР±СЂСЏРЅС‹Р№",
+	KeyColor.RED: "РєСЂР°СЃРЅС‹Р№",
+	KeyColor.BLUE: "СЃРёРЅРёР№",
+	KeyColor.GREEN: "Р·РµР»С‘РЅС‹Р№",
+	KeyColor.PURPLE: "С„РёРѕР»РµС‚РѕРІС‹Р№",
+	KeyColor.NONE: "РЅРµС‚",
 }
 
 @export var target_scene: String = ""
@@ -122,12 +122,12 @@ func _update_hint_text() -> void:
 		return
 
 	if is_open:
-		hint_label.text = "[F] Войти"
+		hint_label.text = "[F] Р’РѕР№С‚Рё"
 	elif requires_key:
-		var key_name: String = COLOR_NAMES.get(required_key, "ключ")
-		hint_label.text = "[F] Открыть (%s ключ)" % key_name
+		var key_name: String = COLOR_NAMES.get(required_key, "РєР»СЋС‡")
+		hint_label.text = "[F] РћС‚РєСЂС‹С‚СЊ (%s РєР»СЋС‡)" % key_name
 	else:
-		hint_label.text = "[F] Открыть"
+		hint_label.text = "[F] РћС‚РєСЂС‹С‚СЊ"
 
 
 func _update_visual() -> void:
@@ -220,7 +220,7 @@ func _use_door() -> void:
 		print("target_scene is empty")
 		return
 
-	var level: Node = get_parent()
+	var level: Node = get_tree().current_scene
 	if level and level.has_method("save_before_transition"):
 		level.save_before_transition()
 	else:
@@ -252,8 +252,8 @@ func _show_locked_feedback() -> void:
 		tween.tween_property(animated_sprite, "modulate", original, 0.3)
 
 	if hint_label:
-		var key_name: String = COLOR_NAMES.get(required_key, "ключ")
-		hint_label.text = "Нужен %s ключ" % key_name
+		var key_name: String = COLOR_NAMES.get(required_key, "РєР»СЋС‡")
+		hint_label.text = "РќСѓР¶РµРЅ %s РєР»СЋС‡" % key_name
 		hint_label.add_theme_color_override("font_color", Color.RED)
 
 		await get_tree().create_timer(1.5).timeout

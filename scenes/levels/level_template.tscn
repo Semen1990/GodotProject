@@ -1,0 +1,36 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://levels/gameplay_level_base.gd" id="1_level_base"]
+[ext_resource type="PackedScene" path="res://scenes/Ui/game_ui.tscn" id="2_game_ui"]
+[ext_resource type="PackedScene" path="res://scenes/Ui/death_menu.tscn" id="3_death_menu"]
+[ext_resource type="Script" path="res://scripts/inventory/ui/death_menu.gd" id="4_death_menu_script"]
+[ext_resource type="PackedScene" path="res://scenes/Ui/simple_pause_menu.tscn" id="5_pause_menu"]
+
+[node name="GameplayLevelTemplate" type="Node2D"]
+script = ExtResource("1_level_base")
+
+[node name="Background" type="Node2D" parent="."]
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="Geometry" type="Node2D" parent="World"]
+
+[node name="Markers" type="Node2D" parent="World"]
+
+[node name="PlayerSpawn" type="Marker2D" parent="World/Markers"]
+position = Vector2(160, 320)
+
+[node name="Entities" type="Node2D" parent="World"]
+
+[node name="Encounters" type="Node2D" parent="World"]
+
+[node name="Objects" type="Node2D" parent="World"]
+
+[node name="UI" type="Node" parent="."]
+
+[node name="GameUI" parent="UI" instance=ExtResource("2_game_ui")]
+
+[node name="DeathMenu" parent="UI" groups=["death_menu"] instance=ExtResource("3_death_menu")]
+script = ExtResource("4_death_menu_script")
+
+[node name="SimplePauseMenu" parent="UI" instance=ExtResource("5_pause_menu")]

@@ -1,9 +1,20 @@
-﻿extends Node2D
+extends Node2D
 class_name GameplayLevelBase
 
 const DEFAULT_GAME_UI_SCENE := preload("res://scenes/Ui/game_ui.tscn")
 const DEFAULT_ITEM_DATABASE_PATH := "res://data/items/demo_database.tres"
 const ARMOR_POLL_INTERVAL := 0.1
+
+const WORLD_ROOT_PATH := "World"
+const GEOMETRY_ROOT_PATH := "World/Geometry"
+const MARKERS_ROOT_PATH := "World/Markers"
+const PLAYER_SPAWN_PATH := "World/Markers/PlayerSpawn"
+const ENTITIES_ROOT_PATH := "World/Entities"
+const ENCOUNTERS_ROOT_PATH := "World/Encounters"
+const OBJECTS_ROOT_PATH := "World/Objects"
+const UI_ROOT_PATH := "UI"
+const POTION_KIND_HP := "hp"
+const POTION_KIND_MANA := "mana"
 
 @export var item_database_path: String = DEFAULT_ITEM_DATABASE_PATH
 @export var camera_limit_left: int = 0
@@ -11,7 +22,7 @@ const ARMOR_POLL_INTERVAL := 0.1
 @export var camera_limit_top: int = 0
 @export var camera_limit_bottom: int = 1200
 
-@onready var player_spawn: Node2D = get_node_or_null("PlayerSpawn")
+var player_spawn: Node2D = null
 
 var game_ui: CanvasLayer = null
 var current_player: Node = null
@@ -19,6 +30,7 @@ var armor_watch_timer: Timer = null
 var last_armor_value: int = -1
 var inventory_ui: InventoryUI = null
 var hotbar_ui: HotbarUI = null
+var current_encounter_zone: CombatEncounterZone = null
 
 var base_player_armor: int = 0
 var base_player_max_health: int = 0
@@ -37,6 +49,8 @@ var potion_bonus_damage: int = 0
 
 
 func _ready() -> void:
+	_cache_level_structure()
+	_validate_level_structure()
 	_set_current_level()
 
 	var is_new_game: bool = not (Global and Global.run_started)
@@ -53,11 +67,74 @@ func _ready() -> void:
 	_setup_level_before_player_spawn()
 	_spawn_selected_character()
 	_setup_level_after_player_spawn()
+	_setup_encounter_zones()
 
 	if Global and game_ui:
 		Global.register_game_ui(game_ui)
 
 	_on_level_ready()
+
+
+func _cache_level_structure() -> void:
+	player_spawn = _find_player_spawn()
+
+
+func _validate_level_structure() -> void:
+	if get_markers_root() == self:
+		push_warning("GameplayLevelBase: missing 'World/Markers' container, using scene root fallback")
+	if player_spawn == null:
+		push_warning("GameplayLevelBase: missing 'World/Markers/PlayerSpawn' marker")
+	if get_entities_root() == self:
+		push_warning("GameplayLevelBase: missing 'World/Entities' container, using scene root fallback")
+	if get_encounters_root() == self:
+		push_warning("GameplayLevelBase: missing 'World/Encounters' container, using scene root fallback")
+	if get_objects_root() == self:
+		push_warning("GameplayLevelBase: missing 'World/Objects' container, using scene root fallback")
+	if get_ui_root() == self:
+		push_warning("GameplayLevelBase: missing 'UI' container, using scene root fallback")
+
+
+func get_world_root() -> Node:
+	return _resolve_level_node([WORLD_ROOT_PATH], self)
+
+
+func get_geometry_root() -> Node:
+	return _resolve_level_node([GEOMETRY_ROOT_PATH, "Geometry"], self)
+
+
+func get_markers_root() -> Node:
+	return _resolve_level_node([MARKERS_ROOT_PATH, "Markers"], self)
+
+
+func get_entities_root() -> Node:
+	return _resolve_level_node([ENTITIES_ROOT_PATH, "Entities"], self)
+
+
+func get_encounters_root() -> Node:
+	return _resolve_level_node([ENCOUNTERS_ROOT_PATH, "Encounters"], self)
+
+
+func get_objects_root() -> Node:
+	return _resolve_level_node([OBJECTS_ROOT_PATH, "Objects"], self)
+
+
+func get_ui_root() -> Node:
+	return _resolve_level_node([UI_ROOT_PATH], self)
+
+
+func _resolve_level_node(paths: Array[String], fallback: Node) -> Node:
+	for path in paths:
+		var candidate: Node = get_node_or_null(path)
+		if candidate != null:
+			return candidate
+	return fallback
+
+
+func _find_player_spawn() -> Node2D:
+	var spawn: Node2D = get_node_or_null(PLAYER_SPAWN_PATH) as Node2D
+	if spawn == null:
+		spawn = get_node_or_null("PlayerSpawn") as Node2D
+	return spawn
 
 
 func _set_current_level() -> void:
@@ -78,7 +155,7 @@ func _start_new_run() -> void:
 func _remove_persisted_scene_objects() -> void:
 	await get_tree().process_frame
 
-	for child in get_children():
+	for child in _get_persistent_scene_nodes():
 		var child_name: String = child.name
 
 		if Global and Global.is_pickup_collected(child_name):
@@ -94,6 +171,26 @@ func _remove_persisted_scene_objects() -> void:
 				child.is_open = true
 			if child.has_method("_update_visual"):
 				child._update_visual()
+
+
+func _get_persistent_scene_nodes() -> Array[Node]:
+	var nodes: Array[Node] = []
+
+	for container in [get_entities_root(), get_objects_root()]:
+		if container == null or container == self:
+			continue
+		for child in container.get_children():
+			nodes.append(child)
+
+	if not nodes.is_empty():
+		return nodes
+
+	for child in get_children():
+		if child == get_world_root() or child == get_ui_root():
+			continue
+		nodes.append(child)
+
+	return nodes
 
 
 func _initialize_inventory() -> void:
@@ -129,38 +226,136 @@ func _get_character_class() -> InventoryEnums.CharacterClass:
 
 
 func _ensure_game_ui() -> void:
-	var existing_ui: Node = get_node_or_null("GameUI")
-	if existing_ui is CanvasLayer:
-		game_ui = existing_ui as CanvasLayer
-	elif DEFAULT_GAME_UI_SCENE:
+	game_ui = _find_existing_game_ui()
+	if game_ui == null and DEFAULT_GAME_UI_SCENE:
 		game_ui = DEFAULT_GAME_UI_SCENE.instantiate() as CanvasLayer
 		if game_ui:
 			game_ui.name = "GameUI"
-			add_child(game_ui)
+			get_ui_root().add_child(game_ui)
 
 	if game_ui and game_ui.has_method("rebuild_ui"):
 		game_ui.rebuild_ui()
 
 
+func _find_existing_game_ui() -> CanvasLayer:
+	for path in ["%s/GameUI" % UI_ROOT_PATH, "GameUI"]:
+		var existing_ui: Node = get_node_or_null(path)
+		if existing_ui is CanvasLayer:
+			return existing_ui as CanvasLayer
+	return null
+
+
 func _ensure_inventory_ui() -> void:
-	inventory_ui = get_node_or_null("InventoryUI") as InventoryUI
+	inventory_ui = get_node_or_null("%s/InventoryUI" % UI_ROOT_PATH) as InventoryUI
+	if inventory_ui == null:
+		inventory_ui = get_node_or_null("InventoryUI") as InventoryUI
 	if inventory_ui == null:
 		inventory_ui = InventoryUI.new()
 		inventory_ui.name = "InventoryUI"
 		inventory_ui.visible = false
-		add_child(inventory_ui)
+		get_ui_root().add_child(inventory_ui)
 
 	if inventory_ui and inventory_ui.has_signal("item_used") and not inventory_ui.item_used.is_connected(_on_inventory_item_used):
 		inventory_ui.item_used.connect(_on_inventory_item_used)
 
-	hotbar_ui = get_node_or_null("HotbarUI") as HotbarUI
+	hotbar_ui = get_node_or_null("%s/HotbarUI" % UI_ROOT_PATH) as HotbarUI
+	if hotbar_ui == null:
+		hotbar_ui = get_node_or_null("HotbarUI") as HotbarUI
 	if hotbar_ui == null:
 		hotbar_ui = HotbarUI.new()
 		hotbar_ui.name = "HotbarUI"
-		add_child(hotbar_ui)
+		get_ui_root().add_child(hotbar_ui)
 
 	if hotbar_ui and hotbar_ui.has_signal("hotbar_slot_used") and not hotbar_ui.hotbar_slot_used.is_connected(_on_hotbar_slot_used):
 		hotbar_ui.hotbar_slot_used.connect(_on_hotbar_slot_used)
+
+
+func _setup_encounter_zones() -> void:
+	for zone in _get_encounter_zones():
+		if not zone.player_entered_encounter.is_connected(_on_player_entered_encounter):
+			zone.player_entered_encounter.connect(_on_player_entered_encounter)
+		if not zone.player_exited_encounter.is_connected(_on_player_exited_encounter):
+			zone.player_exited_encounter.connect(_on_player_exited_encounter)
+		if not zone.instant_potion_restrictions_changed.is_connected(_on_encounter_restrictions_changed):
+			zone.instant_potion_restrictions_changed.connect(_on_encounter_restrictions_changed)
+
+		if zone.has_method("_refresh_overlap_state"):
+			zone.call_deferred("_refresh_overlap_state")
+
+	call_deferred("_refresh_current_encounter_zone")
+
+
+func _get_encounter_zones() -> Array[CombatEncounterZone]:
+	var zones: Array[CombatEncounterZone] = []
+	var encounters_root: Node = get_encounters_root()
+
+	if encounters_root != null and encounters_root != self:
+		_collect_encounter_zones(encounters_root, zones)
+		if not zones.is_empty():
+			return zones
+
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return zones
+
+	for node in tree.get_nodes_in_group("combat_encounter_zones"):
+		var zone: CombatEncounterZone = node as CombatEncounterZone
+		if zone == null:
+			continue
+		if self.is_ancestor_of(zone):
+			zones.append(zone)
+
+	return zones
+
+
+func _collect_encounter_zones(root: Node, zones: Array[CombatEncounterZone]) -> void:
+	for child in root.get_children():
+		var zone: CombatEncounterZone = child as CombatEncounterZone
+		if zone != null:
+			zones.append(zone)
+
+		_collect_encounter_zones(child, zones)
+
+
+func _refresh_current_encounter_zone() -> void:
+	var active_zone: CombatEncounterZone = null
+
+	if current_player != null:
+		for zone in _get_encounter_zones():
+			if zone.has_player(current_player) or zone.overlaps_body(current_player):
+				active_zone = zone
+				break
+
+	current_encounter_zone = active_zone
+	_sync_instant_potion_repeat_blocks()
+
+
+func _sync_instant_potion_repeat_blocks() -> void:
+	if not Inventory or not Inventory.has_method("set_instant_potion_repeat_block"):
+		return
+
+	var hp_blocked: bool = false
+	var mana_blocked: bool = false
+
+	if current_encounter_zone != null:
+		var blocks: Dictionary = current_encounter_zone.get_instant_potion_blocks()
+		hp_blocked = bool(blocks.get(POTION_KIND_HP, false))
+		mana_blocked = bool(blocks.get(POTION_KIND_MANA, false))
+
+	Inventory.set_instant_potion_repeat_block(POTION_KIND_HP, hp_blocked)
+	Inventory.set_instant_potion_repeat_block(POTION_KIND_MANA, mana_blocked)
+
+
+func _on_player_entered_encounter(_zone: CombatEncounterZone) -> void:
+	_refresh_current_encounter_zone()
+
+
+func _on_player_exited_encounter(_zone: CombatEncounterZone) -> void:
+	_refresh_current_encounter_zone()
+
+
+func _on_encounter_restrictions_changed(_zone: CombatEncounterZone) -> void:
+	_refresh_current_encounter_zone()
 
 
 func _spawn_selected_character() -> void:
@@ -180,8 +375,8 @@ func _spawn_selected_character() -> void:
 		return
 
 	current_player = character_scene.instantiate()
+	get_entities_root().add_child(current_player)
 	current_player.global_position = _resolve_spawn_position()
-	add_child(current_player)
 
 	if Global:
 		Global.register_player(current_player)
@@ -199,12 +394,46 @@ func _resolve_spawn_position() -> Vector2:
 	var spawn_pos: Vector2 = player_spawn.global_position if player_spawn else Vector2(100, 100)
 
 	if Global and not Global.spawn_point.is_empty():
-		var spawn_node: Node2D = get_node_or_null(Global.spawn_point) as Node2D
+		var spawn_node: Node2D = _find_spawn_point(Global.spawn_point)
 		if spawn_node:
 			spawn_pos = spawn_node.global_position
 		Global.spawn_point = ""
 
 	return spawn_pos
+
+
+func _find_spawn_point(spawn_point_id: String) -> Node2D:
+	if spawn_point_id.is_empty():
+		return null
+
+	var markers_root: Node = get_markers_root()
+	if markers_root != null and markers_root != self:
+		var marker_spawn: Node2D = _find_spawn_point_in_branch(markers_root, spawn_point_id)
+		if marker_spawn:
+			return marker_spawn
+
+	return _find_spawn_point_in_branch(self, spawn_point_id)
+
+
+func _find_spawn_point_in_branch(root: Node, spawn_point_id: String) -> Node2D:
+	for child in root.get_children():
+		var node_2d: Node2D = child as Node2D
+		if node_2d and _matches_spawn_point(node_2d, spawn_point_id):
+			return node_2d
+
+		var nested: Node2D = _find_spawn_point_in_branch(child, spawn_point_id)
+		if nested:
+			return nested
+
+	return null
+
+
+func _matches_spawn_point(node: Node2D, spawn_point_id: String) -> bool:
+	if node.name == spawn_point_id:
+		return true
+	if "spawn_point_id" in node:
+		return str(node.spawn_point_id) == spawn_point_id
+	return false
 
 
 func _connect_player_lifecycle_signals() -> void:
@@ -280,8 +509,13 @@ func save_before_transition() -> void:
 	else:
 		Global.saved_player_mana = -1
 
+
+	_clear_level_potion_effects()
 	if RunState:
 		RunState.capture_scene_state(self)
+
+	current_encounter_zone = null
+	_sync_instant_potion_repeat_blocks()
 
 
 func _setup_camera() -> void:
@@ -353,13 +587,7 @@ func _on_inventory_item_used(item: InventoryItem) -> void:
 	if not current_player or not item or not item.data:
 		return
 
-	var item_id: int = item.get_item_id()
-	if Inventory.is_potion_used(item_id):
-		return
-
-	Inventory.mark_potion_used(item_id)
-	for effect in item.data.effects:
-		_apply_potion_effect(effect)
+	_try_use_potion_item(item)
 
 
 func _on_hotbar_slot_used(index: int) -> void:
@@ -370,13 +598,59 @@ func _on_hotbar_slot_used(index: int) -> void:
 	if not item or not item.data:
 		return
 
-	var item_id: int = item.get_item_id()
-	if Inventory.is_potion_used(item_id):
+	if not _try_use_potion_item(item):
 		return
 
-	Inventory.mark_potion_used(item_id)
+	item.remove(1)
+	if item.is_empty():
+		Inventory.set_hotbar_item(index, -1)
+	else:
+		Inventory.hotbar_changed.emit(index)
+
+	Inventory.inventory_changed.emit()
+
+
+func _try_use_potion_item(item: InventoryItem) -> bool:
+	if not current_player or not Inventory or not item or not item.data:
+		return false
+
+	_refresh_current_encounter_zone()
+
+	if not Inventory.can_use_item_instance(item):
+		return false
+
+	var instant_potion_kind: String = _get_instant_potion_kind(item.data)
+	if not instant_potion_kind.is_empty() and current_encounter_zone != null:
+		if not current_encounter_zone.can_use_instant_potion(instant_potion_kind):
+			_sync_instant_potion_repeat_blocks()
+			return false
+
 	for effect in item.data.effects:
 		_apply_potion_effect(effect)
+
+	if item.data.consumable_type == InventoryEnums.ConsumableType.POTION_BUFF:
+		Inventory.mark_potion_used(item.get_item_id(), item.data, {
+			"effects": item.data.effects.duplicate(true),
+			"consumable_type": int(item.data.consumable_type),
+		})
+	elif not instant_potion_kind.is_empty() and current_encounter_zone != null:
+		current_encounter_zone.register_instant_potion_use(instant_potion_kind)
+		_sync_instant_potion_repeat_blocks()
+
+	return true
+
+
+func _get_instant_potion_kind(item_data: GameItemData) -> String:
+	if item_data == null:
+		return ""
+
+	match item_data.consumable_type:
+		InventoryEnums.ConsumableType.POTION_HP:
+			return POTION_KIND_HP
+		InventoryEnums.ConsumableType.POTION_MANA:
+			return POTION_KIND_MANA
+		_:
+			return ""
 
 
 func _apply_potion_effect(effect: Dictionary) -> void:
@@ -565,25 +839,45 @@ func _on_mana_changed(value) -> void:
 
 
 func _on_player_died() -> void:
-	potion_bonus_armor = 0
-	potion_bonus_damage = 0
+	_clear_level_potion_effects()
 
 	if Inventory:
 		Inventory.reset_on_death()
 
 	_apply_current_equipment_state()
+	call_deferred("_refresh_current_encounter_zone")
 	_on_level_player_died()
 
 
 func _on_player_revived() -> void:
 	_consume_revival_artifact()
 	_apply_current_equipment_state()
+	call_deferred("_refresh_current_encounter_zone")
 	_on_level_player_revived()
 
+
+func _clear_level_potion_effects() -> void:
+	potion_bonus_armor = 0
+	potion_bonus_damage = 0
+
+	if Inventory and Inventory.has_method("clear_potion_effects"):
+		Inventory.clear_potion_effects()
+
+	if not current_player:
+		return
+
+	if "armor" in current_player:
+		current_player.armor = base_player_armor + equipment_bonus_armor
+		if game_ui and game_ui.has_method("update_armor"):
+			game_ui.update_armor(current_player.armor)
+
+	if "current_damage" in current_player:
+		current_player.current_damage = base_player_damage + equipment_bonus_damage
 
 func _create_fallback_player() -> void:
 	var fallback: CharacterBody2D = CharacterBody2D.new()
 	fallback.name = "FallbackPlayer"
+	fallback.add_to_group("player")
 
 	var collision: CollisionShape2D = CollisionShape2D.new()
 	var shape: RectangleShape2D = RectangleShape2D.new()
@@ -591,8 +885,8 @@ func _create_fallback_player() -> void:
 	collision.shape = shape
 	fallback.add_child(collision)
 
+	get_entities_root().add_child(fallback)
 	fallback.global_position = player_spawn.global_position if player_spawn else Vector2(100, 100)
-	add_child(fallback)
 	current_player = fallback
 
 
