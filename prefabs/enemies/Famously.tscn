@@ -1,0 +1,91 @@
+[gd_scene format=3 uid="uid://37jm71c64bwi"]
+
+[ext_resource type="Script" uid="uid://lgr6lv31x0v8" path="res://scripts/enemies/famously.gd" id="1_famously_script"]
+[ext_resource type="Texture2D" uid="uid://i1vbsoaepkn6" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_1.png" id="2_8su4f"]
+[ext_resource type="Texture2D" uid="uid://1bs552n4h4le" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_2.png" id="3_cbtu4"]
+[ext_resource type="Texture2D" uid="uid://dptdsgc40hhng" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_3.png" id="4_vbeiy"]
+[ext_resource type="Texture2D" uid="uid://clptooy3rx7ok" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_4.png" id="5_06jiq"]
+[ext_resource type="Texture2D" uid="uid://g03x17frqmc3" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_5.png" id="6_hh55m"]
+[ext_resource type="Texture2D" uid="uid://u22rhspkmfj1" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_6.png" id="7_ikrq4"]
+[ext_resource type="Texture2D" uid="uid://pad5u83oyoju" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_7.png" id="8_r02wp"]
+[ext_resource type="Texture2D" uid="uid://bsuf8013l7dge" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_8.png" id="9_jqnn6"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_famously"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_8su4f")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_cbtu4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_vbeiy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_06jiq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_hh55m")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_ikrq4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_r02wp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_jqnn6")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 7.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_famously_body"]
+radius = 38.0
+height = 130.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_famously_detection"]
+radius = 310.0
+
+[node name="Famously" type="CharacterBody2D" unique_id=229644950]
+position = Vector2(0, -1)
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1_famously_script")
+max_health = 12
+current_health = 12
+attack_damage = 2
+move_speed = 84.0
+chase_speed = 96.0
+attack_range = 140.0
+detection_range = 310.0
+attack_cooldown_time = 1.25
+minimum_distance_to_player = 44.0
+enable_patrol = true
+patrol_distance = 220.0
+cast_cooldown_time = 5.0
+art_faces_left_by_default = false
+visual_offset_when_facing_left = Vector2(81, -112.000015)
+visual_offset_when_facing_right = Vector2(-81, -112.000015)
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1907635945]
+position = Vector2(0, -112.000015)
+scale = Vector2(2.2178571, 2.3940861)
+sprite_frames = SubResource("SpriteFrames_famously")
+animation = &"idle"
+frame_progress = 0.5406001
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1550885699]
+position = Vector2(-1, -65)
+shape = SubResource("CapsuleShape2D_famously_body")
+
+[node name="DetectionArea" type="Area2D" parent="." unique_id=424961212]
+position = Vector2(6, -34)
+collision_layer = 0
+collision_mask = 3
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=1595488920]
+position = Vector2(-4, -5)
+shape = SubResource("CircleShape2D_famously_detection")

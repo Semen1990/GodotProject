@@ -17,6 +17,7 @@ const POTION_KIND_HP := "hp"
 const POTION_KIND_MANA := "mana"
 const ENCOUNTER_ENEMY_GROUP := "encounter_enemy"
 const ENCOUNTER_ZONE_FALLBACK_DISTANCE := 320.0
+const MADNESS_RELIEF_ON_NEW_ROOM := 1
 
 @export var item_database_path: String = DEFAULT_ITEM_DATABASE_PATH
 @export var camera_limit_left: int = 0
@@ -61,7 +62,9 @@ func _ready() -> void:
 	var is_new_game: bool = not (Global and Global.run_started)
 	if is_new_game:
 		_start_new_run()
+		_register_room_visit(true)
 	else:
+		_register_room_visit(false)
 		await _remove_persisted_scene_objects()
 
 	_initialize_inventory()
@@ -146,8 +149,37 @@ func _set_current_level() -> void:
 	if not Global:
 		return
 
-	var level_id: String = scene_file_path if not scene_file_path.is_empty() else name
-	Global.set_current_level(level_id)
+	Global.set_current_level(_get_room_progression_id())
+
+
+func _get_room_progression_id() -> String:
+	return scene_file_path if not scene_file_path.is_empty() else name
+
+
+func _register_room_visit(is_new_game: bool) -> void:
+	var room_id: String = _get_room_progression_id()
+	if room_id.is_empty():
+		return
+
+	if Global:
+		Global.last_room_path = room_id
+
+	if RunState == null:
+		return
+
+	var already_visited: bool = RunState.is_room_visited(room_id)
+	if is_new_game:
+		RunState.mark_room_visited(room_id)
+		return
+
+	if already_visited:
+		return
+
+	RunState.mark_room_visited(room_id)
+	if Global:
+		Global.add_room_visited()
+		if Global.saved_player_madness_stacks > 0:
+			Global.saved_player_madness_stacks = maxi(0, Global.saved_player_madness_stacks - MADNESS_RELIEF_ON_NEW_ROOM)
 
 
 func _start_new_run() -> void:
@@ -238,6 +270,9 @@ func _ensure_game_ui() -> void:
 			game_ui.name = "GameUI"
 			get_ui_root().add_child(game_ui)
 
+	if game_ui:
+		game_ui.visible = true
+
 	if game_ui and game_ui.has_method("rebuild_ui"):
 		game_ui.rebuild_ui()
 
@@ -323,6 +358,9 @@ func _collect_encounter_zones(root: Node, zones: Array[CombatEncounterZone]) -> 
 
 
 func _refresh_current_encounter_zone() -> void:
+	if not is_inside_tree():
+		return
+
 	current_encounter_zone = _resolve_encounter_zone_for_player()
 	_sync_instant_potion_repeat_blocks()
 
@@ -359,6 +397,8 @@ func _resolve_encounter_zone_for_player() -> CombatEncounterZone:
 
 
 func _get_nearest_blocking_enemy_distance_to_player(zone: CombatEncounterZone, player_position: Vector2) -> float:
+	if not is_inside_tree():
+		return INF
 	if zone == null:
 		return INF
 
@@ -420,6 +460,8 @@ func _on_player_exited_encounter(_zone: CombatEncounterZone) -> void:
 
 
 func _on_encounter_restrictions_changed(_zone: CombatEncounterZone) -> void:
+	if not is_inside_tree():
+		return
 	_refresh_current_encounter_zone()
 
 
@@ -560,6 +602,11 @@ func _restore_player_stats() -> void:
 		if current_player.has_signal("mana_changed"):
 			current_player.mana_changed.emit(current_player.current_mana)
 
+	if "max_madness_stacks" in current_player:
+		current_player.max_madness_stacks = Global.saved_player_max_madness_stacks
+	if current_player.has_method("set_madness_stacks"):
+		current_player.set_madness_stacks(Global.saved_player_madness_stacks)
+
 	_refresh_resource_ui()
 	Global.clear_saved_stats()
 
@@ -574,6 +621,15 @@ func save_before_transition() -> void:
 	else:
 		Global.saved_player_mana = -1
 
+	if "madness_stacks" in current_player:
+		Global.saved_player_madness_stacks = int(current_player.madness_stacks)
+	else:
+		Global.saved_player_madness_stacks = 0
+
+	if "max_madness_stacks" in current_player:
+		Global.saved_player_max_madness_stacks = int(current_player.max_madness_stacks)
+	else:
+		Global.saved_player_max_madness_stacks = 9
 
 	_clear_level_potion_effects()
 	if RunState:
@@ -612,6 +668,8 @@ func _setup_ui() -> void:
 			"mana": current_player.current_mana if "current_mana" in current_player else 0,
 			"max_mana": current_player.max_mana if "max_mana" in current_player else 0,
 			"armor": current_player.armor if "armor" in current_player else 0,
+			"madness": current_player.madness_stacks if "madness_stacks" in current_player else 0,
+			"max_madness": current_player.max_madness_stacks if "max_madness_stacks" in current_player else 9,
 		}
 		game_ui.setup_character_ui(stats)
 
@@ -620,6 +678,9 @@ func _setup_ui() -> void:
 
 	if current_player.has_signal("mana_changed") and not current_player.mana_changed.is_connected(_on_mana_changed):
 		current_player.mana_changed.connect(_on_mana_changed)
+
+	if current_player.has_signal("madness_changed") and not current_player.madness_changed.is_connected(_on_madness_changed):
+		current_player.madness_changed.connect(_on_madness_changed)
 
 	_setup_armor_watch()
 
@@ -718,6 +779,8 @@ func _try_use_potion_item(item: InventoryItem) -> bool:
 
 
 func _has_active_blocking_enemy_in_level() -> bool:
+	if not is_inside_tree():
+		return false
 	var tree: SceneTree = get_tree()
 	if tree == null:
 		return false
@@ -805,6 +868,9 @@ func _refresh_resource_ui() -> void:
 
 	if "current_mana" in current_player and game_ui.has_method("update_mana"):
 		game_ui.update_mana(current_player.current_mana)
+
+	if "madness_stacks" in current_player and game_ui.has_method("update_madness"):
+		game_ui.update_madness(current_player.madness_stacks, current_player.max_madness_stacks)
 
 
 func _show_heal_effect() -> void:
@@ -942,6 +1008,11 @@ func _on_health_changed(value) -> void:
 func _on_mana_changed(value) -> void:
 	if game_ui and game_ui.has_method("update_mana"):
 		game_ui.update_mana(value)
+
+
+func _on_madness_changed(value, max_value) -> void:
+	if game_ui and game_ui.has_method("update_madness"):
+		game_ui.update_madness(value, max_value)
 
 
 func _on_player_died() -> void:

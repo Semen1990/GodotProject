@@ -1,151 +1,159 @@
 {
-  "effect_templates": [
-    {
-      "id": "restore_health",
-      "type": "restore_health",
-      "description": "Восстанавливает {power} HP.",
-      "duration": null,
-      "value_type": "flat"
-    },
-    {
-      "id": "restore_mana",
-      "type": "restore_mana",
-      "description": "Восстанавливает {power} MP.",
-      "duration": null,
-      "value_type": "flat"
-    },
-    {
-      "id": "buff_damage",
-      "type": "buff_damage",
-      "description": "Увеличивает урон на {power} до конца комнаты.",
-      "duration": "room",
-      "value_type": "flat"
-    },
-    {
-      "id": "buff_armor",
-      "type": "buff_armor",
-      "description": "Увеличивает броню на {power} до конца комнаты.",
-      "duration": "room",
-      "value_type": "flat"
-    },
-    {
-      "id": "debuff_armor",
-      "type": "debuff_armor",
-      "description": "Уменьшает броню на {power} до конца комнаты.",
-      "duration": "room",
-      "value_type": "flat"
-    },
-    {
-      "id": "debuff_speed",
-      "type": "debuff_speed",
-      "description": "Уменьшает скорость передвижения и высоту прыжка на {power}% до конца комнаты.",
-      "duration": "room",
-      "value_type": "percent"
-    },
-    {
-      "id": "life_steal_on_hit",
-      "type": "life_steal_on_hit",
-      "description": "Каждая {condition} атака восстанавливает {power} HP.",
-      "duration": "room",
-      "value_type": "special"
-    },
-    {
-      "id": "double_attack_chance",
-      "type": "double_attack_chance",
-      "description": "{power}% шанс совершить двойную атаку.",
-      "duration": "room",
-      "value_type": "percent"
-    },
-    {
-      "id": "shield",
-      "type": "shield",
-      "description": "Создаёт щит, поглощающий {power} HP урона.",
-      "duration": "room",
-      "value_type": "flat"
-    },
-    {
-      "id": "poison_on_hit",
-      "type": "poison_on_hit",
-      "description": "Атаки отравляют врага, нанося {power} урона каждую секунду в течение {duration} сек.",
-      "duration": 5,
-      "value_type": "flat"
-    },
-    {
-      "id": "luck_boost",
-      "type": "luck_boost",
-      "description": "Увеличивает шанс найти предметы лучшего качества на {power}%.",
-      "duration": "room",
-      "value_type": "percent"
-    },
-    {
-      "id": "resist_element",
-      "type": "resist_element",
-      "description": "{chance}% шанс полностью избежать эффектов {element}.",
-      "duration": "room",
-      "value_type": "special"
-    },
-    {
-      "id": "cure_madness",
-      "type": "cure_madness",
-      "description": "Снимает {power} стаков безумия.",
-      "duration": null,
-      "value_type": "flat"
-    },
-    {
-      "id": "bonus_on_resist_fire",
-      "type": "bonus_on_resist",
-      "description": "При избегании огня следующая способность не тратит кулдаун.",
-      "duration": "special",
-      "value_type": "special"
-    },
-    {
-      "id": "bonus_on_resist_poison",
-      "type": "bonus_on_resist",
-      "description": "При избегании яда получаете +30% скорости на 5 сек.",
-      "duration": 5,
-      "value_type": "special"
-    },
-    {
-      "id": "bonus_on_resist_bleed",
-      "type": "bonus_on_resist",
-      "description": "При избегании кровотечения восстанавливаете 2 HP.",
-      "duration": null,
-      "value_type": "flat"
-    },
-    {
-      "id": "bonus_on_resist_cold",
-      "type": "bonus_on_resist",
-      "description": "При избегании холода замораживаете атакующего на 2 сек.",
-      "duration": 2,
-      "value_type": "special"
-    },
-    {
-      "id": "bonus_on_resist_madness",
-      "type": "bonus_on_resist",
-      "description": "При избегании безумия снимает 1 стак безумия.",
-      "duration": null,
-      "value_type": "flat"
-    },
-    {
-      "id": "restore_mana_full",
-      "type": "restore_mana_full",
-      "description": "Полностью восстанавливает ману.",
-      "duration": null,
-      "value_type": "special"
-    },
-    {
-      "id": "increase_max_mana",
-      "type": "increase_max_mana",
-      "description": "Увеличивает максимальный запас маны на {power} до конца комнаты.",
-      "duration": "room",
-      "value_type": "flat"
-    },
-    {
-      "id": "guaranteed_better_loot",
-      "type": "guaranteed_better_loot",
-      "description": "Один из выпавших предметов будет на один уровень редкости выше.",
-      "duration": "room",
-      "value_type": "special"
-    }
-  ]
+    "effect_templates":  [
+                             {
+                                 "id":  "restore_health",
+                                 "type":  "restore_health",
+                                 "description":  "Р вЂ™Р С•РЎРѓРЎРѓРЎвЂљР В°Р Р…Р В°Р Р†Р В»Р С‘Р Р†Р В°Р ВµРЎвЂљ {power} HP.",
+                                 "duration":  null,
+                                 "value_type":  "flat"
+                             },
+                             {
+                                 "id":  "restore_mana",
+                                 "type":  "restore_mana",
+                                 "description":  "Р вЂ™Р С•РЎРѓРЎРѓРЎвЂљР В°Р Р…Р В°Р Р†Р В»Р С‘Р Р†Р В°Р ВµРЎвЂљ {power} MP.",
+                                 "duration":  null,
+                                 "value_type":  "flat"
+                             },
+                             {
+                                 "id":  "buff_damage",
+                                 "type":  "buff_damage",
+                                 "description":  "Р Р€Р Р†Р ВµР В»Р С‘РЎвЂЎР С‘Р Р†Р В°Р ВµРЎвЂљ РЎС“РЎР‚Р С•Р Р… Р Р…Р В° {power} Р Т‘Р С• Р С”Р С•Р Р…РЎвЂ Р В° Р С”Р С•Р СР Р…Р В°РЎвЂљРЎвЂ№.",
+                                 "duration":  "room",
+                                 "value_type":  "flat"
+                             },
+                             {
+                                 "id":  "buff_armor",
+                                 "type":  "buff_armor",
+                                 "description":  "Р Р€Р Р†Р ВµР В»Р С‘РЎвЂЎР С‘Р Р†Р В°Р ВµРЎвЂљ Р В±РЎР‚Р С•Р Р…РЎР‹ Р Р…Р В° {power} Р Т‘Р С• Р С”Р С•Р Р…РЎвЂ Р В° Р С”Р С•Р СР Р…Р В°РЎвЂљРЎвЂ№.",
+                                 "duration":  "room",
+                                 "value_type":  "flat"
+                             },
+                             {
+                                 "id":  "debuff_armor",
+                                 "type":  "debuff_armor",
+                                 "description":  "Р Р€Р СР ВµР Р…РЎРЉРЎв‚¬Р В°Р ВµРЎвЂљ Р В±РЎР‚Р С•Р Р…РЎР‹ Р Р…Р В° {power} Р Т‘Р С• Р С”Р С•Р Р…РЎвЂ Р В° Р С”Р С•Р СР Р…Р В°РЎвЂљРЎвЂ№.",
+                                 "duration":  "room",
+                                 "value_type":  "flat"
+                             },
+                             {
+                                 "id":  "debuff_speed",
+                                 "type":  "debuff_speed",
+                                 "description":  "Р Р€Р СР ВµР Р…РЎРЉРЎв‚¬Р В°Р ВµРЎвЂљ РЎРѓР С”Р С•РЎР‚Р С•РЎРѓРЎвЂљРЎРЉ Р С—Р ВµРЎР‚Р ВµР Т‘Р Р†Р С‘Р В¶Р ВµР Р…Р С‘РЎРЏ Р С‘ Р Р†РЎвЂ№РЎРѓР С•РЎвЂљРЎС“ Р С—РЎР‚РЎвЂ№Р В¶Р С”Р В° Р Р…Р В° {power}% Р Т‘Р С• Р С”Р С•Р Р…РЎвЂ Р В° Р С”Р С•Р СР Р…Р В°РЎвЂљРЎвЂ№.",
+                                 "duration":  "room",
+                                 "value_type":  "percent"
+                             },
+                             {
+                                 "id":  "life_steal_on_hit",
+                                 "type":  "life_steal_on_hit",
+                                 "description":  "Р С™Р В°Р В¶Р Т‘Р В°РЎРЏ {condition} Р В°РЎвЂљР В°Р С”Р В° Р Р†Р С•РЎРѓРЎРѓРЎвЂљР В°Р Р…Р В°Р Р†Р В»Р С‘Р Р†Р В°Р ВµРЎвЂљ {power} HP.",
+                                 "duration":  "room",
+                                 "value_type":  "special"
+                             },
+                             {
+                                 "id":  "double_attack_chance",
+                                 "type":  "double_attack_chance",
+                                 "description":  "{power}% РЎв‚¬Р В°Р Р…РЎРѓ РЎРѓР С•Р Р†Р ВµРЎР‚РЎв‚¬Р С‘РЎвЂљРЎРЉ Р Т‘Р Р†Р С•Р в„–Р Р…РЎС“РЎР‹ Р В°РЎвЂљР В°Р С”РЎС“.",
+                                 "duration":  "room",
+                                 "value_type":  "percent"
+                             },
+                             {
+                                 "id":  "shield",
+                                 "type":  "shield",
+                                 "description":  "Р РЋР С•Р В·Р Т‘Р В°РЎвЂРЎвЂљ РЎвЂ°Р С‘РЎвЂљ, Р С—Р С•Р С–Р В»Р С•РЎвЂ°Р В°РЎР‹РЎвЂ°Р С‘Р в„– {power} HP РЎС“РЎР‚Р С•Р Р…Р В°.",
+                                 "duration":  "room",
+                                 "value_type":  "flat"
+                             },
+                             {
+                                 "id":  "poison_on_hit",
+                                 "type":  "poison_on_hit",
+                                 "description":  "Р С’РЎвЂљР В°Р С”Р С‘ Р С•РЎвЂљРЎР‚Р В°Р Р†Р В»РЎРЏРЎР‹РЎвЂљ Р Р†РЎР‚Р В°Р С–Р В°, Р Р…Р В°Р Р…Р С•РЎРѓРЎРЏ {power} РЎС“РЎР‚Р С•Р Р…Р В° Р С”Р В°Р В¶Р Т‘РЎС“РЎР‹ РЎРѓР ВµР С”РЎС“Р Р…Р Т‘РЎС“ Р Р† РЎвЂљР ВµРЎвЂЎР ВµР Р…Р С‘Р Вµ {duration} РЎРѓР ВµР С”.",
+                                 "duration":  5,
+                                 "value_type":  "flat"
+                             },
+                             {
+                                 "id":  "luck_boost",
+                                 "type":  "luck_boost",
+                                 "description":  "Р Р€Р Р†Р ВµР В»Р С‘РЎвЂЎР С‘Р Р†Р В°Р ВµРЎвЂљ РЎв‚¬Р В°Р Р…РЎРѓ Р Р…Р В°Р в„–РЎвЂљР С‘ Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљРЎвЂ№ Р В»РЎС“РЎвЂЎРЎв‚¬Р ВµР С–Р С• Р С”Р В°РЎвЂЎР ВµРЎРѓРЎвЂљР Р†Р В° Р Р…Р В° {power}%.",
+                                 "duration":  "room",
+                                 "value_type":  "percent"
+                             },
+                             {
+                                 "id":  "resist_element",
+                                 "type":  "resist_element",
+                                 "description":  "{chance}% РЎв‚¬Р В°Р Р…РЎРѓ Р С—Р С•Р В»Р Р…Р С•РЎРѓРЎвЂљРЎРЉРЎР‹ Р С‘Р В·Р В±Р ВµР В¶Р В°РЎвЂљРЎРЉ РЎРЊРЎвЂћРЎвЂћР ВµР С”РЎвЂљР С•Р Р† {element}.",
+                                 "duration":  "room",
+                                 "value_type":  "special"
+                             },
+                             {
+                                 "id":  "cure_madness",
+                                 "type":  "cure_madness",
+                                 "description":  "Р РЋР Р…Р С‘Р СР В°Р ВµРЎвЂљ {power} РЎРѓРЎвЂљР В°Р С”Р С•Р Р† Р В±Р ВµР В·РЎС“Р СР С‘РЎРЏ.",
+                                 "duration":  null,
+                                 "value_type":  "flat"
+                             },
+                             {
+                                 "id":  "apply_madness",
+                                 "type":  "apply_madness",
+                                 "description":  "Р вЂќР С•Р В±Р В°Р Р†Р В»РЎРЏР ВµРЎвЂљ {power} РЎРѓРЎвЂљР В°Р С”(Р С•Р Р†) Р В±Р ВµР В·РЎС“Р СР С‘РЎРЏ РЎРѓ РЎв‚¬Р В°Р Р…РЎРѓР С•Р С {chance}%.",
+                                 "max_stacks":  9,
+                                 "duration":  null,
+                                 "value_type":  "flat"
+                             },
+                             {
+                                 "id":  "bonus_on_resist_fire",
+                                 "type":  "bonus_on_resist",
+                                 "description":  "Р СџРЎР‚Р С‘ Р С‘Р В·Р В±Р ВµР С–Р В°Р Р…Р С‘Р С‘ Р С•Р С–Р Р…РЎРЏ РЎРѓР В»Р ВµР Т‘РЎС“РЎР‹РЎвЂ°Р В°РЎРЏ РЎРѓР С—Р С•РЎРѓР С•Р В±Р Р…Р С•РЎРѓРЎвЂљРЎРЉ Р Р…Р Вµ РЎвЂљРЎР‚Р В°РЎвЂљР С‘РЎвЂљ Р С”РЎС“Р В»Р Т‘Р В°РЎС“Р Р….",
+                                 "duration":  "special",
+                                 "value_type":  "special"
+                             },
+                             {
+                                 "id":  "bonus_on_resist_poison",
+                                 "type":  "bonus_on_resist",
+                                 "description":  "Р СџРЎР‚Р С‘ Р С‘Р В·Р В±Р ВµР С–Р В°Р Р…Р С‘Р С‘ РЎРЏР Т‘Р В° Р С—Р С•Р В»РЎС“РЎвЂЎР В°Р ВµРЎвЂљР Вµ +30% РЎРѓР С”Р С•РЎР‚Р С•РЎРѓРЎвЂљР С‘ Р Р…Р В° 5 РЎРѓР ВµР С”.",
+                                 "duration":  5,
+                                 "value_type":  "special"
+                             },
+                             {
+                                 "id":  "bonus_on_resist_bleed",
+                                 "type":  "bonus_on_resist",
+                                 "description":  "Р СџРЎР‚Р С‘ Р С‘Р В·Р В±Р ВµР С–Р В°Р Р…Р С‘Р С‘ Р С”РЎР‚Р С•Р Р†Р С•РЎвЂљР ВµРЎвЂЎР ВµР Р…Р С‘РЎРЏ Р Р†Р С•РЎРѓРЎРѓРЎвЂљР В°Р Р…Р В°Р Р†Р В»Р С‘Р Р†Р В°Р ВµРЎвЂљР Вµ 2 HP.",
+                                 "duration":  null,
+                                 "value_type":  "flat"
+                             },
+                             {
+                                 "id":  "bonus_on_resist_cold",
+                                 "type":  "bonus_on_resist",
+                                 "description":  "Р СџРЎР‚Р С‘ Р С‘Р В·Р В±Р ВµР С–Р В°Р Р…Р С‘Р С‘ РЎвЂ¦Р С•Р В»Р С•Р Т‘Р В° Р В·Р В°Р СР С•РЎР‚Р В°Р В¶Р С‘Р Р†Р В°Р ВµРЎвЂљР Вµ Р В°РЎвЂљР В°Р С”РЎС“РЎР‹РЎвЂ°Р ВµР С–Р С• Р Р…Р В° 2 РЎРѓР ВµР С”.",
+                                 "duration":  2,
+                                 "value_type":  "special"
+                             },
+                             {
+                                 "id":  "bonus_on_resist_madness",
+                                 "type":  "bonus_on_resist",
+                                 "description":  "Р СџРЎР‚Р С‘ Р С‘Р В·Р В±Р ВµР С–Р В°Р Р…Р С‘Р С‘ Р В±Р ВµР В·РЎС“Р СР С‘РЎРЏ РЎРѓР Р…Р С‘Р СР В°Р ВµРЎвЂљ 1 РЎРѓРЎвЂљР В°Р С” Р В±Р ВµР В·РЎС“Р СР С‘РЎРЏ.",
+                                 "duration":  null,
+                                 "value_type":  "flat"
+                             },
+                             {
+                                 "id":  "restore_mana_full",
+                                 "type":  "restore_mana_full",
+                                 "description":  "Р СџР С•Р В»Р Р…Р С•РЎРѓРЎвЂљРЎРЉРЎР‹ Р Р†Р С•РЎРѓРЎРѓРЎвЂљР В°Р Р…Р В°Р Р†Р В»Р С‘Р Р†Р В°Р ВµРЎвЂљ Р СР В°Р Р…РЎС“.",
+                                 "duration":  null,
+                                 "value_type":  "special"
+                             },
+                             {
+                                 "id":  "increase_max_mana",
+                                 "type":  "increase_max_mana",
+                                 "description":  "Р Р€Р Р†Р ВµР В»Р С‘РЎвЂЎР С‘Р Р†Р В°Р ВµРЎвЂљ Р СР В°Р С”РЎРѓР С‘Р СР В°Р В»РЎРЉР Р…РЎвЂ№Р в„– Р В·Р В°Р С—Р В°РЎРѓ Р СР В°Р Р…РЎвЂ№ Р Р…Р В° {power} Р Т‘Р С• Р С”Р С•Р Р…РЎвЂ Р В° Р С”Р С•Р СР Р…Р В°РЎвЂљРЎвЂ№.",
+                                 "duration":  "room",
+                                 "value_type":  "flat"
+                             },
+                             {
+                                 "id":  "guaranteed_better_loot",
+                                 "type":  "guaranteed_better_loot",
+                                 "description":  "Р С›Р Т‘Р С‘Р Р… Р С‘Р В· Р Р†РЎвЂ№Р С—Р В°Р Р†РЎв‚¬Р С‘РЎвЂ¦ Р С—РЎР‚Р ВµР Т‘Р СР ВµРЎвЂљР С•Р Р† Р В±РЎС“Р Т‘Р ВµРЎвЂљ Р Р…Р В° Р С•Р Т‘Р С‘Р Р… РЎС“РЎР‚Р С•Р Р†Р ВµР Р…РЎРЉ РЎР‚Р ВµР Т‘Р С”Р С•РЎРѓРЎвЂљР С‘ Р Р†РЎвЂ№РЎв‚¬Р Вµ.",
+                                 "duration":  "room",
+                                 "value_type":  "special"
+                             }
+                         ]
 }

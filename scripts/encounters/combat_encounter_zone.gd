@@ -240,6 +240,8 @@ func _sync_enemies_by_position() -> void:
 
 
 func get_active_blocking_enemy_count() -> int:
+	if not is_inside_tree():
+		return 0
 	var tree: SceneTree = get_tree()
 	if tree == null:
 		return 0
@@ -403,6 +405,8 @@ func _on_enemy_blocking_changed(_is_blocking: bool, enemy: Node) -> void:
 
 
 func _on_enemy_tree_exited(enemy: Node) -> void:
+	if not is_inside_tree():
+		return
 	_unregister_enemy(enemy)
 
 

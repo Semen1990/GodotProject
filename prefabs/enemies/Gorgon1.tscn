@@ -1,0 +1,95 @@
+[gd_scene format=3 uid="uid://bmbnxdkqyacjs"]
+
+[ext_resource type="Script" uid="uid://daigm5hgkt1ak" path="res://scripts/enemies/gorgon1.gd" id="1_gorgon_script"]
+[ext_resource type="Texture2D" uid="uid://b7bloanwvv6yk" path="res://assets/enemies/Gorgon/Gorgon1.png" id="2_2v72d"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ayewl"]
+atlas = ExtResource("2_2v72d")
+region = Rect2(200, 0, 200, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cqgv0"]
+atlas = ExtResource("2_2v72d")
+region = Rect2(400, 0, 200, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8p2k1"]
+atlas = ExtResource("2_2v72d")
+region = Rect2(600, 0, 200, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8p64y"]
+atlas = ExtResource("2_2v72d")
+region = Rect2(800, 0, 200, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mrwkg"]
+atlas = ExtResource("2_2v72d")
+region = Rect2(1000, 0, 200, 240)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wuhmh"]
+atlas = ExtResource("2_2v72d")
+region = Rect2(1200, 0, 200, 240)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_gorgon"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ayewl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cqgv0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8p2k1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8p64y")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mrwkg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wuhmh")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_gorgon_body"]
+radius = 24.0
+height = 96.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_gorgon_detection"]
+radius = 220.0
+
+[node name="Gorgon" type="CharacterBody2D" unique_id=38386218]
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1_gorgon_script")
+max_health = 12
+current_health = 12
+attack_damage = 2
+move_speed = 82.0
+chase_speed = 92.0
+attack_range = 118.0
+detection_range = 250.0
+idle_time = 1.0
+minimum_distance_to_player = 48.0
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=743185719]
+position = Vector2(0, -112)
+scale = Vector2(0.75, 0.75)
+sprite_frames = SubResource("SpriteFrames_gorgon")
+animation = &"idle"
+frame = 4
+frame_progress = 0.6501796
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1496825835]
+position = Vector2(0, -48)
+shape = SubResource("CapsuleShape2D_gorgon_body")
+
+[node name="DetectionArea" type="Area2D" parent="." unique_id=1177485935]
+position = Vector2(0, -110)
+collision_layer = 0
+collision_mask = 3
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=1725087266]
+shape = SubResource("CircleShape2D_gorgon_detection")
