@@ -91,7 +91,6 @@ const ANIMATION_NAME_MAPPING: Dictionary = {
 func _ready():
 	if not is_in_group("player"):
 		add_to_group("player")
-	print("вњ… ", character_name, " РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°РЅ")
 	
 	# --- Р‘РµР·РѕРїР°СЃРЅРѕРµ РїРѕР»СѓС‡РµРЅРёРµ РЅРѕРґРѕРІ ---
 	animated_sprite = get_node_or_null("AnimatedSprite2D")
@@ -115,9 +114,6 @@ func _ready():
 	# --- РќР°СЃС‚СЂРѕР№РєР° РєРѕРЅС‚СЂРѕР»Р»РµСЂР° ---
 	if player_controller:
 		player_controller.character = self
-	else:
-		print("вљ пёЏ PlayerController РЅРµ РЅР°Р№РґРµРЅ РґР»СЏ: ", character_name)
-	
 	# --- РџСЂРёРјРµРЅРµРЅРёРµ Р°СЂС‚РµС„Р°РєС‚РѕРІ ---
 	call_deferred("apply_artifacts")
 	
@@ -134,7 +130,6 @@ func apply_artifacts():
 		# РџСЂРѕРІРµСЂСЏРµРј РЅР°Р»РёС‡РёРµ СЃРїРѕСЃРѕР±РЅРѕСЃС‚Рё РґРІРѕР№РЅРѕРіРѕ РїСЂС‹Р¶РєР°
 		if Global.has_ability("double_jump"):
 			enable_double_jump = true
-			print("рџ¦ Р”РІРѕР№РЅРѕР№ РїСЂС‹Р¶РѕРє РґРѕСЃС‚СѓРїРµРЅ РґР»СЏ ", character_name)
 		else:
 			enable_double_jump = false
 
@@ -236,13 +231,11 @@ func handle_movement(delta: float):
 			can_double_jump = enable_double_jump
 			has_double_jumped = false
 			coyote_timer = 0
-			print("рџ¦ ", character_name, " РїСЂС‹РіР°РµС‚!")
 		elif enable_double_jump and can_double_jump and not has_double_jumped:
 			# Р”РІРѕР№РЅРѕР№ РїСЂС‹Р¶РѕРє (СЃР»Р°Р±РµРµ РѕР±С‹С‡РЅРѕРіРѕ)
 			velocity.y = jump_velocity * 0.8
 			has_double_jumped = true
 			can_double_jump = false
-			print("рџ¦вњЁ ", character_name, " РёСЃРїРѕР»СЊР·СѓРµС‚ РґРІРѕР№РЅРѕР№ РїСЂС‹Р¶РѕРє!")
 			_show_double_jump_effect()
 
 
@@ -256,7 +249,6 @@ func start_crouch():
 		return
 	
 	is_crouching = true
-	print("рџ¦† РџСЂРёСЃРµРґР°РЅРёРµ!")
 
 
 func stop_crouch():
@@ -265,7 +257,6 @@ func stop_crouch():
 		return
 	
 	is_crouching = false
-	print("рџ¦† Р’СЃС‚Р°Р»!")
 	
 	# Р’РѕСЃСЃС‚Р°РЅР°РІР»РёРІР°РµРј РєРѕР»Р»РёР·РёСЋ
 	if collision_shape and collision_shape.shape:
@@ -290,7 +281,6 @@ func use_special_ability():
 	- Р Р°Р·Р±РѕР№РЅРёРє: slide() - РїРѕРґРєР°С‚
 	- Р‘РµСЂСЃРµСЂРє: rage() - СЏСЂРѕСЃС‚СЊ (РµСЃР»Рё СЂРµР°Р»РёР·РѕРІР°РЅРѕ)
 	"""
-	print("вљЎ ", character_name, " РёСЃРїРѕР»СЊР·СѓРµС‚ СЃРїРѕСЃРѕР±РЅРѕСЃС‚СЊ (Р±Р°Р·РѕРІР°СЏ - РЅРµ РїРµСЂРµРѕРїСЂРµРґРµР»РµРЅР°)")
 
 
 # ===========================================
@@ -474,8 +464,6 @@ func take_damage(amount: int, damage_type: String = "physical", source: String =
 	# РћС‚РїСЂР°РІР»СЏРµРј СЃРёРіРЅР°Р»
 	health_changed.emit(current_health)
 	
-	print("рџ’Ґ ", character_name, " РїРѕР»СѓС‡Р°РµС‚ СѓСЂРѕРЅ: ", reduced_amount, " (", damage_type, ") РѕС‚: ", source)
-	print("   HP: ", current_health, "/", max_health)
 	
 	# РћР±РЅРѕРІР»СЏРµРј СЃС‚Р°С‚РёСЃС‚РёРєСѓ
 	if Global and Global.has_method("add_damage_taken"):
@@ -499,7 +487,6 @@ func die():
 		return
 	
 	is_dead = true
-	print("рџ’Ђ ", character_name, " РїРѕРіРёР± РѕС‚: ", last_damage_source)
 	
 	# РћСЃС‚Р°РЅР°РІР»РёРІР°РµРј РґРІРёР¶РµРЅРёРµ
 	velocity = Vector2.ZERO
@@ -537,7 +524,6 @@ func die():
 
 func _show_death_menu():
 	"""РџРѕРєР°Р·С‹РІР°РµС‚ РјРµРЅСЋ СЃРјРµСЂС‚Рё"""
-	print("рџ“њ РџРѕРєР°Р·С‹РІР°РµРј РјРµРЅСЋ СЃРјРµСЂС‚Рё...")
 	
 	# РџРѕР»СѓС‡Р°РµРј СЃС‚Р°С‚РёСЃС‚РёРєСѓ
 	var stats = {}
@@ -572,7 +558,6 @@ func _show_death_menu():
 
 func _on_revive_requested(_data: Dictionary):
 	"""РћР±СЂР°Р±РѕС‚РєР° РІРѕР·СЂРѕР¶РґРµРЅРёСЏ РёР· РјРµРЅСЋ СЃРјРµСЂС‚Рё"""
-	print("рџ”® Р’РѕР·СЂРѕР¶РґРµРЅРёРµ РёРіСЂРѕРєР°!")
 	
 	if Global and Global.has_method("use_revival_artifact"):
 		Global.use_revival_artifact()
@@ -582,7 +567,6 @@ func _on_revive_requested(_data: Dictionary):
 
 func revive():
 	"""Р’РѕР·СЂРѕР¶РґР°РµС‚ РїРµСЂСЃРѕРЅР°Р¶Р°"""
-	print("вњЁ Р’РѕР·СЂРѕР¶РґРµРЅРёРµ ", character_name, "...")
 	
 	is_dead = false
 	visible = true
@@ -614,20 +598,17 @@ func revive():
 	give_temporary_invincibility(3.0)
 	
 	revived.emit()
-	print("вњ… ", character_name, " РІРѕР·СЂРѕР¶РґС‘РЅ СЃ ", current_health, " HP")
 
 
 func give_temporary_invincibility(duration: float):
 	"""Р”Р°С‘С‚ РІСЂРµРјРµРЅРЅСѓСЋ РЅРµСѓСЏР·РІРёРјРѕСЃС‚СЊ"""
 	is_invincible = true
-	print("рџ›ЎпёЏ РќРµСѓСЏР·РІРёРјРѕСЃС‚СЊ РЅР° ", duration, " СЃРµРєСѓРЅРґ")
 	
 	await get_tree().create_timer(duration).timeout
 	
 	is_invincible = false
 	if animated_sprite:
 		animated_sprite.modulate = Color.WHITE
-	print("рџ›ЎпёЏ РќРµСѓСЏР·РІРёРјРѕСЃС‚СЊ Р·Р°РєРѕРЅС‡РёР»Р°СЃСЊ")
 
 
 # ===========================================
@@ -635,14 +616,10 @@ func give_temporary_invincibility(duration: float):
 # ===========================================
 
 func heal():
-	"""Р‘Р°Р·РѕРІРѕРµ Р»РµС‡РµРЅРёРµ - РїРµСЂРµРѕРїСЂРµРґРµР»СЏРµС‚СЃСЏ РІ paladin_player.gd"""
-	print("вќ¤пёЏ ", character_name, " Р±Р°Р·РѕРІРѕРµ Р»РµС‡РµРЅРёРµ (РЅРµ СЂРµР°Р»РёР·РѕРІР°РЅРѕ)")
-
+	pass
 
 func slide():
-	"""Р‘Р°Р·РѕРІС‹Р№ РїРѕРґРєР°С‚ - РїРµСЂРµРѕРїСЂРµРґРµР»СЏРµС‚СЃСЏ РІ rogue_player.gd"""
-	print("рџ”Ѕ ", character_name, " Р±Р°Р·РѕРІС‹Р№ РїРѕРґРєР°С‚ (РЅРµ СЂРµР°Р»РёР·РѕРІР°РЅ)")
-
+	pass
 
 func block():
 	"""Р‘Р°Р·РѕРІС‹Р№ Р±Р»РѕРє - РїРµСЂРµРѕРїСЂРµРґРµР»СЏРµС‚СЃСЏ РІ warrior_player.gd"""

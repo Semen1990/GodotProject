@@ -15,6 +15,8 @@ const OBJECTS_ROOT_PATH := "World/Objects"
 const UI_ROOT_PATH := "UI"
 const POTION_KIND_HP := "hp"
 const POTION_KIND_MANA := "mana"
+const ENCOUNTER_ENEMY_GROUP := "encounter_enemy"
+const ENCOUNTER_ZONE_FALLBACK_DISTANCE := 320.0
 
 @export var item_database_path: String = DEFAULT_ITEM_DATABASE_PATH
 @export var camera_limit_left: int = 0
@@ -31,7 +33,10 @@ var last_armor_value: int = -1
 var inventory_ui: InventoryUI = null
 var hotbar_ui: HotbarUI = null
 var current_encounter_zone: CombatEncounterZone = null
-
+var fallback_used_instant_potions: Dictionary = {
+	POTION_KIND_HP: false,
+	POTION_KIND_MANA: false,
+}
 var base_player_armor: int = 0
 var base_player_max_health: int = 0
 var base_player_max_mana: int = 0
@@ -318,16 +323,68 @@ func _collect_encounter_zones(root: Node, zones: Array[CombatEncounterZone]) -> 
 
 
 func _refresh_current_encounter_zone() -> void:
-	var active_zone: CombatEncounterZone = null
-
-	if current_player != null:
-		for zone in _get_encounter_zones():
-			if zone.has_player(current_player) or zone.overlaps_body(current_player):
-				active_zone = zone
-				break
-
-	current_encounter_zone = active_zone
+	current_encounter_zone = _resolve_encounter_zone_for_player()
 	_sync_instant_potion_repeat_blocks()
+
+
+func _resolve_encounter_zone_for_player() -> CombatEncounterZone:
+	var player_body: Node2D = current_player as Node2D
+	if player_body == null:
+		return null
+
+	if current_encounter_zone != null and current_encounter_zone.has_method("contains_world_point"):
+		if bool(current_encounter_zone.call("contains_world_point", player_body.global_position)):
+			return current_encounter_zone
+
+	var nearest_zone: CombatEncounterZone = null
+	var nearest_distance: float = INF
+	for zone in _get_encounter_zones():
+		if zone == null:
+			continue
+		if zone.has_player(current_player) or zone.overlaps_body(current_player):
+			return zone
+		if zone.has_method("contains_world_point"):
+			if bool(zone.call("contains_world_point", player_body.global_position)):
+				return zone
+
+		var blocker_distance: float = _get_nearest_blocking_enemy_distance_to_player(zone, player_body.global_position)
+		if blocker_distance < nearest_distance:
+			nearest_distance = blocker_distance
+			nearest_zone = zone
+
+	if nearest_zone != null and nearest_distance <= ENCOUNTER_ZONE_FALLBACK_DISTANCE:
+		return nearest_zone
+
+	return null
+
+
+func _get_nearest_blocking_enemy_distance_to_player(zone: CombatEncounterZone, player_position: Vector2) -> float:
+	if zone == null:
+		return INF
+
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return INF
+
+	var nearest_distance: float = INF
+	for node in tree.get_nodes_in_group(ENCOUNTER_ENEMY_GROUP):
+		var enemy_body: Node2D = node as Node2D
+		if enemy_body == null:
+			continue
+		if not is_instance_valid(enemy_body) or not enemy_body.is_inside_tree():
+			continue
+		if not zone.contains_world_point(enemy_body.global_position):
+			continue
+
+		var is_blocking: bool = enemy_body.is_in_group(ENCOUNTER_ENEMY_GROUP)
+		if enemy_body.has_method("is_repeat_potion_blocker"):
+			is_blocking = bool(enemy_body.call("is_repeat_potion_blocker"))
+		if not is_blocking:
+			continue
+
+		nearest_distance = minf(nearest_distance, player_position.distance_to(enemy_body.global_position))
+
+	return nearest_distance
 
 
 func _sync_instant_potion_repeat_blocks() -> void:
@@ -336,11 +393,19 @@ func _sync_instant_potion_repeat_blocks() -> void:
 
 	var hp_blocked: bool = false
 	var mana_blocked: bool = false
+	var has_active_level_blocker: bool = _has_active_blocking_enemy_in_level()
 
 	if current_encounter_zone != null:
 		var blocks: Dictionary = current_encounter_zone.get_instant_potion_blocks()
 		hp_blocked = bool(blocks.get(POTION_KIND_HP, false))
 		mana_blocked = bool(blocks.get(POTION_KIND_MANA, false))
+
+	if has_active_level_blocker:
+		hp_blocked = hp_blocked or bool(fallback_used_instant_potions.get(POTION_KIND_HP, false))
+		mana_blocked = mana_blocked or bool(fallback_used_instant_potions.get(POTION_KIND_MANA, false))
+	else:
+		fallback_used_instant_potions[POTION_KIND_HP] = false
+		fallback_used_instant_potions[POTION_KIND_MANA] = false
 
 	Inventory.set_instant_potion_repeat_block(POTION_KIND_HP, hp_blocked)
 	Inventory.set_instant_potion_repeat_block(POTION_KIND_MANA, mana_blocked)
@@ -615,13 +680,22 @@ func _try_use_potion_item(item: InventoryItem) -> bool:
 		return false
 
 	_refresh_current_encounter_zone()
+	var encounter_zone: CombatEncounterZone = _resolve_encounter_zone_for_player()
+	current_encounter_zone = encounter_zone
+	var has_active_level_blocker: bool = _has_active_blocking_enemy_in_level()
 
 	if not Inventory.can_use_item_instance(item):
 		return false
 
 	var instant_potion_kind: String = _get_instant_potion_kind(item.data)
-	if not instant_potion_kind.is_empty() and current_encounter_zone != null:
-		if not current_encounter_zone.can_use_instant_potion(instant_potion_kind):
+	if not instant_potion_kind.is_empty():
+		var can_use_instant_potion: bool = true
+		if encounter_zone != null:
+			can_use_instant_potion = encounter_zone.can_use_instant_potion(instant_potion_kind)
+		if can_use_instant_potion and has_active_level_blocker:
+			can_use_instant_potion = not bool(fallback_used_instant_potions.get(instant_potion_kind, false))
+
+		if not can_use_instant_potion:
 			_sync_instant_potion_repeat_blocks()
 			return false
 
@@ -633,11 +707,43 @@ func _try_use_potion_item(item: InventoryItem) -> bool:
 			"effects": item.data.effects.duplicate(true),
 			"consumable_type": int(item.data.consumable_type),
 		})
-	elif not instant_potion_kind.is_empty() and current_encounter_zone != null:
-		current_encounter_zone.register_instant_potion_use(instant_potion_kind)
+	elif not instant_potion_kind.is_empty():
+		if encounter_zone != null:
+			encounter_zone.register_instant_potion_use(instant_potion_kind)
+		if has_active_level_blocker:
+			fallback_used_instant_potions[instant_potion_kind] = true
 		_sync_instant_potion_repeat_blocks()
 
 	return true
+
+
+func _has_active_blocking_enemy_in_level() -> bool:
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return false
+
+	for node in tree.get_nodes_in_group(ENCOUNTER_ENEMY_GROUP):
+		var enemy: Node = node as Node
+		if enemy == null:
+			continue
+		if not is_instance_valid(enemy) or not enemy.is_inside_tree():
+			continue
+		if not self.is_ancestor_of(enemy):
+			continue
+		if _is_enemy_currently_blocking(enemy):
+			return true
+
+	return false
+
+
+func _is_enemy_currently_blocking(enemy: Node) -> bool:
+	if enemy == null or not is_instance_valid(enemy):
+		return false
+
+	if enemy.has_method("is_repeat_potion_blocker"):
+		return bool(enemy.call("is_repeat_potion_blocker"))
+
+	return enemy.is_in_group(ENCOUNTER_ENEMY_GROUP)
 
 
 func _get_instant_potion_kind(item_data: GameItemData) -> String:

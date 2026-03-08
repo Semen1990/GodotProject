@@ -566,7 +566,7 @@ physics_layer_0/collision_mask = 0
 sources/0 = SubResource("TileSetAtlasSource_dd0lh")
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lizard_encounter"]
-size = Vector2(1819, 885)
+size = Vector2(760, 420)
 
 [node name="Level1" type="Node2D" unique_id=1946340499]
 script = ExtResource("1_dd0lh")
@@ -614,7 +614,7 @@ zone_label = "LizardRoom"
 zone_size = Vector2(760, 420)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="World/Encounters/LizardEncounter" unique_id=47948072]
-position = Vector2(-340.5, -232.5)
+position = Vector2(0, 0)
 shape = SubResource("RectangleShape2D_lizard_encounter")
 
 [node name="Objects" type="Node2D" parent="World" unique_id=765926661]

@@ -15,8 +15,7 @@ var last_safe_position: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
-	print("RunState loaded")
-
+	pass
 
 func start_new_run() -> void:
 	is_run_active = true

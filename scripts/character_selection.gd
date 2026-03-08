@@ -1,255 +1,147 @@
 extends CanvasLayer
 
-# Ссылки на UI элементы
-var characters_container
-var description_panel
-var character_name_label
-var health_value
-var mana_value
-var armor_value
-var abilities_list
-var start_button
+var characters_container = null
+var description_panel = null
+var character_name_label = null
+var health_value = null
+var mana_value = null
+var armor_value = null
+var abilities_list = null
+var start_button = null
 
 var current_selected_character = null
-var characters = []
+var characters: Array = []
 
-func _ready():
-	print("=== 🎮 CHARACTER SELECTION LOADING ===")
-	
-	# Безопасная инициализация узлов
+func _ready() -> void:
 	initialize_nodes()
 	initialize_characters()
 	setup_ui()
 
-func initialize_nodes():
-	# Безопасно получаем узлы
+func initialize_nodes() -> void:
 	characters_container = get_node_or_null("CharactersContainer")
 	description_panel = get_node_or_null("DescriptionPanel")
-	
-	# ИСПРАВЛЕНО: ищем кнопку в правильных местах
 	start_button = get_node_or_null("DescriptionPanel/MarginContainer/VBoxContainer/StartButton")
-	
+
 	if start_button == null:
 		start_button = get_node_or_null("StartButton")
-	
+
 	if start_button == null:
 		start_button = get_node_or_null("DescriptionPanel/StartButton")
-	
-	# ВАЖНО: Подключаем сигнал если кнопка найдена
-	if start_button:
-		print("✅ StartButton найдена!")
-		# Отключаем все старые подключения
-		if start_button.pressed.is_connected(_on_start_button_pressed):
-			start_button.pressed.disconnect(_on_start_button_pressed)
-		# Подключаем заново
+
+	if start_button and not start_button.pressed.is_connected(_on_start_button_pressed):
 		start_button.pressed.connect(_on_start_button_pressed)
-	else:
-		print("❌ StartButton НЕ НАЙДЕНА в сцене!")
-	
-	# Получаем остальные UI элементы
+
 	if description_panel:
 		character_name_label = get_node_or_null("DescriptionPanel/MarginContainer/VBoxContainer/CharacterName")
 		health_value = get_node_or_null("DescriptionPanel/MarginContainer/VBoxContainer/StatsContainer/HealthContainer/HealthValue")
 		mana_value = get_node_or_null("DescriptionPanel/MarginContainer/VBoxContainer/StatsContainer/ManaContainer/ManaValue")
 		armor_value = get_node_or_null("DescriptionPanel/MarginContainer/VBoxContainer/StatsContainer/ArmorContainer/ArmorValue")
 		abilities_list = get_node_or_null("DescriptionPanel/MarginContainer/VBoxContainer/AbilitiesList")
-	
-	print("📊 CharactersContainer: ", characters_container != null)
-	print("📊 DescriptionPanel: ", description_panel != null)
-	print("📊 StartButton: ", start_button != null)
 
-func initialize_characters():
-	print("=== 🔍 ИНИЦИАЛИЗАЦИЯ ПЕРСОНАЖЕЙ ===")
-	
+func initialize_characters() -> void:
 	if characters_container == null:
-		print("❌ CharactersContainer не найден!")
 		return
-	
-	characters = []
-	
-	# Получаем всех дочерних узлов в контейнере
+
+	characters.clear()
+
 	for child in characters_container.get_children():
-		print("🔍 Found child: ", child.name, " | Type: ", child.get_class())
-		
-		# Проверяем, что это персонаж с нужными методами
 		if child.has_method("setup_character") and child.has_method("play_idle_animation"):
 			characters.append(child)
-			print("✅ Valid character found: ", child.name)
-			
-			# Подключаем сигнал клика
-			if child.has_signal("character_clicked"):
+
+			if child.has_signal("character_clicked") and not child.character_clicked.is_connected(_on_character_clicked):
 				child.character_clicked.connect(_on_character_clicked)
-				print("✅ Connected signal for: ", child.name)
-			else:
-				print("❌ No character_clicked signal for: ", child.name)
-			
-			# Убеждаемся, что персонаж проигрывает idle анимацию
+
 			child.play_idle_animation()
-			
-			# ПРОВЕРКА AREA2D - ДОБАВЛЕНО
 			check_character_area2d(child)
-		else:
-			print("❌ Not a valid character: ", child.name)
-	
-	print("=== ✅ CHARACTERS INITIALIZED: ", characters.size(), " ===")
 
-# НОВАЯ ФУНКЦИЯ: Проверка Area2D у персонажей
-func check_character_area2d(character):
+func check_character_area2d(character: Node) -> void:
 	var area2d = character.get_node_or_null("Area2D")
-	if area2d:
-		print("✅ Area2D found for: ", character.character_name)
-		print("   Input pickable: ", area2d.input_pickable)
-		print("   Monitoring: ", area2d.monitoring)
-		print("   Monitorable: ", area2d.monitorable)
-		
-		# Проверяем коллизию
-		var collision = area2d.get_node_or_null("CollisionShape2D")
-		if collision:
-			print("   CollisionShape2D found: ", collision.shape != null)
-			print("   Collision disabled: ", collision.disabled)
-		else:
-			print("   ❌ No CollisionShape2D found!")
-	else:
-		print("❌ No Area2D found for: ", character.character_name)
+	if area2d == null:
+		return
 
-func setup_ui():
-	print("=== 🎮 SETUP UI ===")
-	
-	# Безопасно скрываем описание и кнопку
+	var collision = area2d.get_node_or_null("CollisionShape2D")
+	if collision == null:
+		return
+
+func setup_ui() -> void:
 	if description_panel:
 		description_panel.visible = false
-		print("✅ DescriptionPanel hidden")
-	else:
-		print("❌ DescriptionPanel not found - cannot hide")
-	
+
 	if start_button:
 		start_button.visible = false
-		print("✅ StartButton hidden")
-	else:
-		print("❌ StartButton not found - cannot hide")
-	
-	print("=== ✅ CHARACTER SELECTION READY ===")
 
-func select_character(character):
-	print("=== 🎯 SELECT CHARACTER CALLED ===")
-	print("Selecting character: ", character.character_name)
-	
+func select_character(character: Node) -> void:
 	if current_selected_character == character:
-		print("ℹ️ Character already selected")
 		return
-	
-	# Сбрасываем предыдущего выбранного персонажа
-	if current_selected_character:
-		print("🔄 Deselecting previous character: ", current_selected_character.character_name)
+
+	if current_selected_character and current_selected_character.has_method("on_deselected"):
 		current_selected_character.on_deselected()
-	
-	# Выбираем нового персонажа
+
 	current_selected_character = character
-	print("⭐ NEW SELECTION: ", character.character_name)
-	
-	# Проигрываем анимацию выбора
-	character.on_selected()
-	
-	# Показываем описание и кнопку начала игры
+
+	if character.has_method("on_selected"):
+		character.on_selected()
+
 	if description_panel:
 		description_panel.visible = true
-		print("✅ DescriptionPanel shown")
-	
+
 	if start_button:
 		start_button.visible = true
-		print("✅ StartButton shown")
-	
-	# Обновляем описание
-	update_description_panel(character)
-	
-	print("=== ✅ SELECTION COMPLETE ===")
 
-func _on_character_clicked(character):
-	print("=== 🎯 CHARACTER CLICKED ===")
-	print("Character: ", character.character_name)
+	update_description_panel(character)
+
+func _on_character_clicked(character: Node) -> void:
 	select_character(character)
 
-func update_description_panel(character):
-	print("=== 📊 UPDATING DESCRIPTION ===")
-	
-	# Безопасно обновляем UI элементы
+func update_description_panel(character: Node) -> void:
 	if character_name_label:
 		character_name_label.text = character.character_name
-		print("✅ Character name updated: ", character.character_name)
-	
+
 	if health_value:
 		health_value.text = str(character.current_health) + "/" + str(character.max_health)
-		print("✅ Health updated: ", health_value.text)
-	
+
 	if mana_value:
 		mana_value.text = str(character.current_mana) + "/" + str(character.max_mana)
-		print("✅ Mana updated: ", mana_value.text)
-	
+
 	if armor_value:
 		armor_value.text = str(character.armor)
-		print("✅ Armor updated: ", armor_value.text)
-	
-	# Обновляем способности
+
 	if abilities_list:
 		if abilities_list is ItemList:
 			abilities_list.clear()
 			for ability in character.abilities:
 				abilities_list.add_item(ability)
-			print("✅ Abilities updated (ItemList): ", character.abilities)
 		elif abilities_list is RichTextLabel or abilities_list is Label:
-			var abilities_text = ""
+			var abilities_text := ""
 			for ability in character.abilities:
-				abilities_text += "• " + ability + "\n"
-			abilities_list.text = abilities_text
-			print("✅ Abilities updated (Text): ", character.abilities)
-	else:
-		print("❌ AbilitiesList not available")
+				abilities_text += "- " + ability + "\n"
+			abilities_list.text = abilities_text.strip_edges()
 
-func _on_start_button_pressed():
-	print("🎯 START BUTTON PRESSED")
-	
+func _on_start_button_pressed() -> void:
 	if current_selected_character:
-		var character_key = get_character_key(current_selected_character.character_name)
-		print("🚀 Starting game with: ", current_selected_character.character_name, " (key: ", character_key, ")")
-		
-		# Сохраняем выбор в Global
+		var character_key := get_character_key(current_selected_character.character_name)
 		Global.selected_character = character_key
-		print("✅ Selected character saved in Global: ", character_key)
-		
-		# Загружаем игровую сцену
-		var level_path = "res://scenes/levels/level1.tscn"
+
+		var level_path := "res://scenes/levels/level1.tscn"
 		if ResourceLoader.exists(level_path):
-			print("✅ Level scene exists, loading...")
 			get_tree().change_scene_to_file(level_path)
 		else:
-			print("❌ Level scene not found: ", level_path)
-			# Показываем ошибку
 			OS.alert("Уровень не найден: " + level_path, "Ошибка загрузки")
 	else:
-		print("❌ No character selected!")
 		OS.alert("Выберите персонажа!", "Внимание")
 
 func get_character_key(character_name: String) -> String:
-	"""Преобразует отображаемое имя в ключ для Global"""
-	print("🔑 Получаем ключ для: ", character_name)
-	
-	var key = ""
 	match character_name:
 		"Воин":
-			key = "warrior"
+			return "warrior"
 		"Берсерк":
-			key = "berserk"
+			return "berserk"
 		"Разбойник":
-			key = "rogue"
+			return "rogue"
 		"Паладин":
-			key = "paladin"
+			return "paladin"
 		_:
-			print("⚠️ Неизвестное имя персонажа: ", character_name)
-			key = "warrior"  # Fallback
-	
-	print("✅ Ключ: ", key)
-	return key
+			return "warrior"
 
-func _on_back_button_pressed():
-	print("🔙 BACK BUTTON PRESSED")
+func _on_back_button_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

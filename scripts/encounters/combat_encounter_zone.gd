@@ -8,6 +8,8 @@ signal instant_potion_restrictions_changed(zone)
 const PERSISTENCE_COMPONENT := preload("res://scripts/persistence/persistence_component.gd")
 const POTION_KIND_HP: String = "hp"
 const POTION_KIND_MANA: String = "mana"
+const PLAYER_GROUP: String = "player"
+const ENEMY_GROUP: String = "encounter_enemy"
 
 @export var persistent_id: String = ""
 @export var zone_label: String = ""
@@ -96,7 +98,38 @@ func has_player(player: Node) -> bool:
 		return false
 
 	_refresh_overlap_state()
-	return players_inside.has(player.get_instance_id()) or overlaps_body(player)
+	if players_inside.has(player.get_instance_id()) or overlaps_body(player):
+		return true
+
+	var player_body: Node2D = player as Node2D
+	return player_body != null and contains_world_point(player_body.global_position)
+
+
+func contains_world_point(world_point: Vector2) -> bool:
+	var local_point: Vector2 = to_local(world_point)
+	return _contains_local_point(local_point)
+
+
+func _contains_local_point(local_point: Vector2) -> bool:
+	if collision_shape != null and collision_shape.shape != null:
+		var shape_local_point: Vector2 = local_point - collision_shape.position
+		if collision_shape.shape is RectangleShape2D:
+			var rectangle: RectangleShape2D = collision_shape.shape as RectangleShape2D
+			var half_size: Vector2 = rectangle.size * 0.5
+			return absf(shape_local_point.x) <= half_size.x and absf(shape_local_point.y) <= half_size.y
+		if collision_shape.shape is CircleShape2D:
+			var circle: CircleShape2D = collision_shape.shape as CircleShape2D
+			return shape_local_point.length() <= circle.radius
+		if collision_shape.shape is CapsuleShape2D:
+			var capsule: CapsuleShape2D = collision_shape.shape as CapsuleShape2D
+			var radius: float = capsule.radius
+			var body_half_height: float = maxf(capsule.height * 0.5 - radius, 0.0)
+			var clamped_y: float = clampf(shape_local_point.y, -body_half_height, body_half_height)
+			var closest_point := Vector2(0.0, clamped_y)
+			return shape_local_point.distance_to(closest_point) <= radius
+
+	var fallback_half_size: Vector2 = zone_size * 0.5
+	return absf(local_point.x) <= fallback_half_size.x and absf(local_point.y) <= fallback_half_size.y
 
 
 func _refresh_overlap_state() -> void:
@@ -105,6 +138,7 @@ func _refresh_overlap_state() -> void:
 
 	is_refreshing_overlap_state = true
 	_bootstrap_overlaps()
+	_sync_group_members_by_position()
 	is_refreshing_overlap_state = false
 
 
@@ -124,6 +158,8 @@ func _bootstrap_overlaps() -> void:
 			continue
 
 		var player_body: Node2D = players_inside.get(player_id) as Node2D
+		if player_body != null and overlaps_body(player_body):
+			continue
 		if player_body != null:
 			_on_body_exited(player_body)
 		else:
@@ -135,6 +171,8 @@ func _bootstrap_overlaps() -> void:
 			continue
 
 		var enemy_body: Node = tracked_enemies.get(enemy_id) as Node
+		if enemy_body is Node2D and overlaps_body(enemy_body):
+			continue
 		if enemy_body != null:
 			_unregister_enemy(enemy_body)
 		else:
@@ -142,11 +180,90 @@ func _bootstrap_overlaps() -> void:
 			blocking_enemy_ids.erase(enemy_id)
 
 
+func _sync_group_members_by_position() -> void:
+	_sync_players_by_position()
+	_sync_enemies_by_position()
+
+
+func _sync_players_by_position() -> void:
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return
+
+	var seen_player_ids: Dictionary = {}
+	for node in tree.get_nodes_in_group(PLAYER_GROUP):
+		var player_body: Node2D = node as Node2D
+		if player_body == null or not is_instance_valid(player_body) or not player_body.is_inside_tree():
+			continue
+		if not contains_world_point(player_body.global_position):
+			continue
+
+		var player_id: int = player_body.get_instance_id()
+		seen_player_ids[player_id] = true
+		players_inside[player_id] = player_body
+
+	for player_id_variant in players_inside.keys().duplicate():
+		var player_id: int = int(player_id_variant)
+		if seen_player_ids.has(player_id):
+			continue
+		players_inside.erase(player_id)
+
+
+func _sync_enemies_by_position() -> void:
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return
+
+	var seen_enemy_ids: Dictionary = {}
+	for node in tree.get_nodes_in_group(ENEMY_GROUP):
+		var enemy_body: Node2D = node as Node2D
+		if enemy_body == null or not is_instance_valid(enemy_body) or not enemy_body.is_inside_tree():
+			continue
+		if not contains_world_point(enemy_body.global_position):
+			continue
+
+		seen_enemy_ids[enemy_body.get_instance_id()] = true
+		_register_enemy(enemy_body)
+
+	for enemy_id_variant in tracked_enemies.keys().duplicate():
+		var enemy_id: int = int(enemy_id_variant)
+		if seen_enemy_ids.has(enemy_id):
+			continue
+		var enemy_body: Node2D = tracked_enemies.get(enemy_id) as Node2D
+		if enemy_body != null and contains_world_point(enemy_body.global_position):
+			continue
+		if enemy_body != null:
+			_unregister_enemy(enemy_body)
+		else:
+			tracked_enemies.erase(enemy_id)
+			blocking_enemy_ids.erase(enemy_id)
+
+
+func get_active_blocking_enemy_count() -> int:
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return 0
+
+	var blocker_count: int = 0
+	for node in tree.get_nodes_in_group(ENEMY_GROUP):
+		var enemy_body: Node2D = node as Node2D
+		if enemy_body == null:
+			continue
+		if not is_instance_valid(enemy_body) or not enemy_body.is_inside_tree():
+			continue
+		if not contains_world_point(enemy_body.global_position):
+			continue
+		if _is_enemy_currently_blocking(enemy_body):
+			blocker_count += 1
+
+	return blocker_count
+
+
 func _on_body_entered(body: Node2D) -> void:
 	if body == null:
 		return
 
-	if body.is_in_group("player"):
+	if body.is_in_group(PLAYER_GROUP):
 		var player_id: int = body.get_instance_id()
 		var was_present: bool = players_inside.has(player_id)
 		players_inside[player_id] = body
@@ -154,7 +271,7 @@ func _on_body_entered(body: Node2D) -> void:
 			player_entered_encounter.emit(self)
 		return
 
-	if body.is_in_group("encounter_enemy"):
+	if body.is_in_group(ENEMY_GROUP):
 		_register_enemy(body)
 
 
@@ -162,7 +279,7 @@ func _on_body_exited(body: Node2D) -> void:
 	if body == null:
 		return
 
-	if body.is_in_group("player"):
+	if body.is_in_group(PLAYER_GROUP):
 		var player_id: int = body.get_instance_id()
 		var was_present: bool = players_inside.has(player_id)
 		players_inside.erase(player_id)
@@ -170,7 +287,7 @@ func _on_body_exited(body: Node2D) -> void:
 			player_exited_encounter.emit(self)
 		return
 
-	if body.is_in_group("encounter_enemy"):
+	if body.is_in_group(ENEMY_GROUP):
 		_unregister_enemy(body)
 
 
@@ -241,13 +358,18 @@ func _update_enemy_blocking(enemy: Node) -> void:
 	if enemy == null:
 		return
 
-	var is_blocking: bool = false
-	if enemy.has_method("is_repeat_potion_blocker"):
-		is_blocking = bool(enemy.call("is_repeat_potion_blocker"))
-	else:
-		is_blocking = enemy.is_in_group("encounter_enemy")
-
+	var is_blocking: bool = _is_enemy_currently_blocking(enemy)
 	_set_enemy_blocking(enemy.get_instance_id(), is_blocking)
+
+
+func _is_enemy_currently_blocking(enemy: Node) -> bool:
+	if enemy == null or not is_instance_valid(enemy):
+		return false
+
+	if enemy.has_method("is_repeat_potion_blocker"):
+		return bool(enemy.call("is_repeat_potion_blocker"))
+
+	return enemy.is_in_group(ENEMY_GROUP)
 
 
 func _set_enemy_blocking(enemy_id: int, is_blocking: bool) -> void:
@@ -285,7 +407,7 @@ func _on_enemy_tree_exited(enemy: Node) -> void:
 
 
 func _has_active_blockers() -> bool:
-	return not blocking_enemy_ids.is_empty()
+	return get_active_blocking_enemy_count() > 0
 
 
 func _release_limits_if_safe() -> void:
@@ -341,6 +463,9 @@ func _save_state() -> void:
 func _update_collision_shape() -> void:
 	if collision_shape == null:
 		return
+
+	# Shape must stay centered on the encounter node so scene offsets do not break detection.
+	collision_shape.position = Vector2.ZERO
 
 	var rectangle: RectangleShape2D = collision_shape.shape as RectangleShape2D
 	if rectangle == null:

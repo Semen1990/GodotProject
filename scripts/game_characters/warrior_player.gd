@@ -1,72 +1,65 @@
 extends "res://scripts/game_characters/base_game_character.gd"
 
 # ===========================================
-# ВОИН - ТАНК/ЗАЩИТНИК (ИСПРАВЛЕНО v3.0)
+# Р’РћРРќ - РўРђРќРљ/Р—РђР©РРўРќРРљ (РРЎРџР РђР’Р›Р•РќРћ v3.0)
 # ===========================================
 #
-# ИСПРАВЛЕНО:
-# - Броня правильно суммируется: БАЗА + ЭКИПИРОВКА + ЗЕЛЬЕ + БЛОК
-# - При снятии блока броня не сбрасывается к базе
+# РРЎРџР РђР’Р›Р•РќРћ:
+# - Р‘СЂРѕРЅСЏ РїСЂР°РІРёР»СЊРЅРѕ СЃСѓРјРјРёСЂСѓРµС‚СЃСЏ: Р‘РђР—Рђ + Р­РљРРџРР РћР’РљРђ + Р—Р•Р›Р¬Р• + Р‘Р›РћРљ
+# - РџСЂРё СЃРЅСЏС‚РёРё Р±Р»РѕРєР° Р±СЂРѕРЅСЏ РЅРµ СЃР±СЂР°СЃС‹РІР°РµС‚СЃСЏ Рє Р±Р°Р·Рµ
 
-# Блок
+# Р‘Р»РѕРє
 var block_cooldown: float = 0.0
-var is_block_active: bool = false  # Отслеживаем активен ли блок
+var is_block_active: bool = false  # РћС‚СЃР»РµР¶РёРІР°РµРј Р°РєС‚РёРІРµРЅ Р»Рё Р±Р»РѕРє
 
-# БАЗОВАЯ броня персонажа (без модификаторов)
+# Р‘РђР—РћР’РђРЇ Р±СЂРѕРЅСЏ РїРµСЂСЃРѕРЅР°Р¶Р° (Р±РµР· РјРѕРґРёС„РёРєР°С‚РѕСЂРѕРІ)
 var warrior_base_armor: int = 2
 
-# Для совместимости с другими системами
+# Р”Р»СЏ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё СЃ РґСЂСѓРіРёРјРё СЃРёСЃС‚РµРјР°РјРё
 var base_armor: int = 2
 
-# Бонус от блока
+# Р‘РѕРЅСѓСЃ РѕС‚ Р±Р»РѕРєР°
 var block_armor_bonus: int = 0
 
-# Константы
+# РљРѕРЅСЃС‚Р°РЅС‚С‹
 const BLOCK_COOLDOWN_TIME: float = 3.0
 const BLOCK_ARMOR_BONUS_VALUE: int = 2
 const BASE_DAMAGE: int = 2
 const ATTACK_RANGE: float = 55.0
 
-# === ВНЕШНИЕ БОНУСЫ (от экипировки и зелий) ===
-# Эти переменные обновляются из level1.gd
+# === Р’РќР•РЁРќРР• Р‘РћРќРЈРЎР« (РѕС‚ СЌРєРёРїРёСЂРѕРІРєРё Рё Р·РµР»РёР№) ===
+# Р­С‚Рё РїРµСЂРµРјРµРЅРЅС‹Рµ РѕР±РЅРѕРІР»СЏСЋС‚СЃСЏ РёР· level1.gd
 var equipment_armor_bonus: int = 0
 var potion_armor_bonus: int = 0
 
 func _ready():
-	print("\n=== 🛡️ ИНИЦИАЛИЗАЦИЯ ВОИНА ===")
 	
-	# Характеристики
-	character_name = "Воин"
+	# РҐР°СЂР°РєС‚РµСЂРёСЃС‚РёРєРё
+	character_name = "Р’РѕРёРЅ"
 	max_health = 12
 	current_health = 12
 	max_mana = 0
 	current_mana = 0
 	
-	# БАЗОВАЯ броня
+	# Р‘РђР—РћР’РђРЇ Р±СЂРѕРЅСЏ
 	warrior_base_armor = 2
 	armor = warrior_base_armor
-	base_armor = warrior_base_armor  # Для совместимости
+	base_armor = warrior_base_armor  # Р”Р»СЏ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё
 	
-	# Базовый урон
+	# Р‘Р°Р·РѕРІС‹Р№ СѓСЂРѕРЅ
 	current_damage = BASE_DAMAGE
 	
-	# Скорость и прыжок
+	# РЎРєРѕСЂРѕСЃС‚СЊ Рё РїСЂС‹Р¶РѕРє
 	base_speed = 180
 	current_speed = 180
 	max_speed = 180.0
 	jump_velocity = -350
 	
-	print("📊 Характеристики:")
-	print("  HP: ", current_health, "/", max_health)
-	print("  MP: ", current_mana, "/", max_mana, " (скрыто)")
-	print("  ARM: ", armor, " (база)")
-	print("  DMG: ", BASE_DAMAGE)
 	
-	print("🛡️ Воин готов к битве!")
 	super()
 
 func _physics_process(delta):
-	# Обновляем кулдаун блока
+	# РћР±РЅРѕРІР»СЏРµРј РєСѓР»РґР°СѓРЅ Р±Р»РѕРєР°
 	if block_cooldown > 0:
 		block_cooldown -= delta
 		_update_block_cooldown_ui()
@@ -74,118 +67,107 @@ func _physics_process(delta):
 	super(delta)
 
 func _input(event):
-	# Отпускание кнопки E - опускаем щит
+	# РћС‚РїСѓСЃРєР°РЅРёРµ РєРЅРѕРїРєРё E - РѕРїСѓСЃРєР°РµРј С‰РёС‚
 	if event.is_action_released("special_ability") and is_blocking:
 		stop_blocking()
 
 # ===========================================
-# РАСЧЁТ ИТОГОВОЙ БРОНИ
+# Р РђРЎР§РЃРў РРўРћР“РћР’РћР™ Р‘Р РћРќР
 # ===========================================
 
 func recalculate_armor():
-	"""Пересчитывает итоговую броню с учётом ВСЕХ модификаторов"""
+	"""РџРµСЂРµСЃС‡РёС‚С‹РІР°РµС‚ РёС‚РѕРіРѕРІСѓСЋ Р±СЂРѕРЅСЋ СЃ СѓС‡С‘С‚РѕРј Р’РЎР•РҐ РјРѕРґРёС„РёРєР°С‚РѕСЂРѕРІ"""
 	var old_armor = armor
 	
-	# Итого = База + Экипировка + Зелья + Блок
+	# РС‚РѕРіРѕ = Р‘Р°Р·Р° + Р­РєРёРїРёСЂРѕРІРєР° + Р—РµР»СЊСЏ + Р‘Р»РѕРє
 	armor = warrior_base_armor + equipment_armor_bonus + potion_armor_bonus + block_armor_bonus
 	
-	# Обновляем base_armor (для совместимости с родительским классом)
-	# base_armor = база + экипировка (без зелий и блока)
+	# РћР±РЅРѕРІР»СЏРµРј base_armor (РґР»СЏ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё СЃ СЂРѕРґРёС‚РµР»СЊСЃРєРёРј РєР»Р°СЃСЃРѕРј)
+	# base_armor = Р±Р°Р·Р° + СЌРєРёРїРёСЂРѕРІРєР° (Р±РµР· Р·РµР»РёР№ Рё Р±Р»РѕРєР°)
 	base_armor = warrior_base_armor + equipment_armor_bonus
 	
-	if armor != old_armor:
-		print("🛡️ Броня пересчитана: %d (база %d + экип %d + зелье %d + блок %d)" % [
-			armor, warrior_base_armor, equipment_armor_bonus, potion_armor_bonus, block_armor_bonus
-		])
-
 
 func set_equipment_armor(bonus: int):
-	"""Устанавливает бонус брони от экипировки"""
+	"""РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ Р±РѕРЅСѓСЃ Р±СЂРѕРЅРё РѕС‚ СЌРєРёРїРёСЂРѕРІРєРё"""
 	equipment_armor_bonus = bonus
 	recalculate_armor()
 
 
 func set_potion_armor(bonus: int):
-	"""Устанавливает бонус брони от зелий"""
+	"""РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ Р±РѕРЅСѓСЃ Р±СЂРѕРЅРё РѕС‚ Р·РµР»РёР№"""
 	potion_armor_bonus = bonus
 	recalculate_armor()
 
 
 func add_potion_armor(bonus: int):
-	"""Добавляет бонус брони от зелья"""
+	"""Р”РѕР±Р°РІР»СЏРµС‚ Р±РѕРЅСѓСЃ Р±СЂРѕРЅРё РѕС‚ Р·РµР»СЊСЏ"""
 	potion_armor_bonus += bonus
 	recalculate_armor()
 
 
 func reset_potion_bonuses():
-	"""Сбрасывает бонусы от зелий (при смене комнаты/смерти)"""
+	"""РЎР±СЂР°СЃС‹РІР°РµС‚ Р±РѕРЅСѓСЃС‹ РѕС‚ Р·РµР»РёР№ (РїСЂРё СЃРјРµРЅРµ РєРѕРјРЅР°С‚С‹/СЃРјРµСЂС‚Рё)"""
 	potion_armor_bonus = 0
 	recalculate_armor()
 
 # ===========================================
-# СПЕЦИАЛЬНАЯ СПОСОБНОСТЬ (E) - БЛОК ЩИТОМ
+# РЎРџР•Р¦РРђР›Р¬РќРђРЇ РЎРџРћРЎРћР‘РќРћРЎРўР¬ (E) - Р‘Р›РћРљ Р©РРўРћРњ
 # ===========================================
 
 func use_special_ability():
-	"""Воин: Блок щитом"""
+	"""Р’РѕРёРЅ: Р‘Р»РѕРє С‰РёС‚РѕРј"""
 	if is_blocking:
 		return
 	
 	if block_cooldown > 0:
-		print("❌ Блок на кулдауне! Осталось: %.1f сек" % block_cooldown)
 		return
 	
 	block()
 
 func block():
-	"""Поднимает щит - ДОБАВЛЯЕТ бонус к текущей броне"""
+	"""РџРѕРґРЅРёРјР°РµС‚ С‰РёС‚ - Р”РћР‘РђР’Р›РЇР•Рў Р±РѕРЅСѓСЃ Рє С‚РµРєСѓС‰РµР№ Р±СЂРѕРЅРµ"""
 	if is_dead or is_attacking or is_casting or is_sliding:
 		return
 	
-	print("\n🛡️ ЩИТ ПОДНЯТ!")
 	
 	is_blocking = true
 	is_block_active = true
 	
-	# Добавляем бонус от блока
+	# Р”РѕР±Р°РІР»СЏРµРј Р±РѕРЅСѓСЃ РѕС‚ Р±Р»РѕРєР°
 	block_armor_bonus = BLOCK_ARMOR_BONUS_VALUE
 	recalculate_armor()
 	
 	velocity.x = 0
 	play_animation("shield_defence")
 	
-	print("  Итого броня: %d" % armor)
 
 func stop_blocking():
-	"""Опускает щит - УБИРАЕТ только бонус от блока"""
+	"""РћРїСѓСЃРєР°РµС‚ С‰РёС‚ - РЈР‘РР РђР•Рў С‚РѕР»СЊРєРѕ Р±РѕРЅСѓСЃ РѕС‚ Р±Р»РѕРєР°"""
 	if not is_blocking:
 		return
 	
-	print("🛡️ ЩИТ ОПУЩЕН!")
 	
 	is_blocking = false
 	is_block_active = false
 	
-	# Убираем ТОЛЬКО бонус от блока
+	# РЈР±РёСЂР°РµРј РўРћР›Р¬РљРћ Р±РѕРЅСѓСЃ РѕС‚ Р±Р»РѕРєР°
 	block_armor_bonus = 0
 	recalculate_armor()
 	
 	block_cooldown = BLOCK_COOLDOWN_TIME
 	
-	print("  Итого броня: %d" % armor)
 
 # ===========================================
-# АТАКА - УРОН НА 4-М КАДРЕ
+# РђРўРђРљРђ - РЈР РћРќ РќРђ 4-Рњ РљРђР”Р Р•
 # ===========================================
 
 var _attack_damage_dealt: bool = false
 
 func attack():
-	"""Атака воина - урон на 4-м кадре"""
+	"""РђС‚Р°РєР° РІРѕРёРЅР° - СѓСЂРѕРЅ РЅР° 4-Рј РєР°РґСЂРµ"""
 	if is_dead or is_blocking or is_casting or is_sliding or is_crouching or is_attacking:
 		return
 	
-	print("\n⚔️ ВОИН АТАКУЕТ!")
 	is_attacking = true
 	_attack_damage_dealt = false
 	
@@ -206,17 +188,16 @@ func attack():
 	handle_animations()
 
 func _on_attack_frame():
-	"""Урон на 4-м кадре (индекс 3)"""
+	"""РЈСЂРѕРЅ РЅР° 4-Рј РєР°РґСЂРµ (РёРЅРґРµРєСЃ 3)"""
 	if not is_attacking or _attack_damage_dealt:
 		return
 	
 	if animated_sprite.frame == 3:
 		_deal_damage_to_enemies()
 		_attack_damage_dealt = true
-		print("🎯 Урон на кадре 4!")
 
 func _deal_damage_to_enemies():
-	"""Наносит урон врагам"""
+	"""РќР°РЅРѕСЃРёС‚ СѓСЂРѕРЅ РІСЂР°РіР°Рј"""
 	if not animated_sprite:
 		return
 	
@@ -234,25 +215,21 @@ func _deal_damage_to_enemies():
 		var body = result["collider"]
 		if body != self and body.has_method("take_damage"):
 			body.take_damage(current_damage, "physical")
-			print("🎯 Попадание! Урон:", current_damage)
 			
 			if Global and Global.has_method("add_damage_dealt"):
 				Global.add_damage_dealt(current_damage)
 
 # ===========================================
-# ПОЛУЧЕНИЕ УРОНА
+# РџРћР›РЈР§Р•РќРР• РЈР РћРќРђ
 # ===========================================
 
-func take_damage(amount: int, damage_type: String = "physical", source: String = "Неизвестно"):
-	"""Получение урона с учётом брони"""
+func take_damage(amount: int, damage_type: String = "physical", source: String = "РќРµРёР·РІРµСЃС‚РЅРѕ"):
+	"""РџРѕР»СѓС‡РµРЅРёРµ СѓСЂРѕРЅР° СЃ СѓС‡С‘С‚РѕРј Р±СЂРѕРЅРё"""
 	if is_dead:
 		return
 	
 	last_damage_source = source
 	
-	print("\n💥 ВОИН ПОЛУЧАЕТ УРОН!")
-	print("  Входящий: ", amount, " (", damage_type, ")")
-	print("  Текущая броня: ", armor)
 	
 	var final_damage: int
 	if damage_type == "magical":
@@ -262,13 +239,10 @@ func take_damage(amount: int, damage_type: String = "physical", source: String =
 	
 	final_damage = max(1, final_damage)
 	
-	print("  Итоговый урон: ", final_damage)
-	print("  HP до: ", current_health)
 	
 	current_health -= final_damage
 	current_health = max(0, current_health)
 	
-	print("  HP после: ", current_health)
 	
 	if Global and Global.has_method("add_damage_taken"):
 		Global.add_damage_taken(final_damage)
@@ -280,7 +254,7 @@ func take_damage(amount: int, damage_type: String = "physical", source: String =
 		die()
 
 func _show_damage_effect():
-	"""Красная вспышка при получении урона"""
+	"""РљСЂР°СЃРЅР°СЏ РІСЃРїС‹С€РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё СѓСЂРѕРЅР°"""
 	if not animated_sprite:
 		return
 	
@@ -295,18 +269,15 @@ func _show_damage_effect():
 # ===========================================
 
 func _update_block_cooldown_ui():
-	"""Обновляет UI кулдауна"""
+	"""РћР±РЅРѕРІР»СЏРµС‚ UI РєСѓР»РґР°СѓРЅР°"""
 	if Global and Global.game_ui and Global.game_ui.has_method("update_ability_cooldown"):
 		var percent = 1.0 - (block_cooldown / BLOCK_COOLDOWN_TIME)
 		Global.game_ui.update_ability_cooldown("block", percent)
 
 # ===========================================
-# АРТЕФАКТЫ
+# РђР РўР•Р¤РђРљРўР«
 # ===========================================
 
 func apply_artifacts():
-	"""Применяет артефакты"""
+	"""РџСЂРёРјРµРЅСЏРµС‚ Р°СЂС‚РµС„Р°РєС‚С‹"""
 	super.apply_artifacts()
-	
-	if max_mana > 0:
-		print("💙 Воин получил ману: ", max_mana)
