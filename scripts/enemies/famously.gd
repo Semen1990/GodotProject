@@ -21,6 +21,10 @@ const DEATH_FOLDER: String = "res://assets/enemies/Famously/Death"
 @export var cast_release_frame: int = 6
 @export var retreat_cast_distance: float = 176.0
 @export var cast_cooldown_time: float = 5.0
+@export var melee_hit_range: float = 235.0
+@export var melee_vertical_tolerance: float = 120.0
+@export var engaged_detection_multiplier: float = 1.3
+@export var engaged_cast_distance_multiplier: float = 1.3
 @export var spell_vertical_offset: Vector2 = Vector2(0.0, -96.0)
 @export var spell_madness_chance: float = 0.3
 @export var spell_madness_stacks: int = 1
@@ -31,9 +35,13 @@ const DEATH_FOLDER: String = "res://assets/enemies/Famously/Death"
 var queued_attack_mode: StringName = &"melee"
 var has_seen_target_in_melee: bool = false
 var next_cast_allowed_at_msec: int = 0
+var base_detection_range_value: float = 0.0
+var base_retreat_cast_distance: float = 0.0
 
 
 func _initialize_enemy() -> void:
+	base_detection_range_value = detection_range
+	base_retreat_cast_distance = retreat_cast_distance
 	_ensure_sprite_frames()
 	if animated_sprite != null:
 		var normalized_scale_x: float = absf(animated_sprite.scale.x)
@@ -41,18 +49,22 @@ func _initialize_enemy() -> void:
 			normalized_scale_x = 1.0
 		animated_sprite.scale = Vector2(normalized_scale_x, animated_sprite.scale.y)
 		_apply_visual_facing(-1.0)
+	_sync_engaged_ranges()
 	_validate_animation_setup()
 
 
 func save_state() -> Dictionary:
 	var state: Dictionary = super.save_state()
 	state["has_seen_target_in_melee"] = has_seen_target_in_melee
+	state["next_cast_allowed_at_msec"] = next_cast_allowed_at_msec
 	return state
 
 
 func load_state(state: Dictionary) -> void:
 	has_seen_target_in_melee = bool(state.get("has_seen_target_in_melee", false))
+	next_cast_allowed_at_msec = int(state.get("next_cast_allowed_at_msec", 0))
 	super.load_state(state)
+	_sync_engaged_ranges()
 
 
 func _select_idle_animation() -> StringName:
@@ -164,12 +176,37 @@ func _apply_visual_facing(dir_x: float) -> void:
 	animated_sprite.position = visual_offset_when_facing_left if facing_left else visual_offset_when_facing_right
 
 
+func _sync_engaged_ranges() -> void:
+	var detection_multiplier: float = engaged_detection_multiplier if has_engaged_player else 1.0
+	detection_range = base_detection_range_value * detection_multiplier
+	_update_detection_range()
+
+
+func _get_effective_retreat_cast_distance() -> float:
+	var cast_multiplier: float = engaged_cast_distance_multiplier if has_engaged_player else 1.0
+	return base_retreat_cast_distance * cast_multiplier
+
+
+func _on_detection_entered(body: Node2D) -> void:
+	super._on_detection_entered(body)
+	if body == null or not body.is_in_group("player"):
+		return
+	if has_engaged_player:
+		_sync_engaged_ranges()
+
+
 func _deal_damage() -> void:
 	if current_attack_animation == cast_animation_name:
 		_spawn_spell_strike()
 		return
 
-	super._deal_damage()
+	if not _is_target_valid():
+		return
+
+	var horizontal_distance: float = absf(target.global_position.x - global_position.x)
+	var vertical_distance: float = absf(target.global_position.y - global_position.y)
+	if horizontal_distance <= melee_hit_range and vertical_distance <= melee_vertical_tolerance and target.has_method("take_damage"):
+		target.take_damage(current_attack_damage, "physical", name)
 
 
 func _should_cast_on_retreat(distance_to_target: float) -> bool:
@@ -179,7 +216,7 @@ func _should_cast_on_retreat(distance_to_target: float) -> bool:
 		return false
 	if Time.get_ticks_msec() < next_cast_allowed_at_msec:
 		return false
-	return distance_to_target >= retreat_cast_distance and distance_to_target <= detection_range
+	return distance_to_target >= _get_effective_retreat_cast_distance() and distance_to_target <= detection_range
 
 
 func _spawn_spell_strike() -> void:
