@@ -62,6 +62,7 @@ func _ready() -> void:
 			detection_area.body_exited.connect(_on_detection_exited)
 
 	if animated_sprite != null:
+		animated_sprite.z_index = 10
 		if not animated_sprite.animation_finished.is_connected(_on_animation_finished):
 			animated_sprite.animation_finished.connect(_on_animation_finished)
 		if not animated_sprite.frame_changed.is_connected(_on_frame_changed):

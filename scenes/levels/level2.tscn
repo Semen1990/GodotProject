@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://cc2q04j7j5qr6" path="res://scripts/inventory/ui/death_menu.gd" id="4_gycjm"]
 [ext_resource type="PackedScene" uid="uid://ceck3rjiaby11" path="res://scenes/Ui/simple_pause_menu.tscn" id="6_hgky1"]
 [ext_resource type="PackedScene" uid="uid://c3wgtlf6r8x7c" path="res://prefabs/objects/spawn_point.tscn" id="7_b4tpv"]
+[ext_resource type="PackedScene" uid="uid://cmkpjcmc0lm82" path="res://prefabs/objects/key_pickup.tscn" id="8_8i1lk"]
 [ext_resource type="PackedScene" uid="uid://7j4r1w6ko53b" path="res://prefabs/objects/door.tscn" id="8_hkuam"]
 [ext_resource type="PackedScene" uid="uid://37jm71c64bwi" path="res://prefabs/enemies/Famously.tscn" id="9_famously"]
 [ext_resource type="Script" uid="uid://dngtc882c5x73" path="res://scripts/encounters/combat_encounter_zone.gd" id="10_gorgon_encounter"]
@@ -481,6 +482,7 @@ position = Vector2(1662, 765)
 art_faces_left_by_default = true
 visual_offset_when_facing_left = Vector2(-81, -112.000015)
 visual_offset_when_facing_right = Vector2(81, -112.000015)
+attack_range = 140.0
 
 [node name="Encounters" type="Node2D" parent="World" unique_id=476011681]
 
@@ -500,15 +502,27 @@ shape = SubResource("RectangleShape2D_famously_encounter")
 [node name="Objects" type="Node2D" parent="World" unique_id=1910131759]
 
 [node name="Door" parent="World/Objects" unique_id=1799376009 instance=ExtResource("8_hkuam")]
-position = Vector2(191, 760)
+position = Vector2(204, 756)
 target_scene = "res://scenes/levels/level1.tscn"
 is_initially_open = true
+
+[node name="Doorlvl2" parent="World/Objects" unique_id=292039968 instance=ExtResource("8_hkuam")]
+position = Vector2(1472, 756)
+target_scene = "res://scenes/levels/level1.tscn"
+required_key = 5
+
+[node name="KeyPickuplvl2" parent="World/Objects" unique_id=1397560131 instance=ExtResource("8_8i1lk")]
+position = Vector2(685, 838)
+key_color = 5
 
 [node name="UI" type="Node" parent="." unique_id=1520951143]
 
 [node name="GameUI" parent="UI" unique_id=278020147 instance=ExtResource("2_game_ui")]
+visible = false
 
 [node name="DeathMenu" parent="UI" unique_id=2080965026 groups=["death_menu"] instance=ExtResource("3_oyk6k")]
+visible = false
 script = ExtResource("4_gycjm")
 
 [node name="SimplePauseMenu" parent="UI" unique_id=1460008930 instance=ExtResource("6_hgky1")]
+visible = false

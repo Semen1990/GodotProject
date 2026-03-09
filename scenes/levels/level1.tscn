@@ -632,6 +632,10 @@ position = Vector2(572, 849)
 position = Vector2(1750, 879)
 target_scene = "res://scenes/levels/level2.tscn"
 
+[node name="KeyPickup2" parent="World/Objects" unique_id=1397560131 instance=ExtResource("9_nkeig")]
+position = Vector2(516, 850)
+key_color = 4
+
 [node name="UI" type="Node" parent="." unique_id=560765548]
 
 [node name="SimplePauseMenu" parent="UI" unique_id=1140543777 instance=ExtResource("5_dywbp")]

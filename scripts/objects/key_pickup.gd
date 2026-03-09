@@ -14,21 +14,30 @@ enum KeyColor {
 
 const PERSISTENCE_COMPONENT := preload("res://scripts/persistence/persistence_component.gd")
 const COLOR_NAMES := {
-	KeyColor.GOLD: "Золотой",
-	KeyColor.SILVER: "Серебряный",
-	KeyColor.RED: "Красный",
-	KeyColor.BLUE: "Синий",
-	KeyColor.GREEN: "Зелёный",
-	KeyColor.PURPLE: "Фиолетовый",
+	KeyColor.GOLD: "\u0417\u043e\u043b\u043e\u0442\u043e\u0439",
+	KeyColor.SILVER: "\u0421\u0435\u0440\u0435\u0431\u0440\u044f\u043d\u044b\u0439",
+	KeyColor.RED: "\u041a\u0440\u0430\u0441\u043d\u044b\u0439",
+	KeyColor.BLUE: "\u0421\u0438\u043d\u0438\u0439",
+	KeyColor.GREEN: "\u0417\u0435\u043b\u0451\u043d\u044b\u0439",
+	KeyColor.PURPLE: "\u0424\u0438\u043e\u043b\u0435\u0442\u043e\u0432\u044b\u0439",
+}
+const KEY_ANIMATION_DIRS := {
+	KeyColor.GOLD: "res://assets/items/keys_game/gold",
+	KeyColor.SILVER: "res://assets/items/keys_game/silver",
+	KeyColor.RED: "res://assets/items/keys_game/red",
+	KeyColor.BLUE: "res://assets/items/keys_game/blue",
+	KeyColor.GREEN: "res://assets/items/keys_game/green",
+	KeyColor.PURPLE: "res://assets/items/keys_game/purple",
 }
 
 @export var key_color: KeyColor = KeyColor.GOLD
 @export var float_height: float = 4.0
 @export var float_speed: float = 2.5
 @export var auto_collect: bool = false
-@export var sprite_scale: float = 0.4
+@export var sprite_scale: float = 2.0
+@export var animation_speed: float = 12.0
 
-var sprite: Sprite2D = null
+var animated_sprite: AnimatedSprite2D = null
 var hint_label: Label = null
 var persistence: PersistenceComponent = null
 
@@ -40,7 +49,7 @@ var pending_persistent_id: String = ""
 
 
 func _ready() -> void:
-	sprite = get_node_or_null("Sprite2D")
+	animated_sprite = get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
 	hint_label = get_node_or_null("HintLabel")
 	initial_y = position.y
 
@@ -133,7 +142,7 @@ func _setup_hint() -> void:
 		hint_label.name = "HintLabel"
 		add_child(hint_label)
 
-	hint_label.text = "[F] Подобрать"
+	hint_label.text = "[F] \u041f\u043e\u0434\u043e\u0431\u0440\u0430\u0442\u044c"
 	hint_label.position = Vector2(-45, -50)
 	hint_label.visible = false
 	hint_label.add_theme_font_size_override("font_size", 12)
@@ -141,38 +150,63 @@ func _setup_hint() -> void:
 
 
 func _setup_sprite() -> void:
-	if not sprite:
-		sprite = Sprite2D.new()
-		sprite.name = "Sprite2D"
-		add_child(sprite)
-		move_child(sprite, 0)
+	if not animated_sprite:
+		animated_sprite = AnimatedSprite2D.new()
+		animated_sprite.name = "AnimatedSprite2D"
+		add_child(animated_sprite)
+		move_child(animated_sprite, 0)
 
-	var keys_texture_path: String = "res://assets/items/keys.png"
-	if not ResourceLoader.exists(keys_texture_path):
-		_create_fallback_sprite()
-		return
-
-	var full_texture: Texture2D = load(keys_texture_path) as Texture2D
-	if not full_texture:
-		_create_fallback_sprite()
-		return
-
-	var tex_size: Vector2 = full_texture.get_size()
-	var key_height: float = tex_size.y / 6.0
-	var key_width: float = tex_size.x
-
-	var atlas: AtlasTexture = AtlasTexture.new()
-	atlas.atlas = full_texture
-
-	var color_index: int = int(key_color)
-	var region_y: float = key_height * color_index
-	atlas.region = Rect2(0, region_y, key_width, key_height)
-
-	sprite.texture = atlas
-	sprite.scale = Vector2(sprite_scale, sprite_scale)
+	var sprite_frames: SpriteFrames = _build_key_sprite_frames()
+	animated_sprite.sprite_frames = sprite_frames
+	animated_sprite.scale = Vector2.ONE * sprite_scale
+	animated_sprite.play("idle")
 
 
-func _create_fallback_sprite() -> void:
+func _build_key_sprite_frames() -> SpriteFrames:
+	var frames := SpriteFrames.new()
+	frames.add_animation("idle")
+	frames.set_animation_loop("idle", true)
+	frames.set_animation_speed("idle", animation_speed)
+
+	var frames_dir := str(KEY_ANIMATION_DIRS.get(key_color, ""))
+	var file_paths: Array[String] = _collect_png_files(frames_dir)
+	if file_paths.is_empty():
+		return _create_fallback_sprite_frames()
+
+	for file_path in file_paths:
+		var texture: Texture2D = load(file_path) as Texture2D
+		if texture:
+			frames.add_frame("idle", texture)
+
+	if frames.get_frame_count("idle") == 0:
+		return _create_fallback_sprite_frames()
+
+	return frames
+
+
+func _collect_png_files(dir_path: String) -> Array[String]:
+	var files: Array[String] = []
+	var dir: DirAccess = DirAccess.open(dir_path)
+	if dir == null:
+		return files
+
+	dir.list_dir_begin()
+	while true:
+		var file_name: String = dir.get_next()
+		if file_name.is_empty():
+			break
+		if dir.current_is_dir():
+			continue
+		if file_name.get_extension().to_lower() != "png":
+			continue
+		files.append(dir_path.path_join(file_name))
+	dir.list_dir_end()
+
+	files.sort()
+	return files
+
+
+func _create_fallback_sprite_frames() -> SpriteFrames:
 	var colors: Dictionary = {
 		KeyColor.GOLD: Color(1.0, 0.85, 0.0),
 		KeyColor.SILVER: Color(0.75, 0.75, 0.8),
@@ -184,7 +218,7 @@ func _create_fallback_sprite() -> void:
 
 	var size: int = 32
 	var image: Image = Image.create(size, size, false, Image.FORMAT_RGBA8)
-	var color: Color = colors.get(key_color, Color.YELLOW)
+	var color = colors.get(key_color, Color.YELLOW)
 
 	for x in range(size):
 		for y in range(size):
@@ -199,8 +233,12 @@ func _create_fallback_sprite() -> void:
 				image.set_pixel(x, y, color)
 
 	var texture: ImageTexture = ImageTexture.create_from_image(image)
-	sprite.texture = texture
-	sprite.scale = Vector2(1.5, 1.5)
+	var frames := SpriteFrames.new()
+	frames.add_animation("idle")
+	frames.set_animation_loop("idle", true)
+	frames.set_animation_speed("idle", 1.0)
+	frames.add_frame("idle", texture)
+	return frames
 
 
 func _process(delta: float) -> void:
@@ -266,10 +304,10 @@ func _play_collect_effect() -> void:
 
 	var tween: Tween = create_tween()
 	tween.set_parallel(true)
-	if sprite:
-		tween.tween_property(sprite, "scale", sprite.scale * 1.5, 0.2)
-		tween.tween_property(sprite, "modulate:a", 0.0, 0.2)
-		tween.tween_property(sprite, "position:y", sprite.position.y - 20.0, 0.2)
+	if animated_sprite:
+		tween.tween_property(animated_sprite, "scale", animated_sprite.scale * 1.5, 0.2)
+		tween.tween_property(animated_sprite, "modulate:a", 0.0, 0.2)
+		tween.tween_property(animated_sprite, "position:y", animated_sprite.position.y - 20.0, 0.2)
 	else:
 		tween.tween_property(self, "modulate:a", 0.0, 0.2)
 
