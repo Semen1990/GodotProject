@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://dimxc63wxpcw1"]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" uid="uid://bb5y78itq0ebn" path="res://scripts/character_selection.gd" id="1_cdix0"]
 [ext_resource type="Texture2D" uid="uid://wvw8vjvprg8q" path="res://assets/background/Free-Moon-Pixel-Game-Backgrounds5.png" id="2_5bvvd"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://c2f3brcpnbfmq" path="res://scenes/characters/rogue.tscn" id="3_ytn4t"]
 [ext_resource type="PackedScene" uid="uid://t7vi0ab1x20r" path="res://scenes/characters/paladin.tscn" id="4_8u4g5"]
 [ext_resource type="PackedScene" uid="uid://blg16q5rxnvrw" path="res://scenes/characters/warrior.tscn" id="4_gvd7t"]
+[ext_resource type="PackedScene" path="res://scenes/characters/knight.tscn" id="5_knight"]
 [ext_resource type="PackedScene" uid="uid://ceck3rjiaby11" path="res://scenes/Ui/simple_pause_menu.tscn" id="6_corwa"]
 [ext_resource type="Texture2D" uid="uid://depyifnyk23en" path="res://assets/icon/heart.jpg" id="6_k67mm"]
 [ext_resource type="Texture2D" uid="uid://gp3lyexce4j5" path="res://assets/icon/shield.png" id="7_100ye"]
@@ -60,6 +61,10 @@ scale = Vector2(5, 5)
 
 [node name="CharacterBody2D5" parent="CharactersContainer" instance=ExtResource("4_gvd7t")]
 position = Vector2(71, 382)
+scale = Vector2(5, 5)
+
+[node name="KnightCharacter" parent="CharactersContainer" instance=ExtResource("5_knight")]
+position = Vector2(424, 382)
 scale = Vector2(5, 5)
 
 [node name="CharacterBody2D2" parent="CharactersContainer" instance=ExtResource("3_pjefg")]

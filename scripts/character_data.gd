@@ -2,11 +2,11 @@ static func get_characters() -> Dictionary:
 	return {
 		"warrior": {
 			"name": "Воин",
-			"max_health": 12,  # НОВОЕ ЗНАЧЕНИЕ
+			"max_health": 12,
 			"current_health": 12,
-			"max_mana": 0,  # НОВОЕ - нет маны
+			"max_mana": 0,
 			"current_mana": 0,
-			"armor": 2,  # НОВОЕ ЗНАЧЕНИЕ
+			"armor": 2,
 			"damage": 2,
 			"abilities": ["Блок щитом (E)", "Высокая защита"],
 			"description": "Танк с высоким здоровьем и бронёй.\nСпособность: Блок щитом увеличивает броню.",
@@ -47,5 +47,17 @@ static func get_characters() -> Dictionary:
 			"abilities": ["Исцеление (E)", "Божественная защита"],
 			"description": "Поддержка с лечением.\nМожет восстанавливать здоровье.",
 			"selection_animation": "spellcast"
+		},
+		"knight": {
+			"name": "Рыцарь",
+			"max_health": 12,
+			"current_health": 12,
+			"max_mana": 0,
+			"current_mana": 0,
+			"armor": 2,
+			"damage": 2,
+			"abilities": ["Тестовая привязка оружия", "Атака мечом"],
+			"description": "Тестовый персонаж без оружия в базовых анимациях.\nОружие отображается отдельным слоем и меняется от экипировки.",
+			"selection_animation": "demonstration"
 		}
 	}

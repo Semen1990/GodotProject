@@ -140,6 +140,8 @@ func get_character_key(character_name: String) -> String:
 			return "rogue"
 		"Паладин":
 			return "paladin"
+		"Рыцарь":
+			return "knight"
 		_:
 			return "warrior"
 

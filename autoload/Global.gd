@@ -17,7 +17,8 @@ var character_player_scenes = {
 	"warrior": "res://scenes/game_characters/warrior_player.tscn",
 	"berserk": "res://scenes/game_characters/berserk_player.tscn",
 	"paladin": "res://scenes/game_characters/paladin_player.tscn",
-	"rogue": "res://scenes/game_characters/rogue_player.tscn"
+	"rogue": "res://scenes/game_characters/rogue_player.tscn",
+	"knight": "res://scenes/game_characters/knight_player.tscn"
 }
 
 var player_data = {

@@ -258,6 +258,8 @@ func _get_character_class() -> InventoryEnums.CharacterClass:
 			return InventoryEnums.CharacterClass.ROGUE
 		"berserk":
 			return InventoryEnums.CharacterClass.BERSERK
+		"knight":
+			return InventoryEnums.CharacterClass.WARRIOR
 		_:
 			return InventoryEnums.CharacterClass.WARRIOR
 
