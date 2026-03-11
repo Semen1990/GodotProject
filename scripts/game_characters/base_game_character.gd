@@ -297,11 +297,11 @@ func _show_double_jump_effect():
 	if not animated_sprite:
 		return
 	
-	var original_modulate = animated_sprite.modulate
 	animated_sprite.modulate = Color(1.5, 1.5, 2.0, 1.0)
-	
 	var tween = create_tween()
-	tween.tween_property(animated_sprite, "modulate", original_modulate, 0.3)
+	tween.tween_property(animated_sprite, "modulate", Color.WHITE, 0.3)
+
+
 
 
 func _show_damage_effect():
@@ -309,11 +309,11 @@ func _show_damage_effect():
 	if not animated_sprite:
 		return
 	
-	var original_modulate = animated_sprite.modulate
 	animated_sprite.modulate = Color(2.0, 0.5, 0.5, 1.0)
-	
 	var tween = create_tween()
-	tween.tween_property(animated_sprite, "modulate", original_modulate, 0.2)
+	tween.tween_property(animated_sprite, "modulate", Color.WHITE, 0.2)
+
+
 
 
 # ===========================================

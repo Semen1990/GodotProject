@@ -258,8 +258,6 @@ func _get_character_class() -> InventoryEnums.CharacterClass:
 			return InventoryEnums.CharacterClass.ROGUE
 		"berserk":
 			return InventoryEnums.CharacterClass.BERSERK
-		"knight":
-			return InventoryEnums.CharacterClass.WARRIOR
 		_:
 			return InventoryEnums.CharacterClass.WARRIOR
 
@@ -902,11 +900,9 @@ func _on_equipment_stats_changed(stats: Dictionary) -> void:
 
 	var new_max_hp: int = base_player_max_health + equipment_bonus_hp
 	if current_player.max_health != new_max_hp:
-		var hp_diff: int = new_max_hp - current_player.max_health
+		var preserved_health: int = current_player.current_health
 		current_player.max_health = new_max_hp
-		if hp_diff > 0:
-			current_player.current_health += hp_diff
-		current_player.current_health = mini(current_player.current_health, current_player.max_health)
+		current_player.current_health = mini(preserved_health, current_player.max_health)
 
 		if game_ui:
 			game_ui.update_max_health(current_player.max_health)
@@ -915,11 +911,9 @@ func _on_equipment_stats_changed(stats: Dictionary) -> void:
 	if "max_mana" in current_player:
 		var new_max_mana: int = base_player_max_mana + equipment_bonus_mana
 		if current_player.max_mana != new_max_mana:
-			var mana_diff: int = new_max_mana - current_player.max_mana
+			var preserved_mana: int = current_player.current_mana
 			current_player.max_mana = new_max_mana
-			if mana_diff > 0:
-				current_player.current_mana += mana_diff
-			current_player.current_mana = mini(current_player.current_mana, current_player.max_mana)
+			current_player.current_mana = mini(preserved_mana, current_player.max_mana)
 
 			if game_ui:
 				game_ui.update_max_mana(current_player.max_mana)

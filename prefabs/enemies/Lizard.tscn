@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://bdg7rk1sn2jln"]
+[gd_scene format=3 uid="uid://bdg7rk1sn2jln"]
 
 [ext_resource type="Script" uid="uid://bodu3lrct1t41" path="res://scripts/enemies/lizard.gd" id="1_1bmd2"]
 [ext_resource type="Texture2D" uid="uid://bst2n6tbyyfhl" path="res://assets/enemies/lizard/Idle/Idle1.png" id="2_o4mit"]
@@ -28,6 +28,29 @@
 animations = [{
 "frames": [{
 "duration": 1.0,
+"texture": ExtResource("23_24frq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_st05n")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_ok6ml")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_rj87v")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_25vww")
+}, {
+"duration": 1.0,
+"texture": ExtResource("19_yktps")
+}],
+"loop": true,
+"name": &"Back away",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": ExtResource("2_vottj")
 }, {
 "duration": 1.0,
@@ -45,6 +68,14 @@ animations = [{
 "loop": false,
 "name": &"attack",
 "speed": 12.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("6_27c6h")
+}],
+"loop": true,
+"name": &"block",
+"speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -68,6 +99,38 @@ animations = [{
 "loop": false,
 "name": &"death",
 "speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("7_4gfin")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_r044u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_el3nb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_rdiwq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_y0opl")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_rdiwq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_el3nb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_r044u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_4gfin")
+}],
+"loop": false,
+"name": &"fall",
+"speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -125,27 +188,29 @@ height = 78.0
 [sub_resource type="CircleShape2D" id="CircleShape2D_8ybkn"]
 radius = 200.0
 
-[node name="Lizard" type="CharacterBody2D"]
+[node name="Lizard" type="CharacterBody2D" unique_id=1859816894]
 position = Vector2(0, 1)
 collision_layer = 4
 collision_mask = 3
 script = ExtResource("1_1bmd2")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=894131834]
 position = Vector2(8, -4.9999847)
 scale = Vector2(1.6953125, 1.6679688)
 sprite_frames = SubResource("SpriteFrames_tjto1")
-animation = &"hurt"
+animation = &"fall"
+frame = 8
+frame_progress = 1.0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1608501124]
 position = Vector2(-14, 4)
 shape = SubResource("CapsuleShape2D_1bmd2")
 
-[node name="DetectionArea" type="Area2D" parent="."]
+[node name="DetectionArea" type="Area2D" parent="." unique_id=206031734]
 position = Vector2(2, -1)
 collision_layer = 0
 collision_mask = 3
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=1904960582]
 position = Vector2(-19, 5)
 shape = SubResource("CircleShape2D_8ybkn")

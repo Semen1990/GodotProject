@@ -2,8 +2,8 @@ static func get_characters() -> Dictionary:
 	return {
 		"warrior": {
 			"name": "Воин",
-			"max_health": 12,
-			"current_health": 12,
+			"max_health": 100,
+			"current_health": 100,
 			"max_mana": 0,
 			"current_mana": 0,
 			"armor": 2,
@@ -47,17 +47,5 @@ static func get_characters() -> Dictionary:
 			"abilities": ["Исцеление (E)", "Божественная защита"],
 			"description": "Поддержка с лечением.\nМожет восстанавливать здоровье.",
 			"selection_animation": "spellcast"
-		},
-		"knight": {
-			"name": "Рыцарь",
-			"max_health": 12,
-			"current_health": 12,
-			"max_mana": 0,
-			"current_mana": 0,
-			"armor": 2,
-			"damage": 2,
-			"abilities": ["Тестовая привязка оружия", "Атака мечом"],
-			"description": "Тестовый персонаж без оружия в базовых анимациях.\nОружие отображается отдельным слоем и меняется от экипировки.",
-			"selection_animation": "demonstration"
 		}
 	}
