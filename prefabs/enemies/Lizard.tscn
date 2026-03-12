@@ -71,9 +71,12 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
+"texture": ExtResource("2_vottj")
+}, {
+"duration": 1.0,
 "texture": ExtResource("6_27c6h")
 }],
-"loop": true,
+"loop": false,
 "name": &"block",
 "speed": 5.0
 }, {
@@ -198,8 +201,8 @@ script = ExtResource("1_1bmd2")
 position = Vector2(8, -4.9999847)
 scale = Vector2(1.6953125, 1.6679688)
 sprite_frames = SubResource("SpriteFrames_tjto1")
-animation = &"fall"
-frame = 8
+animation = &"block"
+frame = 1
 frame_progress = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1608501124]
