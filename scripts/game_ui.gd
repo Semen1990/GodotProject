@@ -4,6 +4,8 @@ var stats_vbox: VBoxContainer
 var keys_hbox: HBoxContainer
 
 var health_container: VBoxContainer
+var health_bg: ColorRect
+var health_trail_bar: ProgressBar
 var health_bar: ProgressBar
 var health_value_label: Label
 
@@ -18,7 +20,8 @@ var mana_container: VBoxContainer
 var mana_bar: ProgressBar
 var mana_value_label: Label
 
-var ability_container: VBoxContainer
+var ability_container: HBoxContainer
+var ability_slots: Dictionary = {}
 var ability_button: TextureRect
 var ability_cooldown: ColorRect
 var ability_label: Label
@@ -35,6 +38,11 @@ var current_stats: Dictionary = {
 
 var key_labels: Array[Label] = []
 var key_icons: Array[Label] = []
+var health_trail_target: float = 12.0
+var health_trail_delay_timer: float = 0.0
+const HEALTH_TRAIL_DELAY := 0.12
+const HEALTH_TRAIL_SPEED := 48.0
+const ABILITY_PANEL_SIZE := Vector2(56, 56)
 var key_colors: Array[Color] = [
 	Color(1.0, 0.85, 0.0),
 	Color(0.75, 0.75, 0.85),
@@ -67,6 +75,8 @@ func _clear_runtime_ui() -> void:
 	stats_vbox = null
 	keys_hbox = null
 	health_container = null
+	health_bg = null
+	health_trail_bar = null
 	health_bar = null
 	health_value_label = null
 	armor_container = null
@@ -78,11 +88,14 @@ func _clear_runtime_ui() -> void:
 	mana_bar = null
 	mana_value_label = null
 	ability_container = null
+	ability_slots.clear()
 	ability_button = null
 	ability_cooldown = null
 	ability_label = null
 	key_labels.clear()
 	key_icons.clear()
+	health_trail_target = current_stats.get("health", 12)
+	health_trail_delay_timer = 0.0
 
 
 func _create_all_ui() -> void:
@@ -114,6 +127,26 @@ func _create_health_ui() -> void:
 	bar_container.custom_minimum_size = Vector2(200, 24)
 	health_container.add_child(bar_container)
 
+	health_bg = ColorRect.new()
+	health_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	health_bg.color = Color(0.17, 0.08, 0.08, 0.95)
+	bar_container.add_child(health_bg)
+
+	health_trail_bar = ProgressBar.new()
+	health_trail_bar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	health_trail_bar.max_value = 12
+	health_trail_bar.value = 12
+	health_trail_bar.show_percentage = false
+	var trail_fill_style: StyleBoxFlat = StyleBoxFlat.new()
+	trail_fill_style.bg_color = Color(1.0, 0.94, 0.94, 0.9)
+	trail_fill_style.set_corner_radius_all(4)
+	var transparent_bg_style: StyleBoxFlat = StyleBoxFlat.new()
+	transparent_bg_style.bg_color = Color(0, 0, 0, 0)
+	transparent_bg_style.set_corner_radius_all(4)
+	health_trail_bar.add_theme_stylebox_override("fill", trail_fill_style)
+	health_trail_bar.add_theme_stylebox_override("background", transparent_bg_style)
+	bar_container.add_child(health_trail_bar)
+
 	health_bar = ProgressBar.new()
 	health_bar.set_anchors_preset(Control.PRESET_FULL_RECT)
 	health_bar.max_value = 12
@@ -121,14 +154,10 @@ func _create_health_ui() -> void:
 	health_bar.show_percentage = false
 
 	var fill_style: StyleBoxFlat = StyleBoxFlat.new()
-	fill_style.bg_color = Color(0.85, 0.2, 0.2)
+	fill_style.bg_color = Color(0.87, 0.18, 0.2)
 	fill_style.set_corner_radius_all(4)
 	health_bar.add_theme_stylebox_override("fill", fill_style)
-
-	var bg_style: StyleBoxFlat = StyleBoxFlat.new()
-	bg_style.bg_color = Color(0.2, 0.1, 0.1)
-	bg_style.set_corner_radius_all(4)
-	health_bar.add_theme_stylebox_override("background", bg_style)
+	health_bar.add_theme_stylebox_override("background", transparent_bg_style)
 
 	bar_container.add_child(health_bar)
 
@@ -210,42 +239,72 @@ func _create_mana_ui() -> void:
 
 
 func _create_ability_ui() -> void:
-	ability_container = VBoxContainer.new()
-	ability_container.position = Vector2(20, 150)
-	add_child(ability_container)
+	ability_container = HBoxContainer.new()
+	ability_container.add_theme_constant_override("separation", 10)
+	stats_vbox.add_child(ability_container)
 
-	var icon_panel: PanelContainer = PanelContainer.new()
-	icon_panel.custom_minimum_size = Vector2(54, 54)
+	var block_slot: Dictionary = _create_ability_slot("block", "Блок", "E", "res://assets/Spell/shield_defence.png")
+	var slide_slot: Dictionary = _create_ability_slot("slide", "Подкат", "ПКМ", "res://assets/Spell/Icon43.png")
+	ability_slots["block"] = block_slot
+	ability_slots["slide"] = slide_slot
 
-	var panel_style: StyleBoxFlat = StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.15, 0.15, 0.2, 0.9)
-	panel_style.border_color = Color(0.6, 0.6, 0.7)
+	# Совместимость со старым кодом, который знает только один слот способности.
+	ability_button = block_slot.get("icon")
+	ability_cooldown = block_slot.get("cooldown")
+	ability_label = block_slot.get("hotkey")
+
+
+func _create_ability_slot(slot_id: String, title_text: String, hotkey_text: String, icon_path: String) -> Dictionary:
+	var slot_box := VBoxContainer.new()
+	slot_box.name = "%s_ability_slot" % slot_id
+	slot_box.add_theme_constant_override("separation", 2)
+	ability_container.add_child(slot_box)
+
+	var icon_panel := PanelContainer.new()
+	icon_panel.custom_minimum_size = ABILITY_PANEL_SIZE
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.12, 0.13, 0.18, 0.95)
+	panel_style.border_color = Color(0.58, 0.62, 0.74, 0.95)
 	panel_style.set_border_width_all(2)
-	panel_style.set_corner_radius_all(4)
+	panel_style.set_corner_radius_all(6)
 	icon_panel.add_theme_stylebox_override("panel", panel_style)
-	ability_container.add_child(icon_panel)
+	slot_box.add_child(icon_panel)
 
-	ability_button = TextureRect.new()
-	ability_button.custom_minimum_size = Vector2(50, 50)
-	ability_button.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-	ability_button.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-
-	var icon_path: String = "res://assets/Spell/shield_defence.png"
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = Vector2(50, 50)
+	icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	if ResourceLoader.exists(icon_path):
-		ability_button.texture = load(icon_path)
+		icon.texture = load(icon_path)
+	icon_panel.add_child(icon)
 
-	icon_panel.add_child(ability_button)
+	var cooldown := ColorRect.new()
+	cooldown.color = Color(0.0, 0.0, 0.0, 0.72)
+	cooldown.visible = false
+	icon_panel.add_child(cooldown)
 
-	ability_cooldown = ColorRect.new()
-	ability_cooldown.color = Color(0, 0, 0, 0.7)
-	ability_cooldown.visible = false
-	icon_panel.add_child(ability_cooldown)
+	var title := Label.new()
+	title.text = title_text
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 12)
+	title.add_theme_color_override("font_color", Color(0.92, 0.94, 1.0))
+	slot_box.add_child(title)
 
-	ability_label = Label.new()
-	ability_label.text = "[ПКМ]"
-	ability_label.add_theme_font_size_override("font_size", 12)
-	ability_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ability_container.add_child(ability_label)
+	var hotkey := Label.new()
+	hotkey.text = hotkey_text
+	hotkey.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hotkey.add_theme_font_size_override("font_size", 11)
+	hotkey.add_theme_color_override("font_color", Color(0.68, 0.76, 0.9))
+	slot_box.add_child(hotkey)
+
+	return {
+		"root": slot_box,
+		"panel": icon_panel,
+		"icon": icon,
+		"cooldown": cooldown,
+		"title": title,
+		"hotkey": hotkey,
+	}
 
 
 func _create_keys_ui() -> void:
@@ -298,6 +357,7 @@ func _update_keys_position() -> void:
 
 
 func _process(_delta: float) -> void:
+	_update_health_damage_trail(_delta)
 	if keys_hbox:
 		var viewport_size: Vector2 = get_viewport().get_visible_rect().size
 		var target_x: float = viewport_size.x - 280
@@ -311,6 +371,11 @@ func setup_character_ui(stats: Dictionary) -> void:
 	if health_bar:
 		health_bar.max_value = current_stats["max_health"]
 		health_bar.value = current_stats["health"]
+	if health_trail_bar:
+		health_trail_bar.max_value = current_stats["max_health"]
+		health_trail_bar.value = current_stats["health"]
+	health_trail_target = current_stats["health"]
+	health_trail_delay_timer = 0.0
 	_update_health_text()
 
 	if armor_container:
@@ -353,9 +418,17 @@ func _update_keys_from_global() -> void:
 
 
 func update_health(new_health: int) -> void:
+	var previous_health: int = int(current_stats.get("health", new_health))
 	current_stats["health"] = clamp(new_health, 0, current_stats["max_health"])
 	if health_bar:
 		health_bar.value = current_stats["health"]
+	if health_trail_bar:
+		if current_stats["health"] >= previous_health or current_stats["health"] >= health_trail_bar.value:
+			health_trail_bar.value = current_stats["health"]
+			health_trail_delay_timer = 0.0
+		else:
+			health_trail_target = current_stats["health"]
+			health_trail_delay_timer = HEALTH_TRAIL_DELAY
 	_update_health_text()
 
 
@@ -363,7 +436,31 @@ func update_max_health(new_max: int) -> void:
 	current_stats["max_health"] = max(1, new_max)
 	if health_bar:
 		health_bar.max_value = current_stats["max_health"]
+		health_bar.value = clamp(health_bar.value, 0.0, float(current_stats["max_health"]))
+	if health_trail_bar:
+		health_trail_bar.max_value = current_stats["max_health"]
+		health_trail_bar.value = clamp(health_trail_bar.value, 0.0, float(current_stats["max_health"]))
+	health_trail_target = clampf(health_trail_target, 0.0, float(current_stats["max_health"]))
 	_update_health_text()
+
+
+func _update_health_damage_trail(delta: float) -> void:
+	if health_trail_bar == null:
+		return
+
+	var target_value: float = float(current_stats.get("health", 0))
+	if health_trail_bar.value <= target_value:
+		health_trail_bar.value = target_value
+		health_trail_target = target_value
+		return
+
+	health_trail_target = target_value
+	if health_trail_delay_timer > 0.0:
+		health_trail_delay_timer = maxf(0.0, health_trail_delay_timer - delta)
+		return
+
+	var catchup_speed: float = maxf(HEALTH_TRAIL_SPEED, float(current_stats.get("max_health", 0)) * 0.65)
+	health_trail_bar.value = move_toward(health_trail_bar.value, health_trail_target, catchup_speed * delta)
 
 
 func update_mana(new_mana: int) -> void:
@@ -513,23 +610,50 @@ func update_single_key(color_index: int, count: int) -> void:
 
 
 func set_ability_icon(icon_path: String) -> void:
-	if ability_button and ResourceLoader.exists(icon_path):
-		ability_button.texture = load(icon_path)
+	configure_ability_slot("block", "", "", icon_path)
 
 
 func set_ability_hotkey(hotkey_text: String) -> void:
-	if ability_label:
-		ability_label.text = hotkey_text
+	configure_ability_slot("block", "", hotkey_text, "")
 
 
-func update_ability_cooldown(_id: String, percent: float) -> void:
-	if not ability_cooldown:
+func configure_ability_slot(id: String, title_text: String = "", hotkey_text: String = "", icon_path: String = "") -> void:
+	if not ability_slots.has(id):
+		return
+
+	var slot: Dictionary = ability_slots[id]
+	var icon: TextureRect = slot.get("icon")
+	var title: Label = slot.get("title")
+	var hotkey: Label = slot.get("hotkey")
+
+	if icon != null and not icon_path.is_empty() and ResourceLoader.exists(icon_path):
+		icon.texture = load(icon_path)
+	if title != null and not title_text.is_empty():
+		title.text = title_text
+	if hotkey != null and not hotkey_text.is_empty():
+		hotkey.text = hotkey_text
+
+
+func update_ability_cooldown(id: String, percent: float) -> void:
+	if not ability_slots.has(id):
+		if id != "block" or not ability_cooldown:
+			return
+		_update_ability_overlay(ability_cooldown, percent)
+		return
+
+	var slot: Dictionary = ability_slots[id]
+	var cooldown: ColorRect = slot.get("cooldown")
+	_update_ability_overlay(cooldown, percent)
+
+
+func _update_ability_overlay(cooldown_rect: ColorRect, percent: float) -> void:
+	if cooldown_rect == null:
 		return
 
 	if percent >= 1.0:
-		ability_cooldown.visible = false
+		cooldown_rect.visible = false
 	else:
-		ability_cooldown.visible = true
-		var height: float = 50.0 * (1.0 - percent)
-		ability_cooldown.size = Vector2(50, height)
-		ability_cooldown.position = Vector2(2, 52 - height)
+		cooldown_rect.visible = true
+		var height: float = 52.0 * (1.0 - percent)
+		cooldown_rect.size = Vector2(52.0, height)
+		cooldown_rect.position = Vector2(2.0, 54.0 - height)

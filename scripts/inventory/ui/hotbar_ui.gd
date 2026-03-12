@@ -30,6 +30,7 @@ var slot_icons: Array[TextureRect] = []
 var slot_quantities: Array[Label] = []
 var key_labels: Array[Label] = []
 var used_overlays: Array[ColorRect] = []  # Р В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљРЎвЂќР В Р’В Р вЂ™Р’В Р В Р’В Р Р†Р вЂљР’В Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’ВµР В Р’В Р В Р вЂ№Р В Р’В Р Р†Р вЂљРЎв„ўР В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В»Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’ВµР В Р’В Р вЂ™Р’В Р В Р вЂ Р Р†Р вЂљРЎвЂєР Р†Р вЂљРІР‚Сљ Р В Р’В Р вЂ™Р’В Р В РЎС›Р Р†Р вЂљР’ВР В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В»Р В Р’В Р В Р вЂ№Р В Р’В Р В Р РЏ Р В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљР’ВР В Р’В Р В Р вЂ№Р В Р’В Р РЋРІР‚СљР В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљРІР‚СњР В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљРЎС›Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В»Р В Р’В Р В Р вЂ№Р В Р’В Р В РІР‚В°Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В·Р В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљРЎС›Р В Р’В Р вЂ™Р’В Р В Р’В Р Р†Р вЂљР’В Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В°Р В Р’В Р вЂ™Р’В Р В Р’В Р Р†Р вЂљР’В¦Р В Р’В Р вЂ™Р’В Р В Р’В Р Р†Р вЂљР’В¦Р В Р’В Р В Р вЂ№Р В Р вЂ Р В РІР‚С™Р Р†РІР‚С›РІР‚вЂњР В Р’В Р В Р вЂ№Р В Р вЂ Р В РІР‚С™Р вЂ™Р’В¦ Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В·Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’ВµР В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В»Р В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљР’ВР В Р’В Р вЂ™Р’В Р В Р вЂ Р Р†Р вЂљРЎвЂєР Р†Р вЂљРІР‚Сљ
+var cooldown_overlays: Array[ColorRect] = []
 
 # ===========================================
 # Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’ВР В Р’В Р вЂ™Р’В Р В Р Р‹Р РЋРЎв„ўР В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’ВР В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В¦Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’ВР В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљРІвЂћСћР В Р’В Р вЂ™Р’В Р В Р вЂ Р В РІР‚С™Р РЋРІР‚СњР В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’ВР В Р’В Р вЂ™Р’В Р В Р вЂ Р В РІР‚С™Р Р†Р вЂљРЎСљР В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљРІвЂћСћР В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В¦Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’ВР В Р’В Р вЂ™Р’В Р В Р’В Р Р†Р вЂљР Р‹
@@ -38,11 +39,16 @@ var used_overlays: Array[ColorRect] = []  # Р В Р’В Р вЂ™Р’В�
 func _ready():
 	layer = 50
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	set_process(true)
 
 	_create_ui()
 	_connect_signals()
 
 	call_deferred("_refresh_hotbar")
+
+
+func _process(_delta):
+	_refresh_potion_cooldown_overlays()
 
 func _create_ui():
 	"""Р В Р’В Р вЂ™Р’В Р В Р’В Р В РІР‚в„–Р В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљРЎС›Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В·Р В Р’В Р вЂ™Р’В Р В РЎС›Р Р†Р вЂљР’ВР В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В°Р В Р’В Р В Р вЂ№Р В Р вЂ Р В РІР‚С™Р вЂ™Р’ВР В Р’В Р В Р вЂ№Р В Р вЂ Р В РІР‚С™Р РЋРІвЂћСћ UI Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В±Р В Р’В Р В Р вЂ№Р В Р вЂ Р В РІР‚С™Р Р†РІР‚С›РІР‚вЂњР В Р’В Р В Р вЂ№Р В Р’В Р РЋРІР‚СљР В Р’В Р В Р вЂ№Р В Р вЂ Р В РІР‚С™Р РЋРІвЂћСћР В Р’В Р В Р вЂ№Р В Р’В Р Р†Р вЂљРЎв„ўР В Р’В Р В Р вЂ№Р В Р вЂ Р В РІР‚С™Р Р†РІР‚С›РІР‚вЂњР В Р’В Р В Р вЂ№Р В Р вЂ Р В РІР‚С™Р вЂ™Р’В¦ Р В Р’В Р В Р вЂ№Р В Р’В Р РЋРІР‚СљР В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В»Р В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљРЎС›Р В Р’В Р В Р вЂ№Р В Р вЂ Р В РІР‚С™Р РЋРІвЂћСћР В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљРЎС›Р В Р’В Р вЂ™Р’В Р В Р’В Р Р†Р вЂљР’В  Р В Р’В Р вЂ™Р’В Р В Р’В Р Р†Р вЂљР’В  Р В Р’В Р вЂ™Р’В Р В Р вЂ Р В РІР‚С™Р РЋРІР‚СњР В Р’В Р вЂ™Р’В Р В Р вЂ Р В РІР‚С™Р РЋРЎвЂєР В Р’В Р вЂ™Р’В Р В Р вЂ Р В РІР‚С™Р Р†РІР‚С›РЎС›Р В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљРЎвЂќР В Р’В Р вЂ™Р’В Р В Р Р‹Р РЋРІвЂћСћ Р В Р’В Р вЂ™Р’В Р В Р Р‹Р РЋРЎв„ўР В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’ВР В Р’В Р вЂ™Р’В Р В Р вЂ Р В РІР‚С™Р Р†Р вЂљРЎС™Р В Р’В Р вЂ™Р’В Р В Р Р‹Р РЋРЎв„ўР В Р’В Р вЂ™Р’В Р В Р вЂ Р В РІР‚С™Р РЋРЎвЂєР В Р’В Р вЂ™Р’В Р В Р Р‹Р РЋРІвЂћСћ Р В Р’В Р В Р вЂ№Р В Р Р‹Р Р†Р вЂљРЎС™Р В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљРІР‚СљР В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В»Р В Р’В Р В Р вЂ№Р В Р Р‹Р Р†Р вЂљРЎС™"""
@@ -142,6 +148,22 @@ func _create_slot(index: int) -> Control:
 	slot_bg.add_child(used_overlay)
 	used_overlays.append(used_overlay)
 
+	var cooldown_overlay := ColorRect.new()
+	cooldown_overlay.name = "CooldownOverlay"
+	cooldown_overlay.anchor_left = 0.0
+	cooldown_overlay.anchor_top = 0.0
+	cooldown_overlay.anchor_right = 0.0
+	cooldown_overlay.anchor_bottom = 0.0
+	cooldown_overlay.offset_left = 1.0
+	cooldown_overlay.offset_top = SLOT_SIZE.y - 7.0
+	cooldown_overlay.offset_right = 1.0
+	cooldown_overlay.offset_bottom = SLOT_SIZE.y - 1.0
+	cooldown_overlay.color = Color(0.5, 0.8, 1.0, 0.9)
+	cooldown_overlay.visible = false
+	cooldown_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot_bg.add_child(cooldown_overlay)
+	cooldown_overlays.append(cooldown_overlay)
+
 	# Р В Р’В Р вЂ™Р’В Р В Р Р‹Р РЋРЎв„ўР В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљРЎС›Р В Р’В Р вЂ™Р’В Р В Р Р‹Р вЂ™Р’ВР В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’ВµР В Р’В Р В Р вЂ№Р В Р’В Р Р†Р вЂљРЎв„ў Р В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљРЎСљР В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В»Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В°Р В Р’В Р вЂ™Р’В Р В Р’В Р Р†Р вЂљР’В Р В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљР’ВР В Р’В Р В Р вЂ№Р В Р вЂ Р Р†Р вЂљРЎв„ўР вЂ™Р’В¬Р В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљР’В
 	var key_label = Label.new()
 	key_label.text = str(index + 1)
@@ -208,7 +230,7 @@ func _refresh_hotbar():
 		return
 
 	for i in range(NUM_SLOTS):
-		var item = Inventory.get_hotbar_item(i)
+		var item: InventoryItem = Inventory.get_hotbar_item(i)
 
 		if item and item.data and not item.is_empty():
 			# Р ВР С”Р С•Р Р…Р С”Р В°
@@ -222,23 +244,74 @@ func _refresh_hotbar():
 			else:
 				slot_quantities[i].visible = false
 
-			# Р СџРЎР‚Р С•Р Р†Р ВµРЎР‚РЎРЏР ВµР С, Р С‘РЎРѓР С—Р С•Р В»РЎРЉР В·Р С•Р Р†Р В°Р Р…Р С• Р В»Р С‘ Р В·Р ВµР В»РЎРЉР Вµ
-			if Inventory.is_potion_blocked(item):
+			var is_potion: bool = Inventory.is_potion_item(item)
+			var is_hard_blocked: bool = Inventory.is_potion_hard_blocked(item)
+
+			if is_hard_blocked:
 				used_overlays[i].visible = true
-				slots[i].modulate = Color(0.6, 0.6, 0.6)  # Р вЂ”Р В°РЎвЂљР ВµР СР Р…РЎРЏР ВµР С
+				slots[i].modulate = Color(0.6, 0.6, 0.6)
 			else:
 				used_overlays[i].visible = false
-				slots[i].modulate = Color.WHITE
+				if is_potion and Inventory.is_potion_global_cooldown_active():
+					slots[i].modulate = Color(0.84, 0.9, 0.96)
+				else:
+					slots[i].modulate = Color.WHITE
+
+			_update_potion_cooldown_overlay(i, item)
 		else:
 			slot_icons[i].texture = null
 			slot_icons[i].visible = false
 			slot_quantities[i].visible = false
 			used_overlays[i].visible = false
 			slots[i].modulate = Color.WHITE
+			_update_potion_cooldown_overlay(i, null)
 
 
 func _on_hotbar_changed(_index: int):
 	_refresh_hotbar()
+
+
+func _refresh_potion_cooldown_overlays() -> void:
+	if not Inventory:
+		return
+
+	for i in range(NUM_SLOTS):
+		_update_potion_cooldown_overlay(i, Inventory.get_hotbar_item(i))
+
+
+func _update_potion_cooldown_overlay(index: int, item: InventoryItem) -> void:
+	if index < 0 or index >= cooldown_overlays.size():
+		return
+
+	var overlay: ColorRect = cooldown_overlays[index]
+	if overlay == null:
+		return
+
+	if not Inventory or item == null or item.is_empty() or not Inventory.is_potion_item(item):
+		overlay.visible = false
+		return
+
+	var fraction: float = Inventory.get_potion_global_cooldown_fraction()
+	if fraction <= 0.0:
+		overlay.visible = false
+		return
+
+	var max_width: float = SLOT_SIZE.x - 2.0
+	overlay.visible = true
+	overlay.offset_left = 1.0
+	overlay.offset_top = SLOT_SIZE.y - 7.0
+	overlay.offset_right = 1.0 + (max_width * fraction)
+	overlay.offset_bottom = SLOT_SIZE.y - 1.0
+
+	match item.data.consumable_type:
+		InventoryEnums.ConsumableType.POTION_HP:
+			overlay.color = Color(0.42, 0.92, 0.52, 0.9)
+		InventoryEnums.ConsumableType.POTION_MANA:
+			overlay.color = Color(0.42, 0.72, 1.0, 0.9)
+		InventoryEnums.ConsumableType.POTION_BUFF:
+			overlay.color = Color(1.0, 0.78, 0.36, 0.9)
+		_:
+			overlay.color = Color(0.7, 0.78, 1.0, 0.9)
 
 
 # ===========================================
@@ -275,20 +348,7 @@ func _use_slot(index: int):
 		_refresh_hotbar()
 		return
 
-	var before_quantity: int = item.quantity
 	hotbar_slot_used.emit(index)
-
-	var item_after: InventoryItem = Inventory.get_hotbar_item(index)
-	var after_quantity: int = 0
-	if item_after != null and not item_after.is_empty():
-		after_quantity = item_after.quantity
-
-	if after_quantity >= before_quantity:
-		_show_cannot_use_effect(index)
-		_refresh_hotbar()
-		return
-
-	_highlight_slot(index)
 	_refresh_hotbar()
 
 

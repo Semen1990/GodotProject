@@ -1,6 +1,7 @@
 extends "res://scripts/game_characters/base_game_character.gd"
 
 enum BlockPhase { NONE, STARTUP, ACTIVE, RECOVERY }
+enum CrouchPhase { NONE, STARTUP, ACTIVE, RECOVERY }
 
 enum HitReaction { LIGHT, HURT, HEAVY }
 
@@ -17,13 +18,20 @@ const COUNTER_WINDOW_TIME: float = 0.9
 
 const SNEAK_SPEED_MULTIPLIER: float = 0.62
 
+const CROUCH_STARTUP_TIME: float = 0.18
+const CROUCH_ACTIVE_TIME: float = 0.22
+const CROUCH_RECOVERY_TIME: float = 0.10
+const CROUCH_COOLDOWN_TIME: float = 0.20
+
 const BLOCK_STARTUP_TIME: float = 0.12
 const BLOCK_ACTIVE_TIME: float = 0.32
 const BLOCK_RECOVERY_TIME: float = 0.24
 const BLOCK_COOLDOWN_TIME: float = 2.0
 const BLOCK_EARLY_GRACE_TIME: float = 0.08
-const BLOCK_SUCCESS_STUN_DURATION: float = 1.2
+const BLOCK_SUCCESS_STUN_DURATION: float = 1.6
 const BLOCK_SOUND_PATH: String = "res://sounds/players/block1-shield.mp3"
+const BLOCK_ICON_PATH: String = "res://assets/Spell/shield_defence.png"
+const SLIDE_ICON_PATH: String = "res://assets/Spell/Icon43.png"
 const BLOCK_LIGHT_THRESHOLD: int = 4
 const BLOCK_MEDIUM_THRESHOLD: int = 6
 
@@ -68,6 +76,10 @@ var block_audio_player: AudioStreamPlayer2D = null
 var reaction_lock_timer: float = 0.0
 var current_hit_reaction: int = HitReaction.LIGHT
 var is_sneaking: bool = false
+var sneak_mode_enabled: bool = false
+var crouch_phase: int = CrouchPhase.NONE
+var crouch_phase_timer: float = 0.0
+var crouch_cooldown: float = 0.0
 
 var _attack_damage_dealt: bool = false
 var _current_attack_animation: String = "attack"
@@ -94,6 +106,7 @@ func _ready() -> void:
 	default_collision_mask = collision_mask
 	default_collision_layer = collision_layer
 	_setup_block_audio()
+	_configure_skill_ui()
 	_update_block_cooldown_ui()
 
 
@@ -103,6 +116,9 @@ func _physics_process(delta: float) -> void:
 
 	if slide_cooldown > 0.0:
 		slide_cooldown = maxf(0.0, slide_cooldown - delta)
+
+	if crouch_cooldown > 0.0:
+		crouch_cooldown = maxf(0.0, crouch_cooldown - delta)
 
 	if counter_window_timer > 0.0:
 		counter_window_timer = maxf(0.0, counter_window_timer - delta)
@@ -116,6 +132,7 @@ func _physics_process(delta: float) -> void:
 
 	_update_block_state(delta)
 	_update_slide_state(delta)
+	_update_crouch_state(delta)
 	_update_block_cooldown_ui()
 
 	super(delta)
@@ -123,22 +140,33 @@ func _physics_process(delta: float) -> void:
 
 func handle_movement(delta: float) -> void:
 	if is_inventory_open:
-		_stop_sneak()
+		_cancel_sneak_mode()
 		velocity.x = move_toward(velocity.x, 0.0, friction * delta)
 		return
 
 	var direction: float = Input.get_axis("move_left", "move_right")
 	var is_jumping: bool = Input.is_action_just_pressed("jump")
-	var sneak_pressed: bool = Input.is_action_pressed("crouch")
+	var crouch_pressed: bool = Input.is_action_just_pressed("crouch")
+
+	if Input.is_action_just_pressed("sneak_toggle"):
+		_toggle_sneak_mode()
 
 	if reaction_lock_timer > 0.0:
-		_stop_sneak()
+		_cancel_sneak_mode()
 		velocity.x = move_toward(velocity.x, 0.0, friction * delta * 0.75)
 		return
 
-	if is_attacking or is_casting or block_phase != BlockPhase.NONE:
-		_stop_sneak()
+	if is_attacking or block_phase != BlockPhase.NONE or (is_casting and not is_using_consumable):
+		_cancel_sneak_mode()
 		velocity.x = move_toward(velocity.x, 0.0, friction * delta)
+		return
+
+	if crouch_pressed:
+		_start_crouch_action()
+
+	if crouch_phase != CrouchPhase.NONE:
+		_cancel_sneak_mode()
+		velocity.x = move_toward(velocity.x, 0.0, friction * delta * 1.2)
 		return
 
 	if is_sliding:
@@ -147,20 +175,22 @@ func handle_movement(delta: float) -> void:
 		velocity.x = slide_direction * slide_speed
 		return
 
-	is_sneaking = sneak_pressed and is_on_floor() and not is_blocking and not is_attacking
+	is_sneaking = sneak_mode_enabled and is_on_floor() and direction != 0.0 and not is_blocking and not is_attacking and not is_using_consumable
 
 	if direction != 0.0:
 		var target_speed: float = current_speed
 		if is_sneaking:
 			target_speed *= SNEAK_SPEED_MULTIPLIER
+		if is_using_consumable:
+			target_speed *= consumable_move_speed_multiplier
 		velocity.x = move_toward(velocity.x, direction * target_speed, acceleration * delta)
 		if animated_sprite:
 			animated_sprite.flip_h = direction < 0.0
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, friction * delta)
 
-	if is_jumping and not is_blocking:
-		_stop_sneak()
+	if is_jumping and not is_blocking and not is_using_consumable:
+		_cancel_sneak_mode()
 		if is_on_floor() or coyote_timer > 0.0:
 			velocity.y = jump_velocity
 			can_double_jump = enable_double_jump
@@ -186,6 +216,12 @@ func handle_animations() -> void:
 
 	if is_hurt:
 		play_animation("hurt")
+		return
+
+	if crouch_phase != CrouchPhase.NONE:
+		play_animation("crouch")
+		if crouch_phase == CrouchPhase.ACTIVE:
+			_hold_crouch_pose_frame()
 		return
 
 	if is_sliding:
@@ -218,13 +254,13 @@ func handle_animations() -> void:
 func use_special_ability() -> void:
 	if is_dead or is_attacking or is_casting or is_sliding or is_hurt:
 		return
-	if block_phase != BlockPhase.NONE or block_cooldown > 0.0:
+	if block_phase != BlockPhase.NONE or block_cooldown > 0.0 or crouch_phase != CrouchPhase.NONE:
 		return
 	block()
 
 
 func block() -> void:
-	_stop_sneak()
+	_cancel_sneak_mode()
 	is_blocking = true
 	is_block_active = false
 	block_phase = BlockPhase.STARTUP
@@ -242,12 +278,12 @@ func stop_blocking() -> void:
 func attack() -> void:
 	if is_dead or is_casting or is_sliding or is_inventory_open:
 		return
-	if block_phase != BlockPhase.NONE or is_hurt or is_attacking:
+	if block_phase != BlockPhase.NONE or is_hurt or is_attacking or crouch_phase != CrouchPhase.NONE:
 		return
 
 	var use_counter: bool = is_counter_attack_ready and counter_window_timer > 0.0
 	_current_attack_started_from_sneak = is_sneaking
-	_stop_sneak()
+	_cancel_sneak_mode()
 	is_attacking = true
 	_attack_damage_dealt = false
 
@@ -282,12 +318,12 @@ func attack() -> void:
 func slide() -> void:
 	if is_dead or is_attacking or is_casting or is_hurt:
 		return
-	if is_sliding or block_phase != BlockPhase.NONE or slide_cooldown > 0.0:
+	if is_sliding or block_phase != BlockPhase.NONE or slide_cooldown > 0.0 or crouch_phase != CrouchPhase.NONE:
 		return
 	if not is_on_floor():
 		return
 
-	_stop_sneak()
+	_cancel_sneak_mode()
 	is_sliding = true
 	slide_timer = SLIDE_TOTAL_DURATION
 	slide_iframe_active = false
@@ -333,7 +369,9 @@ func take_damage(amount: int, damage_type: String = "physical", source: String =
 		Global.add_damage_taken(final_damage)
 	health_changed.emit(current_health)
 	_show_damage_effect()
-	_apply_hit_reaction(_classify_hit_reaction(final_damage))
+	var reaction_type: int = _classify_hit_reaction(final_damage)
+	_apply_hit_reaction(reaction_type)
+	damage_received.emit(final_damage, _reaction_type_to_tag(reaction_type))
 
 	if current_health <= 0:
 		die()
@@ -492,6 +530,16 @@ func _apply_hit_reaction(reaction_type: int) -> void:
 			velocity.x = -facing_dir * HEAVY_PUSHBACK
 
 
+func _reaction_type_to_tag(reaction_type: int) -> String:
+	match reaction_type:
+		HitReaction.LIGHT:
+			return "light"
+		HitReaction.HEAVY:
+			return "heavy"
+		_:
+			return "hurt"
+
+
 func _on_attack_frame() -> void:
 	if not is_attacking or _attack_damage_dealt:
 		return
@@ -606,10 +654,16 @@ func apply_guard_break_stun(duration: float = 0.38) -> void:
 		animated_sprite.frame_changed.disconnect(_on_attack_frame)
 	_attack_damage_dealt = true
 	is_attacking = false
-	_stop_sneak()
+	_cancel_sneak_mode()
 	is_hurt = true
 	reaction_lock_timer = maxf(reaction_lock_timer, duration)
 	play_animation("hurt")
+
+
+func set_consumable_use_state(active: bool, move_multiplier: float = 1.0) -> void:
+	super.set_consumable_use_state(active, move_multiplier)
+	if active:
+		_cancel_sneak_mode()
 
 
 func _setup_block_audio() -> void:
@@ -657,17 +711,115 @@ func _update_slide_visual() -> void:
 
 
 func _stop_sneak() -> void:
+	_cancel_sneak_mode()
+
+
+func _cancel_sneak_mode() -> void:
+	sneak_mode_enabled = false
 	is_sneaking = false
+
+
+func _toggle_sneak_mode() -> void:
+	if is_dead or is_inventory_open or is_using_consumable:
+		return
+	if is_attacking or is_casting or is_sliding or is_hurt:
+		return
+	if block_phase != BlockPhase.NONE or crouch_phase != CrouchPhase.NONE:
+		return
+	sneak_mode_enabled = not sneak_mode_enabled
+	if not sneak_mode_enabled:
+		is_sneaking = false
+
+
+func _start_crouch_action() -> void:
+	if is_dead or is_inventory_open or is_using_consumable:
+		return
+	if not is_on_floor():
+		return
+	if is_attacking or is_casting or is_sliding or is_hurt:
+		return
+	if block_phase != BlockPhase.NONE or crouch_phase != CrouchPhase.NONE:
+		return
+	if crouch_cooldown > 0.0:
+		return
+
+	_cancel_sneak_mode()
+	is_crouching = false
+	crouch_phase = CrouchPhase.STARTUP
+	crouch_phase_timer = CROUCH_STARTUP_TIME
+	velocity.x = 0.0
+	play_animation("crouch")
+	if animated_sprite:
+		animated_sprite.play()
+
+
+func _update_crouch_state(delta: float) -> void:
+	if crouch_phase == CrouchPhase.NONE:
+		is_crouching = false
+		return
+
+	crouch_phase_timer = maxf(0.0, crouch_phase_timer - delta)
+
+	match crouch_phase:
+		CrouchPhase.STARTUP:
+			is_crouching = false
+			if crouch_phase_timer <= 0.0:
+				crouch_phase = CrouchPhase.ACTIVE
+				crouch_phase_timer = CROUCH_ACTIVE_TIME
+				is_crouching = true
+				_hold_crouch_pose_frame()
+		CrouchPhase.ACTIVE:
+			is_crouching = true
+			_hold_crouch_pose_frame()
+			if crouch_phase_timer <= 0.0:
+				crouch_phase = CrouchPhase.RECOVERY
+				crouch_phase_timer = CROUCH_RECOVERY_TIME
+				is_crouching = false
+		CrouchPhase.RECOVERY:
+			is_crouching = false
+			if crouch_phase_timer <= 0.0:
+				crouch_phase = CrouchPhase.NONE
+				crouch_phase_timer = 0.0
+				crouch_cooldown = CROUCH_COOLDOWN_TIME
+
+
+func _hold_crouch_pose_frame() -> void:
+	if not animated_sprite or animated_sprite.sprite_frames == null:
+		return
+	var anim_name: String = animated_sprite.animation
+	if anim_name == "":
+		anim_name = "crouch"
+	if not animated_sprite.sprite_frames.has_animation(anim_name):
+		return
+	var frame_count: int = animated_sprite.sprite_frames.get_frame_count(anim_name)
+	var hold_frame: int = max(0, frame_count - 1)
+	animated_sprite.stop()
+	animated_sprite.frame = hold_frame
 
 
 func _update_block_cooldown_ui() -> void:
 	if Global and Global.game_ui and Global.game_ui.has_method("update_ability_cooldown"):
-		var percent: float = 1.0
+		var block_percent: float = 1.0
 		if block_phase != BlockPhase.NONE:
-			percent = 0.0
+			block_percent = 0.0
 		elif block_cooldown > 0.0:
-			percent = 1.0 - (block_cooldown / BLOCK_COOLDOWN_TIME)
-		Global.game_ui.update_ability_cooldown("block", clampf(percent, 0.0, 1.0))
+			block_percent = 1.0 - (block_cooldown / BLOCK_COOLDOWN_TIME)
+		Global.game_ui.update_ability_cooldown("block", clampf(block_percent, 0.0, 1.0))
+
+		var slide_percent: float = 1.0
+		if is_sliding:
+			slide_percent = 0.0
+		elif slide_cooldown > 0.0:
+			slide_percent = 1.0 - (slide_cooldown / SLIDE_COOLDOWN_TIME)
+		Global.game_ui.update_ability_cooldown("slide", clampf(slide_percent, 0.0, 1.0))
+
+
+func _configure_skill_ui() -> void:
+	if not Global or not Global.game_ui:
+		return
+	if Global.game_ui.has_method("configure_ability_slot"):
+		Global.game_ui.configure_ability_slot("block", "Блок", "E", BLOCK_ICON_PATH)
+		Global.game_ui.configure_ability_slot("slide", "Подкат", "ПКМ", SLIDE_ICON_PATH)
 
 
 func apply_artifacts() -> void:

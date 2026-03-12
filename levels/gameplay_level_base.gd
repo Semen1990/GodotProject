@@ -1,7 +1,7 @@
 extends Node2D
-class_name GameplayLevelBase
 
 const DEFAULT_GAME_UI_SCENE := preload("res://scenes/Ui/game_ui.tscn")
+const CONSUMABLE_USE_CONTROLLER_SCRIPT := preload("res://scripts/consumables/consumable_use_controller.gd")
 const DEFAULT_ITEM_DATABASE_PATH := "res://data/items/demo_database.tres"
 const ARMOR_POLL_INTERVAL := 0.1
 
@@ -15,6 +15,9 @@ const OBJECTS_ROOT_PATH := "World/Objects"
 const UI_ROOT_PATH := "UI"
 const POTION_KIND_HP := "hp"
 const POTION_KIND_MANA := "mana"
+const POTION_USE_DURATION := 0.8
+const POTION_GLOBAL_COOLDOWN := 2.0
+const POTION_MOVE_SPEED_MULTIPLIER := 0.35
 const ENCOUNTER_ENEMY_GROUP := "encounter_enemy"
 const ENCOUNTER_ZONE_FALLBACK_DISTANCE := 320.0
 const MADNESS_RELIEF_ON_NEW_ROOM := 1
@@ -33,6 +36,9 @@ var armor_watch_timer: Timer = null
 var last_armor_value: int = -1
 var inventory_ui: InventoryUI = null
 var hotbar_ui: HotbarUI = null
+var consumable_use_controller = null
+var pending_consumable_item: InventoryItem = null
+var pending_consumable_hotbar_index: int = -1
 var current_encounter_zone: CombatEncounterZone = null
 var fallback_used_instant_potions: Dictionary = {
 	POTION_KIND_HP: false,
@@ -431,24 +437,10 @@ func _sync_instant_potion_repeat_blocks() -> void:
 	if not Inventory or not Inventory.has_method("set_instant_potion_repeat_block"):
 		return
 
-	var hp_blocked: bool = false
-	var mana_blocked: bool = false
-	var has_active_level_blocker: bool = _has_active_blocking_enemy_in_level()
-
-	if current_encounter_zone != null:
-		var blocks: Dictionary = current_encounter_zone.get_instant_potion_blocks()
-		hp_blocked = bool(blocks.get(POTION_KIND_HP, false))
-		mana_blocked = bool(blocks.get(POTION_KIND_MANA, false))
-
-	if has_active_level_blocker:
-		hp_blocked = hp_blocked or bool(fallback_used_instant_potions.get(POTION_KIND_HP, false))
-		mana_blocked = mana_blocked or bool(fallback_used_instant_potions.get(POTION_KIND_MANA, false))
-	else:
-		fallback_used_instant_potions[POTION_KIND_HP] = false
-		fallback_used_instant_potions[POTION_KIND_MANA] = false
-
-	Inventory.set_instant_potion_repeat_block(POTION_KIND_HP, hp_blocked)
-	Inventory.set_instant_potion_repeat_block(POTION_KIND_MANA, mana_blocked)
+	fallback_used_instant_potions[POTION_KIND_HP] = false
+	fallback_used_instant_potions[POTION_KIND_MANA] = false
+	Inventory.set_instant_potion_repeat_block(POTION_KIND_HP, false)
+	Inventory.set_instant_potion_repeat_block(POTION_KIND_MANA, false)
 
 
 func _on_player_entered_encounter(_zone: CombatEncounterZone) -> void:
@@ -493,6 +485,7 @@ func _spawn_selected_character() -> void:
 	_setup_camera()
 	_setup_ui()
 	_connect_player_lifecycle_signals()
+	_setup_consumable_use_controller()
 	_after_player_spawned()
 	call_deferred("_restore_player_stats")
 
@@ -552,6 +545,29 @@ func _connect_player_lifecycle_signals() -> void:
 
 	if current_player.has_signal("revived") and not current_player.revived.is_connected(_on_player_revived):
 		current_player.revived.connect(_on_player_revived)
+
+
+func _setup_consumable_use_controller() -> void:
+	consumable_use_controller = null
+	_clear_pending_consumable_use()
+
+	if not current_player or CONSUMABLE_USE_CONTROLLER_SCRIPT == null:
+		return
+
+	consumable_use_controller = CONSUMABLE_USE_CONTROLLER_SCRIPT.new()
+	consumable_use_controller.name = "ConsumableUseController"
+	current_player.add_child(consumable_use_controller)
+	consumable_use_controller.setup(current_player)
+
+	if consumable_use_controller.has_signal("use_completed") and not consumable_use_controller.use_completed.is_connected(_on_consumable_use_completed):
+		consumable_use_controller.use_completed.connect(_on_consumable_use_completed)
+	if consumable_use_controller.has_signal("use_interrupted") and not consumable_use_controller.use_interrupted.is_connected(_on_consumable_use_interrupted):
+		consumable_use_controller.use_interrupted.connect(_on_consumable_use_interrupted)
+
+
+func _clear_pending_consumable_use() -> void:
+	pending_consumable_item = null
+	pending_consumable_hotbar_index = -1
 
 
 func _save_base_stats() -> void:
@@ -614,6 +630,9 @@ func _restore_player_stats() -> void:
 func save_before_transition() -> void:
 	if not current_player or not Global:
 		return
+
+	if consumable_use_controller != null and is_instance_valid(consumable_use_controller) and consumable_use_controller.has_method("interrupt_use"):
+		consumable_use_controller.interrupt_use("transition")
 
 	Global.saved_player_health = current_player.current_health
 	if "current_mana" in current_player:
@@ -713,7 +732,7 @@ func _on_inventory_item_used(item: InventoryItem) -> void:
 	if not current_player or not item or not item.data:
 		return
 
-	_try_use_potion_item(item)
+	_try_use_potion_item(item, -1)
 
 
 func _on_hotbar_slot_used(index: int) -> void:
@@ -724,58 +743,70 @@ func _on_hotbar_slot_used(index: int) -> void:
 	if not item or not item.data:
 		return
 
-	if not _try_use_potion_item(item):
-		return
-
-	item.remove(1)
-	if item.is_empty():
-		Inventory.set_hotbar_item(index, -1)
-	else:
-		Inventory.hotbar_changed.emit(index)
-
-	Inventory.inventory_changed.emit()
+	_try_use_potion_item(item, index)
 
 
-func _try_use_potion_item(item: InventoryItem) -> bool:
-	if not current_player or not Inventory or not item or not item.data:
+func _try_use_potion_item(item: InventoryItem, source_hotbar_index: int = -1) -> bool:
+	if not current_player or not Inventory or not item or not item.data or consumable_use_controller == null:
 		return false
-
-	_refresh_current_encounter_zone()
-	var encounter_zone: CombatEncounterZone = _resolve_encounter_zone_for_player()
-	current_encounter_zone = encounter_zone
-	var has_active_level_blocker: bool = _has_active_blocking_enemy_in_level()
+	if not Inventory.is_potion_item(item):
+		return false
 
 	if not Inventory.can_use_item_instance(item):
 		return false
 
-	var instant_potion_kind: String = _get_instant_potion_kind(item.data)
-	if not instant_potion_kind.is_empty():
-		var can_use_instant_potion: bool = true
-		if encounter_zone != null:
-			can_use_instant_potion = encounter_zone.can_use_instant_potion(instant_potion_kind)
-		if can_use_instant_potion and has_active_level_blocker:
-			can_use_instant_potion = not bool(fallback_used_instant_potions.get(instant_potion_kind, false))
+	if consumable_use_controller.has_method("is_busy") and consumable_use_controller.is_busy():
+		return false
 
-		if not can_use_instant_potion:
-			_sync_instant_potion_repeat_blocks()
-			return false
+	var payload: Dictionary = {
+		"item": item,
+		"item_id": item.get_item_id(),
+		"item_data": item.data,
+		"effects": item.data.effects.duplicate(true),
+		"consumable_type": int(item.data.consumable_type),
+		"instant_kind": _get_instant_potion_kind(item.data),
+		"duration": POTION_USE_DURATION,
+		"move_multiplier": POTION_MOVE_SPEED_MULTIPLIER,
+		"source_hotbar_index": source_hotbar_index,
+	}
 
-	for effect in item.data.effects:
+	if not consumable_use_controller.start_use(payload):
+		return false
+
+	pending_consumable_item = item
+	pending_consumable_hotbar_index = source_hotbar_index
+	return true
+
+
+func _on_consumable_use_completed(payload: Dictionary) -> void:
+	if not Inventory:
+		_clear_pending_consumable_use()
+		return
+
+	var item: InventoryItem = payload.get("item", pending_consumable_item) as InventoryItem
+	if item == null or item.data == null:
+		_clear_pending_consumable_use()
+		return
+
+	if not Inventory.consume_item_instance(item, 1):
+		_clear_pending_consumable_use()
+		return
+
+	for effect in payload.get("effects", []):
 		_apply_potion_effect(effect)
 
-	if item.data.consumable_type == InventoryEnums.ConsumableType.POTION_BUFF:
-		Inventory.mark_potion_used(item.get_item_id(), item.data, {
+	if int(payload.get("consumable_type", -1)) == int(InventoryEnums.ConsumableType.POTION_BUFF):
+		Inventory.mark_potion_used(int(payload.get("item_id", item.get_item_id())), item.data, {
 			"effects": item.data.effects.duplicate(true),
 			"consumable_type": int(item.data.consumable_type),
 		})
-	elif not instant_potion_kind.is_empty():
-		if encounter_zone != null:
-			encounter_zone.register_instant_potion_use(instant_potion_kind)
-		if has_active_level_blocker:
-			fallback_used_instant_potions[instant_potion_kind] = true
-		_sync_instant_potion_repeat_blocks()
 
-	return true
+	Inventory.set_potion_global_cooldown(POTION_GLOBAL_COOLDOWN)
+	_clear_pending_consumable_use()
+
+
+func _on_consumable_use_interrupted(_payload: Dictionary) -> void:
+	_clear_pending_consumable_use()
 
 
 func _has_active_blocking_enemy_in_level() -> bool:

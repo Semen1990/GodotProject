@@ -14,6 +14,7 @@ signal health_changed(new_health: int)
 signal mana_changed(new_mana: int)
 signal armor_changed(new_armor: int)
 signal madness_changed(new_stacks: int, max_stacks: int)
+signal damage_received(final_damage: int, reaction_tag: String)
 signal died()
 signal revived()
 
@@ -43,6 +44,8 @@ var is_crouching: bool = false
 var is_hurt: bool = false
 var is_invincible: bool = false  # Р СњР ВµРЎС“РЎРЏР В·Р Р†Р С‘Р СР С•РЎРѓРЎвЂљРЎРЉ Р С—Р С•РЎРѓР В»Р Вµ Р Р†Р С•Р В·РЎР‚Р С•Р В¶Р Т‘Р ВµР Р…Р С‘РЎРЏ
 var is_inventory_open: bool = false  # Р вЂР В»Р С•Р С”Р С‘РЎР‚Р С•Р Р†Р С”Р В° Р С—РЎР‚Р С‘ Р С•РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљР С•Р С Р С‘Р Р…Р Р†Р ВµР Р…РЎвЂљР В°РЎР‚Р Вµ
+var is_using_consumable: bool = false
+var consumable_move_speed_multiplier: float = 1.0
 
 # --- Р РЋР ВР РЋР СћР вЂўР СљР С’ Р С’Р СћР С’Р С™Р В ---
 var attack_combo: int = 0
@@ -197,7 +200,7 @@ func handle_movement(delta: float):
 	var is_special = Input.is_action_just_pressed("special_ability")
 	
 	# --- Р вЂР В»Р С•Р С”Р С‘РЎР‚Р С•Р Р†Р С”Р В° Р Т‘Р Р†Р С‘Р В¶Р ВµР Р…Р С‘РЎРЏ Р Р†Р С• Р Р†РЎР‚Р ВµР СРЎРЏ РЎРѓР С—Р ВµРЎвЂ Р С‘Р В°Р В»РЎРЉР Р…РЎвЂ№РЎвЂ¦ Р Т‘Р ВµР в„–РЎРѓРЎвЂљР Р†Р С‘Р в„– ---
-	if is_attacking or is_casting or is_sliding:
+	if is_attacking or is_sliding or (is_casting and not is_using_consumable):
 		velocity.x = move_toward(velocity.x, 0, friction * delta)
 		return
 	
@@ -215,7 +218,10 @@ func handle_movement(delta: float):
 	# --- Р вЂќР вЂ™Р ВР вЂ“Р вЂўР СњР ВР вЂў ---
 	if not is_blocking and not is_crouching:
 		if direction != 0:
-			velocity.x = move_toward(velocity.x, direction * current_speed, acceleration * delta)
+			var target_speed: float = current_speed
+			if is_using_consumable:
+				target_speed *= consumable_move_speed_multiplier
+			velocity.x = move_toward(velocity.x, direction * target_speed, acceleration * delta)
 			# Р СџР С•Р Р†Р С•РЎР‚Р С•РЎвЂљ РЎРѓР С—РЎР‚Р В°Р в„–РЎвЂљР В°
 			if animated_sprite:
 				animated_sprite.flip_h = direction < 0
@@ -468,6 +474,7 @@ func take_damage(amount: int, damage_type: String = "physical", source: String =
 	
 	# Р С›РЎвЂљР С—РЎР‚Р В°Р Р†Р В»РЎРЏР ВµР С РЎРѓР С‘Р С–Р Р…Р В°Р В»
 	health_changed.emit(current_health)
+	damage_received.emit(reduced_amount, "hurt")
 	
 	
 	# Р С›Р В±Р Р…Р С•Р Р†Р В»РЎРЏР ВµР С РЎРѓРЎвЂљР В°РЎвЂљР С‘РЎРѓРЎвЂљР С‘Р С”РЎС“
@@ -509,12 +516,26 @@ func die():
 	
 	# Р СџРЎР‚Р С•Р С‘Р С–РЎР‚РЎвЂ№Р Р†Р В°Р ВµР С Р В°Р Р…Р С‘Р СР В°РЎвЂ Р С‘РЎР‹ РЎРѓР СР ВµРЎР‚РЎвЂљР С‘
 	play_animation("death")
+	call_deferred("_finish_death_sequence")
+
+
+func set_consumable_use_state(active: bool, move_multiplier: float = 1.0) -> void:
+	is_using_consumable = active
+	consumable_move_speed_multiplier = move_multiplier if active else 1.0
+
+
+func _finish_death_sequence() -> void:
+	if not is_dead:
+		return
 	
 	# Р вЂ“Р Т‘РЎвЂР С Р В·Р В°Р Р†Р ВµРЎР‚РЎв‚¬Р ВµР Р…Р С‘РЎРЏ Р В°Р Р…Р С‘Р СР В°РЎвЂ Р С‘Р С‘
 	if animated_sprite:
 		await animated_sprite.animation_finished
 	else:
 		await get_tree().create_timer(1.0).timeout
+	
+	if not is_dead:
+		return
 	
 	# Р РЋР С”РЎР‚РЎвЂ№Р Р†Р В°Р ВµР С Р С‘Р С–РЎР‚Р С•Р С”Р В°
 	visible = false

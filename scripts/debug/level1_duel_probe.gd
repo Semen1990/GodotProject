@@ -169,15 +169,16 @@ func _scenario_slide_cross() -> Dictionary:
 
 func _scenario_sneak_backstab() -> Dictionary:
 	_place_player_relative_to_lizard(-70.0)
-	Input.action_press("crouch")
+	Input.action_press("sneak_toggle")
+	Input.action_release("sneak_toggle")
+	await get_tree().physics_frame
 	Input.action_press("move_right")
-	_log_event("probe -> press crouch + move_right")
+	_log_event("probe -> toggle sneak + move_right")
 	await _observe_for(0.42)
 	Input.action_release("move_right")
 	player.attack()
 	_log_event("probe -> warrior.attack() from sneak")
 	await _observe_for(1.5)
-	Input.action_release("crouch")
 
 	return {
 		"lizard_state_end": _lizard_state_name(),
@@ -223,7 +224,7 @@ func _place_player_relative_to_lizard(offset_x: float) -> void:
 
 
 func _clear_inputs() -> void:
-	for action in ["move_left", "move_right", "crouch", "jump", "attack", "special_ability", "slide"]:
+	for action in ["move_left", "move_right", "crouch", "jump", "attack", "special_ability", "slide", "sneak_toggle"]:
 		Input.action_release(action)
 
 
@@ -253,15 +254,21 @@ func _poll_player_snapshot() -> void:
 
 
 func _poll_lizard_snapshot() -> void:
+	var parry_timer_value: Variant = lizard.get("parry_timer")
+	var recover_timer_value: Variant = lizard.get("recover_timer")
+	var retreat_timer_value: Variant = lizard.get("retreat_timer")
+	var knockdown_timer_value: Variant = lizard.get("knockdown_timer")
+
 	var snapshot: Dictionary = {
 		"hp": _get_lizard_health(),
 		"state": _lizard_state_name(),
 		"anim": _get_lizard_animation(),
 		"can_attack": bool(lizard.get("can_attack")),
 		"combo": int(lizard.get("combo_hits_remaining")),
-		"block_timer": snapped(float(lizard.get("block_timer")), 0.01),
-		"retreat_timer": snapped(float(lizard.get("retreat_timer")), 0.01),
-		"knockdown_timer": snapped(float(lizard.get("knockdown_timer")), 0.01),
+		"parry_timer": snapped(_variant_to_float(parry_timer_value), 0.01),
+		"recover_timer": snapped(_variant_to_float(recover_timer_value), 0.01),
+		"retreat_timer": snapped(_variant_to_float(retreat_timer_value), 0.01),
+		"knockdown_timer": snapped(_variant_to_float(knockdown_timer_value), 0.01),
 		"x": snapped(lizard.global_position.x, 0.1),
 		"vx": snapped(lizard.velocity.x, 0.1),
 	}
@@ -276,6 +283,16 @@ func _poll_lizard_snapshot() -> void:
 			_log_event("lizard %s: %s -> %s" % [key, str(last_lizard_snapshot.get(key)), str(snapshot[key])])
 
 	last_lizard_snapshot = snapshot
+
+
+func _variant_to_float(value: Variant) -> float:
+	match typeof(value):
+		TYPE_FLOAT:
+			return value
+		TYPE_INT:
+			return float(value)
+		_:
+			return 0.0
 
 
 func _lizard_state_name() -> String:
