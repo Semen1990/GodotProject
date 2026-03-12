@@ -145,13 +145,13 @@ func _complete_healing():
 # ПОЛУЧЕНИЕ УРОНА (ИСПРАВЛЕННАЯ СИГНАТУРА!)
 # ===========================================
 
-func take_damage(amount: int, damage_type: String = "physical", source: String = "Неизвестно"):
+func take_damage(amount: int, damage_type: String = "physical", source: String = "Неизвестно", reaction_hint: String = ""):
 	"""
 	Переопределяем получение урона - прерываем исцеление
 	ВАЖНО: Сигнатура должна совпадать с родителем!
 	"""
 	# Вызываем родительскую функцию с ВСЕМИ параметрами
-	super.take_damage(amount, damage_type, source)
+	super.take_damage(amount, damage_type, source, reaction_hint)
 	
 	# Прерываем исцеление если идет
 	if is_healing:

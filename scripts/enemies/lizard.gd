@@ -20,6 +20,7 @@ signal repeat_potion_blocking_changed(is_blocking)
 enum State { IDLE, PATROL, CHASE, ATTACK, HURT, DEAD, RETREAT, PARRY, KNOCKDOWN, PRESSURE, RECOVER }
 enum AttackProfile { NORMAL, PUNISH_RUSH, PUNISH_HEAVY }
 enum ParryPhase { NONE, STARTUP, ACTIVE }
+enum PostComboExit { NONE, RETREAT, HOLD, PARRY }
 var current_state: State = State.IDLE
 
 const PERSISTENCE_COMPONENT := preload("res://scripts/persistence/persistence_component.gd")
@@ -33,16 +34,21 @@ const COMBO_MIN_HITS: int = 2
 const COMBO_MAX_HITS: int = 3
 const COMBO_CHAIN_DELAY_TIME: float = 0.12
 const NORMAL_COMBO_RECOVER_TIME: float = 0.82
-const RETREAT_TIME_MIN: float = 0.28
-const RETREAT_TIME_MAX: float = 0.38
+const COMBO_FATIGUE_RECOVER_TIME: float = 0.96
+const COMBO_FATIGUE_COOLDOWN_TIME: float = 1.18
+const COMBO_FATIGUE_RETREAT_CHANCE: float = 0.60
+const COMBO_FATIGUE_HOLD_CHANCE: float = 0.25
+const RETREAT_TIME_MIN: float = 0.88
+const RETREAT_TIME_MAX: float = 1.16
+const RETREAT_MIN_COMMIT_TIME: float = 0.72
 const RETREAT_SPEED_MULTIPLIER: float = 0.92
 const RETREAT_DISTANCE_TARGET: float = 138.0
-const PARRY_STARTUP_TIME: float = 0.10
-const PARRY_ACTIVE_TIME: float = 0.30
-const PARRY_RECOVER_TIME: float = 0.22
+const PARRY_STARTUP_TIME: float = 0.16
+const PARRY_ACTIVE_TIME: float = 2.00
+const PARRY_RECOVER_TIME: float = 0.30
 const PARRY_COOLDOWN_TIME: float = 3.8
 const PARRY_TRIGGER_DISTANCE: float = 136.0
-const PARRY_TRIGGER_CHANCE: float = 0.42
+const PARRY_TRIGGER_CHANCE: float = 0.70
 const ALERT_RUSH_SPEED_MULTIPLIER: float = 2.6
 const PLAYER_GUARD_FEEDBACK_TIME: float = 1.2
 const BACKSTAB_KNOCKDOWN_DEFAULT: float = 0.95
@@ -50,11 +56,16 @@ const BACKSTAB_RECOVER_TIME: float = 0.65
 const ATTACK_HIT_FRAME: int = 3
 const NORMAL_ATTACK_HIT_TELL: float = 0.24
 const NORMAL_ATTACK_SPEED_SCALE: float = 1.05
+const NORMAL_MEDIUM_ATTACK_CHANCE: float = 0.35
+const NORMAL_MEDIUM_ATTACK_DAMAGE_MULTIPLIER: float = 1.2
+const NORMAL_MEDIUM_HIT_TELL: float = 0.34
+const NORMAL_MEDIUM_HOLD_TIME: float = 0.16
 const PUNISH_RUSH_HIT_TELL: float = 0.18
 const PUNISH_RUSH_SPEED_SCALE: float = 1.42
 const PUNISH_HEAVY_HIT_TELL: float = 0.34
 const PUNISH_HEAVY_SPEED_SCALE: float = 0.9
-const PUNISH_HEAVY_DAMAGE_MULTIPLIER: float = 1.6
+const PUNISH_HEAVY_HOLD_TIME: float = 0.12
+const PUNISH_HEAVY_DAMAGE_MULTIPLIER: float = 1.8
 const PUNISH_HEAVY_RECOVER_TIME: float = 1.0
 const PUNISH_RUSH_RECOVER_TIME: float = 0.95
 
@@ -75,22 +86,32 @@ var forced_stagger_timer: float = 0.0
 var pressure_timer: float = 0.0
 var retreat_timer: float = 0.0
 var recover_timer: float = 0.0
+var retreat_commit_timer: float = 0.0
 var parry_phase: int = ParryPhase.NONE
 var parry_timer: float = 0.0
 var parry_cooldown: float = 0.0
 var combo_hits_remaining: int = 0
 var combo_chain_timer: float = 0.0
+var combo_continuation_pending: bool = false
 var engage_rush_timer: float = 0.0
 var knockdown_timer: float = 0.0
 var queued_counter_combo: bool = false
 var target_attack_latched: bool = false
 var retreat_target_side: int = 0
+var pending_post_combo_exit: int = PostComboExit.NONE
 var attack_elapsed: float = 0.0
 var attack_profile: int = AttackProfile.NORMAL
 var attack_damage_multiplier: float = 1.0
 var attack_hit_tell_time: float = NORMAL_ATTACK_HIT_TELL
 var attack_post_recover_time: float = NORMAL_COMBO_RECOVER_TIME
+var attack_reaction_tag: String = "light"
+var attack_pre_hit_pause_time: float = 0.0
 var use_hurt_recover_pose: bool = false
+var heavy_attack_pause_active: bool = false
+var heavy_attack_pause_used: bool = false
+var heavy_attack_pause_timer: float = 0.0
+var queued_counter_is_heavy: bool = false
+var parry_visual_cue_shown: bool = false
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -208,6 +229,9 @@ func _physics_process(delta: float) -> void:
 	if retreat_timer > 0.0:
 		retreat_timer = maxf(0.0, retreat_timer - delta)
 
+	if retreat_commit_timer > 0.0:
+		retreat_commit_timer = maxf(0.0, retreat_commit_timer - delta)
+
 	if recover_timer > 0.0:
 		recover_timer = maxf(0.0, recover_timer - delta)
 
@@ -223,7 +247,14 @@ func _physics_process(delta: float) -> void:
 			_resolve_post_recover_state()
 
 	if current_state == State.ATTACK:
-		attack_elapsed += delta
+		if heavy_attack_pause_active:
+			heavy_attack_pause_timer = maxf(0.0, heavy_attack_pause_timer - delta)
+			if heavy_attack_pause_timer <= 0.0:
+				heavy_attack_pause_active = false
+				if animated_sprite:
+					animated_sprite.play()
+		else:
+			attack_elapsed += delta
 
 	match current_state:
 		State.IDLE:
@@ -354,6 +385,9 @@ func _change_state(new_state: State) -> void:
 			velocity.x = 0.0
 			damage_dealt_this_attack = false
 			attack_elapsed = 0.0
+			heavy_attack_pause_active = false
+			heavy_attack_pause_used = false
+			heavy_attack_pause_timer = 0.0
 			_face_target()
 			_configure_attack_profile()
 			if animated_sprite:
@@ -361,6 +395,7 @@ func _change_state(new_state: State) -> void:
 			_play_anim("attack")
 		State.RETREAT:
 			retreat_timer = randf_range(RETREAT_TIME_MIN, RETREAT_TIME_MAX)
+			retreat_commit_timer = RETREAT_MIN_COMMIT_TIME
 			retreat_target_side = 0
 			if target and is_instance_valid(target):
 				retreat_target_side = int(signf(target.global_position.x - global_position.x))
@@ -371,6 +406,7 @@ func _change_state(new_state: State) -> void:
 		State.PARRY:
 			parry_phase = ParryPhase.STARTUP
 			parry_timer = PARRY_STARTUP_TIME
+			parry_visual_cue_shown = false
 			velocity.x = 0.0
 			_face_target()
 			_play_anim("block")
@@ -492,8 +528,21 @@ func _process_pressure() -> void:
 		_change_state(State.CHASE)
 		return
 
-	if combo_hits_remaining > 0 and combo_chain_timer <= 0.0 and dist <= attack_range + 18.0:
-		_change_state(State.ATTACK)
+	if combo_continuation_pending:
+		if combo_chain_timer > 0.0:
+			velocity.x = 0.0
+			return
+		combo_continuation_pending = false
+		if combo_hits_remaining > 0 and dist <= attack_range + 18.0:
+			_change_state(State.ATTACK)
+			return
+		combo_hits_remaining = 0
+		_begin_combo_fatigue()
+		return
+
+	if combo_hits_remaining > 0:
+		combo_hits_remaining = 0
+		_begin_combo_fatigue()
 		return
 
 	if dist <= attack_range + 18.0 and can_attack:
@@ -539,10 +588,10 @@ func _process_retreat() -> void:
 
 	var dir_x: float = target.global_position.x - global_position.x
 	var current_target_side: int = int(signf(dir_x))
-	if retreat_target_side != 0 and current_target_side != 0 and current_target_side != retreat_target_side:
+	if retreat_commit_timer <= 0.0 and retreat_target_side != 0 and current_target_side != 0 and current_target_side != retreat_target_side:
 		_change_state(State.PRESSURE)
 		return
-	if retreat_timer <= 0.0 or absf(dir_x) >= RETREAT_DISTANCE_TARGET or is_on_wall():
+	if (retreat_commit_timer <= 0.0 and (retreat_timer <= 0.0 or absf(dir_x) >= RETREAT_DISTANCE_TARGET)) or is_on_wall():
 		_change_state(State.PRESSURE if absf(dir_x) <= PRESSURE_DISTANCE else State.CHASE)
 		return
 
@@ -572,6 +621,9 @@ func _process_parry() -> void:
 			parry_phase = ParryPhase.ACTIVE
 			parry_timer = PARRY_ACTIVE_TIME
 			_hold_parry_frame(1)
+			if not parry_visual_cue_shown:
+				parry_visual_cue_shown = true
+				_show_combat_popup("Блок", Color(0.8, 0.95, 1.0, 1.0), 0.85)
 		ParryPhase.ACTIVE:
 			_hold_parry_frame(1)
 			if parry_timer > 0.0 and not queued_counter_combo:
@@ -580,13 +632,16 @@ func _process_parry() -> void:
 			pass
 
 	parry_phase = ParryPhase.NONE
+	parry_visual_cue_shown = false
 	parry_cooldown = PARRY_COOLDOWN_TIME
 	if queued_counter_combo:
 		queued_counter_combo = false
-		_setup_punish_attack()
+		_setup_punish_attack(queued_counter_is_heavy)
+		queued_counter_is_heavy = false
 		_change_state(State.ATTACK)
 		return
 
+	queued_counter_is_heavy = false
 	_enter_recover(PARRY_RECOVER_TIME, false)
 
 
@@ -619,7 +674,9 @@ func _on_detection_entered(body: Node2D) -> void:
 			repeat_potion_blocking_changed.emit(is_repeat_potion_blocker())
 		engage_rush_timer = 0.65
 		combo_hits_remaining = 0
+		combo_continuation_pending = false
 		queued_counter_combo = false
+		pending_post_combo_exit = PostComboExit.NONE
 		_change_state(State.CHASE)
 
 
@@ -629,7 +686,9 @@ func _on_detection_exited(body: Node2D) -> void:
 	if body == target:
 		target = null
 		combo_hits_remaining = 0
+		combo_continuation_pending = false
 		queued_counter_combo = false
+		pending_post_combo_exit = PostComboExit.NONE
 		engage_rush_timer = 0.0
 		if current_state in [State.CHASE, State.PRESSURE, State.RETREAT, State.PARRY, State.RECOVER]:
 			_change_state(State.PATROL)
@@ -643,6 +702,13 @@ func _play_anim(anim_name: String) -> void:
 
 func _on_frame_changed() -> void:
 	if current_state != State.ATTACK or damage_dealt_this_attack:
+		return
+	if attack_pre_hit_pause_time > 0.0 and not heavy_attack_pause_used and animated_sprite and animated_sprite.frame >= max(0, ATTACK_HIT_FRAME - 1):
+		heavy_attack_pause_used = true
+		heavy_attack_pause_active = true
+		heavy_attack_pause_timer = attack_pre_hit_pause_time
+		animated_sprite.stop()
+		animated_sprite.frame = max(0, ATTACK_HIT_FRAME - 1)
 		return
 	if attack_elapsed >= attack_hit_tell_time and animated_sprite.frame >= ATTACK_HIT_FRAME:
 		_deal_damage()
@@ -659,15 +725,21 @@ func _on_animation_finished() -> void:
 			combo_hits_remaining = maxi(0, combo_hits_remaining - 1)
 			if combo_hits_remaining > 0 and target and is_instance_valid(target) and target.get("is_dead") != true and global_position.distance_to(target.global_position) <= attack_range + 18.0:
 				combo_chain_timer = COMBO_CHAIN_DELAY_TIME
+				combo_continuation_pending = true
 				_change_state(State.PRESSURE)
 				velocity.x = 0.0
 				return
 
 			combo_hits_remaining = 0
+			combo_continuation_pending = false
 			can_attack = false
-			attack_cooldown = attack_post_recover_time
 			queued_counter_combo = false
-			_enter_recover(attack_post_recover_time, false)
+			if attack_profile == AttackProfile.NORMAL:
+				_begin_combo_fatigue()
+			else:
+				attack_cooldown = attack_post_recover_time
+				pending_post_combo_exit = PostComboExit.NONE
+				_enter_recover(attack_post_recover_time, false)
 		State.HURT:
 			if forced_stagger_timer > 0.0:
 				_play_anim("hurt")
@@ -712,7 +784,12 @@ func _deal_damage() -> void:
 		if target.has_method("register_incoming_attacker"):
 			target.register_incoming_attacker(self)
 		var total_damage: int = maxi(1, int(round(damage * attack_damage_multiplier)))
-		target.take_damage(total_damage, "physical", "Ящерица с копьём")
+		var reaction_tag: String = attack_reaction_tag
+		if _is_target_hit_in_back():
+			reaction_tag = "heavy"
+			total_damage = maxi(total_damage, int(round(damage * PUNISH_HEAVY_DAMAGE_MULTIPLIER)))
+			_show_combat_popup("Контратака", Color(1.0, 0.72, 0.32, 1.0), 0.85)
+		target.take_damage(total_damage, "physical", "Ящерица с копьём", reaction_tag)
 
 
 func take_damage(amount: int, _type: String = "physical") -> void:
@@ -722,8 +799,10 @@ func take_damage(amount: int, _type: String = "physical") -> void:
 		return
 	if current_state == State.PARRY and parry_phase == ParryPhase.ACTIVE:
 		queued_counter_combo = true
+		queued_counter_is_heavy = true
 		parry_timer = 0.0
 		_show_combat_popup("ПАРИР.", Color(0.9, 0.95, 1.0, 1.0), 0.75)
+		_show_combat_popup("Контратака", Color(1.0, 0.72, 0.32, 1.0), 0.9)
 		if target and is_instance_valid(target) and target.has_method("apply_guard_break_stun"):
 			target.apply_guard_break_stun(0.55)
 		return
@@ -793,7 +872,10 @@ func apply_short_stagger(duration: float = 0.45, attacker_x: float = 0.0) -> voi
 		return
 	forced_stagger_timer = maxf(forced_stagger_timer, duration)
 	combo_hits_remaining = 0
+	combo_continuation_pending = false
 	queued_counter_combo = false
+	queued_counter_is_heavy = false
+	pending_post_combo_exit = PostComboExit.NONE
 	combo_chain_timer = 0.0
 	parry_phase = ParryPhase.NONE
 	parry_timer = 0.0
@@ -815,7 +897,10 @@ func apply_backstab_knockdown(duration: float = BACKSTAB_KNOCKDOWN_DEFAULT, atta
 	knockdown_timer = maxf(knockdown_timer, duration)
 	forced_stagger_timer = 0.0
 	combo_hits_remaining = 0
+	combo_continuation_pending = false
 	queued_counter_combo = false
+	queued_counter_is_heavy = false
+	pending_post_combo_exit = PostComboExit.NONE
 	combo_chain_timer = 0.0
 	velocity.x = 0.0
 	parry_phase = ParryPhase.NONE
@@ -830,7 +915,10 @@ func show_player_guard_feedback(duration: float = PLAYER_GUARD_FEEDBACK_TIME) ->
 	if not is_alive or current_state == State.DEAD:
 		return
 	combo_hits_remaining = 0
+	combo_continuation_pending = false
 	queued_counter_combo = false
+	queued_counter_is_heavy = false
+	pending_post_combo_exit = PostComboExit.NONE
 	combo_chain_timer = 0.0
 	parry_phase = ParryPhase.NONE
 	parry_timer = 0.0
@@ -863,29 +951,72 @@ func _should_enter_parry(dist: float) -> bool:
 func _setup_normal_combo() -> void:
 	attack_profile = AttackProfile.NORMAL
 	combo_hits_remaining = randi_range(COMBO_MIN_HITS, COMBO_MAX_HITS)
-	attack_damage_multiplier = 1.0
-	attack_hit_tell_time = NORMAL_ATTACK_HIT_TELL
+	combo_continuation_pending = false
+	pending_post_combo_exit = PostComboExit.NONE
+	if randf() <= NORMAL_MEDIUM_ATTACK_CHANCE:
+		attack_damage_multiplier = NORMAL_MEDIUM_ATTACK_DAMAGE_MULTIPLIER
+		attack_hit_tell_time = NORMAL_MEDIUM_HIT_TELL
+		attack_reaction_tag = "hurt"
+		attack_pre_hit_pause_time = NORMAL_MEDIUM_HOLD_TIME
+	else:
+		attack_damage_multiplier = 1.0
+		attack_hit_tell_time = NORMAL_ATTACK_HIT_TELL
+		attack_reaction_tag = "light"
+		attack_pre_hit_pause_time = 0.0
 	attack_post_recover_time = NORMAL_COMBO_RECOVER_TIME
 
 
-func _setup_punish_attack() -> void:
-	if randf() <= 0.72:
-		attack_profile = AttackProfile.PUNISH_RUSH
-		combo_hits_remaining = randi_range(COMBO_MIN_HITS, COMBO_MAX_HITS)
-		attack_damage_multiplier = 1.1
-		attack_hit_tell_time = PUNISH_RUSH_HIT_TELL
-		attack_post_recover_time = PUNISH_RUSH_RECOVER_TIME
-	else:
+func _setup_punish_attack(force_heavy: bool = false) -> void:
+	if force_heavy:
 		attack_profile = AttackProfile.PUNISH_HEAVY
 		combo_hits_remaining = 1
+		combo_continuation_pending = false
+		pending_post_combo_exit = PostComboExit.NONE
 		attack_damage_multiplier = PUNISH_HEAVY_DAMAGE_MULTIPLIER
 		attack_hit_tell_time = PUNISH_HEAVY_HIT_TELL
 		attack_post_recover_time = PUNISH_HEAVY_RECOVER_TIME
+		attack_reaction_tag = "heavy"
+		attack_pre_hit_pause_time = PUNISH_HEAVY_HOLD_TIME
+		return
+	if randf() <= 0.72:
+		attack_profile = AttackProfile.PUNISH_RUSH
+		combo_hits_remaining = randi_range(COMBO_MIN_HITS, COMBO_MAX_HITS)
+		combo_continuation_pending = false
+		pending_post_combo_exit = PostComboExit.NONE
+		attack_damage_multiplier = 1.1
+		attack_hit_tell_time = PUNISH_RUSH_HIT_TELL
+		attack_post_recover_time = PUNISH_RUSH_RECOVER_TIME
+		attack_reaction_tag = "light"
+		attack_pre_hit_pause_time = 0.0
+	else:
+		attack_profile = AttackProfile.PUNISH_HEAVY
+		combo_hits_remaining = 1
+		combo_continuation_pending = false
+		pending_post_combo_exit = PostComboExit.NONE
+		attack_damage_multiplier = PUNISH_HEAVY_DAMAGE_MULTIPLIER
+		attack_hit_tell_time = PUNISH_HEAVY_HIT_TELL
+		attack_post_recover_time = PUNISH_HEAVY_RECOVER_TIME
+		attack_reaction_tag = "heavy"
+		attack_pre_hit_pause_time = PUNISH_HEAVY_HOLD_TIME
 
 
 func _configure_attack_profile() -> void:
 	if combo_hits_remaining <= 0:
 		_setup_normal_combo()
+
+
+func _is_target_hit_in_back() -> bool:
+	if target == null or not is_instance_valid(target):
+		return false
+	if not target.has_method("get_facing_direction"):
+		return false
+	var target_facing: float = float(target.get_facing_direction())
+	var attacker_side: float = signf(global_position.x - target.global_position.x)
+	if attacker_side == 0.0:
+		return false
+	if absf(global_position.x - target.global_position.x) <= 10.0:
+		return false
+	return attacker_side != target_facing
 
 
 func _get_attack_speed_scale() -> float:
@@ -906,6 +1037,23 @@ func _enter_recover(duration: float, use_hurt_pose: bool) -> void:
 
 func _resolve_post_recover_state() -> void:
 	use_hurt_recover_pose = false
+	if pending_post_combo_exit != PostComboExit.NONE and target and is_instance_valid(target) and target.get("is_dead") != true:
+		var post_combo_exit: int = pending_post_combo_exit
+		pending_post_combo_exit = PostComboExit.NONE
+		match post_combo_exit:
+			PostComboExit.RETREAT:
+				_change_state(State.RETREAT)
+				return
+			PostComboExit.HOLD:
+				pressure_timer = randf_range(PRESSURE_REEVALUATE_MIN, PRESSURE_REEVALUATE_MAX) + 0.32
+				_change_state(State.PRESSURE)
+				return
+			PostComboExit.PARRY:
+				_change_state(State.PARRY)
+				return
+			_:
+				pass
+
 	if target and is_instance_valid(target) and target.get("is_dead") != true:
 		var dist: float = global_position.distance_to(target.global_position)
 		if dist <= PRESSURE_DISTANCE:
@@ -927,6 +1075,26 @@ func _hold_parry_frame(frame_index: int) -> void:
 		return
 	animated_sprite.stop()
 	animated_sprite.frame = mini(frame_index, frame_count - 1)
+
+
+func _begin_combo_fatigue() -> void:
+	attack_cooldown = maxf(attack_cooldown, COMBO_FATIGUE_COOLDOWN_TIME)
+	combo_continuation_pending = false
+	if target and is_instance_valid(target) and target.get("is_dead") != true:
+		var dist: float = global_position.distance_to(target.global_position)
+		if dist <= PRESSURE_DISTANCE:
+			var roll: float = randf()
+			if roll <= COMBO_FATIGUE_RETREAT_CHANCE:
+				pending_post_combo_exit = PostComboExit.RETREAT
+			elif roll <= COMBO_FATIGUE_RETREAT_CHANCE + COMBO_FATIGUE_HOLD_CHANCE:
+				pending_post_combo_exit = PostComboExit.HOLD
+			else:
+				pending_post_combo_exit = PostComboExit.PARRY
+		else:
+			pending_post_combo_exit = PostComboExit.HOLD
+	else:
+		pending_post_combo_exit = PostComboExit.NONE
+	_enter_recover(COMBO_FATIGUE_RECOVER_TIME, false)
 
 
 func _show_combat_popup(text: String, color: Color, duration: float = 0.35) -> void:

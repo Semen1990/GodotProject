@@ -173,7 +173,7 @@ func _reset_combo():
 # ПОЛУЧЕНИЕ УРОНА (ИСПРАВЛЕННАЯ СИГНАТУРА!)
 # ===========================================
 
-func take_damage(amount: int, damage_type: String = "physical", source: String = "Неизвестно"):
+func take_damage(amount: int, damage_type: String = "physical", source: String = "Неизвестно", reaction_hint: String = ""):
 	"""
 	Переопределяем получение урона - ярость при низком HP
 	ВАЖНО: Сигнатура должна совпадать с родителем!
@@ -186,7 +186,7 @@ func take_damage(amount: int, damage_type: String = "physical", source: String =
 		print("🛡️ ЯРОСТЬ защищает! Урон: ", amount, " → ", final_amount)
 	
 	# Вызываем родительскую функцию с ВСЕМИ параметрами
-	super.take_damage(final_amount, damage_type, source)
+	super.take_damage(final_amount, damage_type, source, reaction_hint)
 	
 	# Прерываем комбо при получении урона
 	if combo_stage > 0:

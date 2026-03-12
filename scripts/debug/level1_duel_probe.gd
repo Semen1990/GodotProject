@@ -10,8 +10,10 @@ const LIZARD_STATE_NAMES := {
 	4: "HURT",
 	5: "DEAD",
 	6: "RETREAT",
-	7: "BLOCK",
+	7: "PARRY",
 	8: "KNOCKDOWN",
+	9: "PRESSURE",
+	10: "RECOVER",
 }
 
 const WARRIOR_BLOCK_PHASE_NAMES := {
@@ -117,7 +119,7 @@ func _load_fresh_level() -> void:
 
 func _scenario_approach_pressure() -> Dictionary:
 	_place_player_relative_to_lizard(-220.0)
-	await _observe_for(2.8)
+	await _observe_for(4.2)
 
 	return {
 		"player_hp": _get_player_health(),

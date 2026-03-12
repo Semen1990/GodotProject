@@ -450,7 +450,7 @@ func attack():
 	handle_animations()
 
 
-func take_damage(amount: int, damage_type: String = "physical", source: String = "Р СњР ВµР С‘Р В·Р Р†Р ВµРЎРѓРЎвЂљР Р…Р С•"):
+func take_damage(amount: int, damage_type: String = "physical", source: String = "Р СњР ВµР С‘Р В·Р Р†Р ВµРЎРѓРЎвЂљР Р…Р С•", _reaction_hint: String = ""):
 	"""
 	Р СџР С•Р В»РЎС“РЎвЂЎР ВµР Р…Р С‘Р Вµ РЎС“РЎР‚Р С•Р Р…Р В°.
 	

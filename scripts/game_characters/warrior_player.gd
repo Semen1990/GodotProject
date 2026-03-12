@@ -45,9 +45,12 @@ const SLIDE_CORE_POSE_START_TIME: float = 0.16
 const SLIDE_CORE_POSE_TOGGLE_TIME: float = 0.09
 
 const LIGHT_HIT_LOCK: float = 0.08
-const HURT_LOCK: float = 0.22
-const HEAVY_LOCK: float = 0.38
-const HEAVY_PUSHBACK: float = 180.0
+const HURT_LOCK: float = 0.20
+const HEAVY_LOCK: float = 0.48
+const MEDIUM_HURT_SPEED_SCALE: float = 1.75
+const HEAVY_HURT_SPEED_SCALE: float = 1.0
+const HEAVY_PUSHBACK: float = 210.0
+const HEAVY_PUSHBACK_DECAY: float = 520.0
 
 var warrior_base_armor: int = 2
 var base_armor: int = 2
@@ -75,6 +78,7 @@ var block_audio_player: AudioStreamPlayer2D = null
 
 var reaction_lock_timer: float = 0.0
 var current_hit_reaction: int = HitReaction.LIGHT
+var hurt_animation_speed_scale: float = 1.0
 var is_sneaking: bool = false
 var sneak_mode_enabled: bool = false
 var crouch_phase: int = CrouchPhase.NONE
@@ -129,6 +133,9 @@ func _physics_process(delta: float) -> void:
 		reaction_lock_timer = maxf(0.0, reaction_lock_timer - delta)
 		if reaction_lock_timer <= 0.0:
 			is_hurt = false
+			hurt_animation_speed_scale = 1.0
+			if animated_sprite:
+				animated_sprite.speed_scale = 1.0
 
 	_update_block_state(delta)
 	_update_slide_state(delta)
@@ -153,7 +160,10 @@ func handle_movement(delta: float) -> void:
 
 	if reaction_lock_timer > 0.0:
 		_cancel_sneak_mode()
-		velocity.x = move_toward(velocity.x, 0.0, friction * delta * 0.75)
+		if current_hit_reaction == HitReaction.HEAVY:
+			velocity.x = move_toward(velocity.x, 0.0, HEAVY_PUSHBACK_DECAY * delta)
+		else:
+			velocity.x = move_toward(velocity.x, 0.0, friction * delta * 0.75)
 		return
 
 	if is_attacking or block_phase != BlockPhase.NONE or (is_casting and not is_using_consumable):
@@ -215,8 +225,13 @@ func handle_animations() -> void:
 		return
 
 	if is_hurt:
+		if animated_sprite:
+			animated_sprite.speed_scale = hurt_animation_speed_scale
 		play_animation("hurt")
 		return
+
+	if animated_sprite:
+		animated_sprite.speed_scale = 1.0
 
 	if crouch_phase != CrouchPhase.NONE:
 		play_animation("crouch")
@@ -340,7 +355,7 @@ func slide() -> void:
 	_update_slide_visual()
 
 
-func take_damage(amount: int, damage_type: String = "physical", source: String = "Неизвестно") -> void:
+func take_damage(amount: int, damage_type: String = "physical", source: String = "Неизвестно", reaction_hint: String = "") -> void:
 	if is_dead:
 		return
 	if slide_iframe_active:
@@ -369,7 +384,7 @@ func take_damage(amount: int, damage_type: String = "physical", source: String =
 		Global.add_damage_taken(final_damage)
 	health_changed.emit(current_health)
 	_show_damage_effect()
-	var reaction_type: int = _classify_hit_reaction(final_damage)
+	var reaction_type: int = _classify_hit_reaction(final_damage, reaction_hint)
 	_apply_hit_reaction(reaction_type)
 	damage_received.emit(final_damage, _reaction_type_to_tag(reaction_type))
 
@@ -475,11 +490,25 @@ func _set_enemy_slide_collision_enabled(enabled: bool) -> void:
 
 
 func _can_successfully_block() -> bool:
+	if not _is_attack_in_front():
+		return false
 	if block_phase == BlockPhase.ACTIVE and is_block_active:
 		return true
 	if block_phase == BlockPhase.STARTUP and block_phase_timer <= BLOCK_EARLY_GRACE_TIME:
 		return true
 	return false
+
+
+func _is_attack_in_front() -> bool:
+	if last_incoming_attacker == null or not is_instance_valid(last_incoming_attacker):
+		return true
+
+	var relative_x: float = last_incoming_attacker.global_position.x - global_position.x
+	if absf(relative_x) <= 4.0:
+		return true
+
+	var facing_dir: float = _get_facing_direction()
+	return signf(relative_x) == facing_dir
 
 
 func _resolve_blocked_damage(amount: int) -> int:
@@ -503,7 +532,17 @@ func _register_successful_block() -> void:
 	last_incoming_attacker = null
 
 
-func _classify_hit_reaction(final_damage: int) -> int:
+func _classify_hit_reaction(final_damage: int, reaction_hint: String = "") -> int:
+	match reaction_hint:
+		"light":
+			return HitReaction.LIGHT
+		"hurt", "medium":
+			return HitReaction.HURT
+		"heavy":
+			return HitReaction.HEAVY
+		_:
+			pass
+
 	if final_damage <= 1:
 		return HitReaction.LIGHT
 	if final_damage >= 4:
@@ -515,19 +554,21 @@ func _apply_hit_reaction(reaction_type: int) -> void:
 	current_hit_reaction = reaction_type
 	match reaction_type:
 		HitReaction.LIGHT:
+			hurt_animation_speed_scale = 1.0
 			reaction_lock_timer = maxf(reaction_lock_timer, LIGHT_HIT_LOCK)
 		HitReaction.HURT:
+			hurt_animation_speed_scale = MEDIUM_HURT_SPEED_SCALE
 			reaction_lock_timer = maxf(reaction_lock_timer, HURT_LOCK)
 			if not is_hurt:
 				is_hurt = true
 				play_animation("hurt")
 		HitReaction.HEAVY:
+			hurt_animation_speed_scale = HEAVY_HURT_SPEED_SCALE
 			reaction_lock_timer = maxf(reaction_lock_timer, HEAVY_LOCK)
 			if not is_hurt:
 				is_hurt = true
 				play_animation("hurt")
-			var facing_dir: float = _get_facing_direction()
-			velocity.x = -facing_dir * HEAVY_PUSHBACK
+			velocity.x = _get_heavy_pushback_velocity()
 
 
 func _reaction_type_to_tag(reaction_type: int) -> String:
@@ -641,6 +682,14 @@ func _show_block_flash() -> void:
 	var tween := create_tween()
 	animated_sprite.modulate = Color(1.8, 1.8, 2.2, 1.0)
 	tween.tween_property(animated_sprite, "modulate", Color.WHITE, 0.12)
+
+
+func _get_heavy_pushback_velocity() -> float:
+	if last_incoming_attacker and is_instance_valid(last_incoming_attacker):
+		var attacker_side: float = signf(last_incoming_attacker.global_position.x - global_position.x)
+		if attacker_side != 0.0:
+			return -attacker_side * HEAVY_PUSHBACK
+	return -_get_facing_direction() * HEAVY_PUSHBACK
 
 
 func register_incoming_attacker(attacker: Node2D) -> void:
