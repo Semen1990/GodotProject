@@ -9,6 +9,14 @@
 [ext_resource type="Texture2D" uid="uid://u22rhspkmfj1" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_6.png" id="7_ikrq4"]
 [ext_resource type="Texture2D" uid="uid://pad5u83oyoju" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_7.png" id="8_r02wp"]
 [ext_resource type="Texture2D" uid="uid://bsuf8013l7dge" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_8.png" id="9_jqnn6"]
+[ext_resource type="Texture2D" uid="uid://bajqo8tb52cs8" path="res://assets/enemies/Famously/Hurt/Bringer-of-Death_Hurt_1.png" id="10_4sk3y"]
+[ext_resource type="Texture2D" uid="uid://der8434nibimu" path="res://assets/enemies/Famously/Hurt/Bringer-of-Death_Hurt_2.png" id="11_gee87"]
+[ext_resource type="Texture2D" uid="uid://ck7biva1x0ysv" path="res://assets/enemies/Famously/Hurt/Bringer-of-Death_Hurt_3.png" id="12_khvev"]
+[ext_resource type="Texture2D" uid="uid://bfcd56pookld7" path="res://assets/enemies/Famously/Death/Bringer-of-Death_Death_6.png" id="13_j6ghm"]
+[ext_resource type="Texture2D" uid="uid://bfyfex5pnf2h5" path="res://assets/enemies/Famously/Death/Bringer-of-Death_Death_7.png" id="14_vfc32"]
+[ext_resource type="Texture2D" uid="uid://dbwfh78ekc7sg" path="res://assets/enemies/Famously/Death/Bringer-of-Death_Death_8.png" id="15_x5elu"]
+[ext_resource type="Texture2D" uid="uid://w6i4ieuc8ydi" path="res://assets/enemies/Famously/Death/Bringer-of-Death_Death_9.png" id="16_dqjku"]
+[ext_resource type="Texture2D" uid="uid://cl4jlyp5g3wuh" path="res://assets/enemies/Famously/Death/Bringer-of-Death_Death_10.png" id="17_3yy2t"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_famously"]
 animations = [{
@@ -40,6 +48,58 @@ animations = [{
 "loop": true,
 "name": &"idle",
 "speed": 7.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("10_4sk3y")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_gee87")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_khvev")
+}],
+"loop": false,
+"name": &"stun",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_8su4f")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_j6ghm")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_vfc32")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_x5elu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_dqjku")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_3yy2t")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_dqjku")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_x5elu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_vfc32")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_j6ghm")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_jqnn6")
+}],
+"loop": false,
+"name": &"teleport",
+"speed": 5.0
 }]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_famously_body"]
@@ -54,6 +114,8 @@ position = Vector2(0, -1)
 collision_layer = 4
 collision_mask = 3
 script = ExtResource("1_famously_script")
+visual_offset_when_facing_left = Vector2(81, -112.000015)
+visual_offset_when_facing_right = Vector2(-81, -112.000015)
 max_health = 12
 current_health = 12
 attack_damage = 2
@@ -61,25 +123,16 @@ move_speed = 84.0
 chase_speed = 96.0
 attack_range = 175.0
 detection_range = 310.0
+patrol_distance = 220.0
 attack_cooldown_time = 1.25
 minimum_distance_to_player = 44.0
 enable_patrol = true
-patrol_distance = 220.0
-cast_cooldown_time = 5.0
-melee_hit_range = 235.0
-melee_vertical_tolerance = 120.0
-engaged_detection_multiplier = 1.3
-engaged_cast_distance_multiplier = 1.3
-art_faces_left_by_default = false
-visual_offset_when_facing_left = Vector2(81, -112.000015)
-visual_offset_when_facing_right = Vector2(-81, -112.000015)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1907635945]
 position = Vector2(0, -112.000015)
 scale = Vector2(2.2178571, 2.3940861)
 sprite_frames = SubResource("SpriteFrames_famously")
-animation = &"idle"
-frame_progress = 0.5406001
+animation = &"teleport"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1550885699]
 position = Vector2(-1, -65)

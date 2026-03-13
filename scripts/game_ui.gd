@@ -1,7 +1,10 @@
 extends CanvasLayer
 
+const ENEMY_TARGET_HUD_SCENE := preload("res://scenes/Ui/enemy_target_hud.tscn")
+
 var stats_vbox: VBoxContainer
 var keys_hbox: HBoxContainer
+var enemy_target_hud: PanelContainer
 
 var health_container: VBoxContainer
 var health_bg: ColorRect
@@ -74,6 +77,7 @@ func _clear_runtime_ui() -> void:
 
 	stats_vbox = null
 	keys_hbox = null
+	enemy_target_hud = null
 	health_container = null
 	health_bg = null
 	health_trail_bar = null
@@ -110,6 +114,7 @@ func _create_all_ui() -> void:
 	_create_mana_ui()
 	_create_ability_ui()
 	_create_keys_ui()
+	_create_enemy_target_ui()
 
 
 func _create_health_ui() -> void:
@@ -354,6 +359,40 @@ func _update_keys_position() -> void:
 		return
 	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
 	keys_hbox.position = Vector2(viewport_size.x - 280, 20)
+	_update_enemy_target_position()
+
+
+func _create_enemy_target_ui() -> void:
+	if ENEMY_TARGET_HUD_SCENE == null:
+		return
+
+	enemy_target_hud = ENEMY_TARGET_HUD_SCENE.instantiate() as PanelContainer
+	if enemy_target_hud == null:
+		return
+
+	enemy_target_hud.visible = false
+	add_child(enemy_target_hud)
+	_update_enemy_target_position()
+
+
+func _update_enemy_target_position() -> void:
+	if enemy_target_hud == null or keys_hbox == null:
+		return
+
+	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
+	var hud_size: Vector2 = enemy_target_hud.size
+	if hud_size.x <= 0.0 or hud_size.y <= 0.0:
+		hud_size = enemy_target_hud.get_combined_minimum_size()
+
+	var key_height: float = maxf(keys_hbox.size.y, keys_hbox.get_combined_minimum_size().y)
+	var key_width: float = maxf(keys_hbox.size.x, keys_hbox.get_combined_minimum_size().x)
+	var right_edge: float = keys_hbox.position.x + key_width
+	var target_x: float = right_edge - hud_size.x
+	target_x = clampf(target_x, 20.0, viewport_size.x - hud_size.x - 20.0)
+	enemy_target_hud.position = Vector2(
+		target_x,
+		keys_hbox.position.y + key_height + 14.0
+	)
 
 
 func _process(_delta: float) -> void:
@@ -363,6 +402,7 @@ func _process(_delta: float) -> void:
 		var target_x: float = viewport_size.x - 280
 		if absf(keys_hbox.position.x - target_x) > 10.0:
 			keys_hbox.position.x = target_x
+	_update_enemy_target_position()
 
 
 func setup_character_ui(stats: Dictionary) -> void:
@@ -607,6 +647,26 @@ func update_single_key(color_index: int, count: int) -> void:
 	if color_index >= 0 and color_index < key_labels.size():
 		key_labels[color_index].text = str(count)
 		_update_key_visual(color_index, count)
+
+
+func show_enemy_target(snapshot: Dictionary, show_exact_health: bool = false) -> void:
+	if enemy_target_hud == null or not enemy_target_hud.has_method("show_target"):
+		return
+	enemy_target_hud.show_target(snapshot, show_exact_health)
+	_update_enemy_target_position()
+
+
+func update_enemy_target(snapshot: Dictionary, show_exact_health: bool = false) -> void:
+	if enemy_target_hud == null or not enemy_target_hud.has_method("update_target"):
+		return
+	enemy_target_hud.update_target(snapshot, show_exact_health)
+	_update_enemy_target_position()
+
+
+func hide_enemy_target() -> void:
+	if enemy_target_hud == null or not enemy_target_hud.has_method("hide_target"):
+		return
+	enemy_target_hud.hide_target()
 
 
 func set_ability_icon(icon_path: String) -> void:

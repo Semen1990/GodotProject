@@ -15,6 +15,7 @@ signal mana_changed(new_mana: int)
 signal armor_changed(new_armor: int)
 signal madness_changed(new_stacks: int, max_stacks: int)
 signal damage_received(final_damage: int, reaction_tag: String)
+signal combat_action_performed(action_name: String, payload: Dictionary)
 signal died()
 signal revived()
 

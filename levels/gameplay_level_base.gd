@@ -58,6 +58,7 @@ var equipment_bonus_damage: int = 0
 
 var potion_bonus_armor: int = 0
 var potion_bonus_damage: int = 0
+var current_enemy_ui_target: Node = null
 
 
 func _ready() -> void:
@@ -82,6 +83,7 @@ func _ready() -> void:
 	_spawn_selected_character()
 	_setup_level_after_player_spawn()
 	_setup_encounter_zones()
+	_setup_enemy_target_ui_tracking()
 
 	if Global and game_ui:
 		Global.register_game_ui(game_ui)
@@ -170,10 +172,16 @@ func _register_room_visit(is_new_game: bool) -> void:
 	if Global:
 		Global.last_room_path = room_id
 
+	var already_visited: bool = RunState != null and RunState.is_room_visited(room_id)
+	var is_new_room: bool = is_new_game or not already_visited
+	if RunCombatTelemetry:
+		RunCombatTelemetry.record_room_visit(room_id, is_new_room)
+	if EnemyAdaptationDirector:
+		EnemyAdaptationDirector.refresh_for_room(room_id)
+
 	if RunState == null:
 		return
 
-	var already_visited: bool = RunState.is_room_visited(room_id)
 	if is_new_game:
 		RunState.mark_room_visited(room_id)
 		return
@@ -191,6 +199,10 @@ func _register_room_visit(is_new_game: bool) -> void:
 func _start_new_run() -> void:
 	if Inventory:
 		Inventory.clear_all()
+	if RunCombatTelemetry:
+		RunCombatTelemetry.reset_run()
+	if EnemyAdaptationDirector:
+		EnemyAdaptationDirector.reset_run()
 	if Global:
 		Global.start_run()
 
@@ -281,6 +293,8 @@ func _ensure_game_ui() -> void:
 
 	if game_ui and game_ui.has_method("rebuild_ui"):
 		game_ui.rebuild_ui()
+		if game_ui.has_method("hide_enemy_target"):
+			game_ui.hide_enemy_target()
 
 
 func _find_existing_game_ui() -> CanvasLayer:
@@ -487,6 +501,7 @@ func _spawn_selected_character() -> void:
 	_connect_player_lifecycle_signals()
 	_setup_consumable_use_controller()
 	_after_player_spawned()
+	call_deferred("_refresh_adaptation_state")
 	call_deferred("_restore_player_stats")
 
 
@@ -545,6 +560,112 @@ func _connect_player_lifecycle_signals() -> void:
 
 	if current_player.has_signal("revived") and not current_player.revived.is_connected(_on_player_revived):
 		current_player.revived.connect(_on_player_revived)
+
+	if current_player.has_signal("damage_received") and not current_player.damage_received.is_connected(_on_player_damage_received):
+		current_player.damage_received.connect(_on_player_damage_received)
+
+	if current_player.has_signal("combat_action_performed") and not current_player.combat_action_performed.is_connected(_on_player_combat_action_performed):
+		current_player.combat_action_performed.connect(_on_player_combat_action_performed)
+
+
+func _setup_enemy_target_ui_tracking() -> void:
+	_clear_current_enemy_ui_target()
+	for enemy in _get_scene_enemies_for_ui():
+		_connect_enemy_ui_signals(enemy)
+
+
+func _get_scene_enemies_for_ui() -> Array[Node]:
+	var enemies: Array[Node] = []
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return enemies
+
+	for node in tree.get_nodes_in_group(ENCOUNTER_ENEMY_GROUP):
+		var enemy: Node = node as Node
+		if enemy == null:
+			continue
+		if not is_instance_valid(enemy) or not enemy.is_inside_tree():
+			continue
+		if not self.is_ancestor_of(enemy):
+			continue
+		enemies.append(enemy)
+
+	return enemies
+
+
+func _connect_enemy_ui_signals(enemy: Node) -> void:
+	if enemy == null or not is_instance_valid(enemy):
+		return
+
+	if enemy.has_signal("ui_target_requested") and not enemy.ui_target_requested.is_connected(_on_enemy_ui_target_requested):
+		enemy.ui_target_requested.connect(_on_enemy_ui_target_requested)
+
+	if enemy.has_signal("enemy_ui_changed"):
+		var changed_callback := Callable(self, "_on_enemy_ui_changed").bind(enemy)
+		if not enemy.enemy_ui_changed.is_connected(changed_callback):
+			enemy.enemy_ui_changed.connect(changed_callback)
+
+	if enemy.has_signal("died"):
+		var died_callback := Callable(self, "_on_enemy_ui_target_died").bind(enemy)
+		if not enemy.died.is_connected(died_callback):
+			enemy.died.connect(died_callback)
+
+
+func _on_enemy_ui_target_requested(enemy: Node) -> void:
+	_set_current_enemy_ui_target(enemy)
+
+
+func _on_enemy_ui_changed(_snapshot: Dictionary, enemy: Node) -> void:
+	if enemy != current_enemy_ui_target:
+		return
+	_refresh_enemy_target_ui()
+
+
+func _on_enemy_ui_target_died(enemy: Node) -> void:
+	if enemy == current_enemy_ui_target:
+		_clear_current_enemy_ui_target()
+
+
+func _set_current_enemy_ui_target(enemy: Node) -> void:
+	if not _is_valid_enemy_ui_target(enemy):
+		return
+	current_enemy_ui_target = enemy
+	_refresh_enemy_target_ui()
+
+
+func _clear_current_enemy_ui_target() -> void:
+	current_enemy_ui_target = null
+	if game_ui and game_ui.has_method("hide_enemy_target"):
+		game_ui.hide_enemy_target()
+
+
+func _refresh_enemy_target_ui() -> void:
+	if game_ui == null or not game_ui.has_method("show_enemy_target"):
+		return
+	if not _is_valid_enemy_ui_target(current_enemy_ui_target):
+		_clear_current_enemy_ui_target()
+		return
+	if not current_enemy_ui_target.has_method("get_enemy_ui_snapshot"):
+		return
+
+	var snapshot: Dictionary = current_enemy_ui_target.get_enemy_ui_snapshot()
+	game_ui.show_enemy_target(snapshot, _should_show_exact_enemy_health())
+
+
+func _is_valid_enemy_ui_target(enemy: Node) -> bool:
+	if enemy == null or not is_instance_valid(enemy):
+		return false
+	if not enemy.is_inside_tree():
+		return false
+	if not self.is_ancestor_of(enemy):
+		return false
+	if "is_alive" in enemy and not bool(enemy.is_alive):
+		return false
+	return true
+
+
+func _should_show_exact_enemy_health() -> bool:
+	return false
 
 
 func _setup_consumable_use_controller() -> void:
@@ -802,6 +923,8 @@ func _on_consumable_use_completed(payload: Dictionary) -> void:
 		})
 
 	Inventory.set_potion_global_cooldown(POTION_GLOBAL_COOLDOWN)
+	if RunCombatTelemetry:
+		RunCombatTelemetry.record_potion_use(_get_potion_telemetry_kind(payload), _get_room_progression_id())
 	_clear_pending_consumable_use()
 
 
@@ -961,10 +1084,13 @@ func _on_equipment_stats_changed(stats: Dictionary) -> void:
 	if "current_speed" in current_player:
 		current_player.current_speed = base_player_speed + int(round(base_player_speed * equipment_bonus_speed / 100.0))
 
+	call_deferred("_refresh_adaptation_state")
+
 
 func _on_equipment_changed(_slot = null, _old_item = null, _new_item = null) -> void:
 	_update_revival_artifact_status()
 	_update_double_jump_artifact()
+	call_deferred("_refresh_adaptation_state")
 
 
 func _update_revival_artifact_status() -> void:
@@ -1077,6 +1203,54 @@ func _clear_level_potion_effects() -> void:
 
 	if "current_damage" in current_player:
 		current_player.current_damage = base_player_damage + equipment_bonus_damage
+
+
+func _get_potion_telemetry_kind(payload: Dictionary) -> String:
+	if int(payload.get("consumable_type", -1)) == int(InventoryEnums.ConsumableType.POTION_BUFF):
+		return "buff"
+
+	match String(payload.get("instant_kind", "")):
+		POTION_KIND_HP:
+			return "hp"
+		POTION_KIND_MANA:
+			return "mana"
+		_:
+			return "buff"
+
+
+func _on_player_damage_received(final_damage: int, reaction_tag: String) -> void:
+	if RunCombatTelemetry:
+		RunCombatTelemetry.record_damage_taken("physical", final_damage, reaction_tag, {
+			"room_id": _get_room_progression_id(),
+		})
+
+
+func _on_player_combat_action_performed(action_name: String, payload: Dictionary) -> void:
+	match action_name:
+		"damage_dealt":
+			if RunCombatTelemetry:
+				RunCombatTelemetry.record_damage_dealt(String(payload.get("damage_type", "physical")), int(payload.get("amount", 0)), payload)
+			var target_node: Node = payload.get("target_node", null) as Node
+			if target_node != null:
+				_set_current_enemy_ui_target(target_node)
+		_:
+			if RunCombatTelemetry:
+				RunCombatTelemetry.record_combat_action(action_name, payload)
+
+
+func _refresh_adaptation_state() -> void:
+	var room_id: String = _get_room_progression_id()
+	_capture_current_build_snapshot(room_id)
+	if EnemyAdaptationDirector:
+		EnemyAdaptationDirector.refresh_for_room(room_id)
+
+
+func _capture_current_build_snapshot(room_id: String = "") -> void:
+	if not current_player or not Inventory or not RunCombatTelemetry:
+		return
+
+	var resolved_room_id: String = room_id if not room_id.is_empty() else _get_room_progression_id()
+	RunCombatTelemetry.capture_build_snapshot(resolved_room_id, current_player, Inventory)
 
 func _create_fallback_player() -> void:
 	var fallback: CharacterBody2D = CharacterBody2D.new()

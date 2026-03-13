@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "styles": {
+    "armor_focus": {
+      "activate_after_new_rooms": 10,
+      "ramp_rooms": 4,
+      "threshold": 0.55,
+      "enemy_tags": [
+        "armor_pierce_candidate"
+      ],
+      "loot_bias": {
+        "guard": 0.45,
+        "dodge": 0.35,
+        "parry": 0.2
+      }
+    },
+    "block_focus": {
+      "activate_after_new_rooms": 8,
+      "ramp_rooms": 3,
+      "threshold": 0.45,
+      "enemy_tags": [
+        "guard_break_candidate"
+      ],
+      "loot_bias": {
+        "dodge": 0.4,
+        "parry": 0.35,
+        "control": 0.25
+      }
+    },
+    "backstab_focus": {
+      "activate_after_new_rooms": 6,
+      "ramp_rooms": 3,
+      "threshold": 0.4,
+      "enemy_tags": [
+        "anti_backstab_candidate"
+      ],
+      "loot_bias": {
+        "frontloaded_damage": 0.35,
+        "control": 0.35,
+        "guard": 0.3
+      }
+    },
+    "potion_reliance": {
+      "activate_after_new_rooms": 8,
+      "ramp_rooms": 3,
+      "threshold": 0.45,
+      "enemy_tags": [
+        "anti_potion_candidate"
+      ],
+      "loot_bias": {
+        "guard": 0.35,
+        "dodge": 0.35,
+        "parry": 0.3
+      }
+    },
+    "fire_focus": {
+      "activate_after_new_rooms": 10,
+      "ramp_rooms": 4,
+      "threshold": 0.3,
+      "enemy_tags": [
+        "fire_resist_candidate"
+      ],
+      "loot_bias": {
+        "ice": 0.45,
+        "poison": 0.25,
+        "physical": 0.3
+      }
+    },
+    "ice_focus": {
+      "activate_after_new_rooms": 10,
+      "ramp_rooms": 4,
+      "threshold": 0.3,
+      "enemy_tags": [
+        "ice_resist_candidate"
+      ],
+      "loot_bias": {
+        "fire": 0.45,
+        "poison": 0.25,
+        "physical": 0.3
+      }
+    },
+    "poison_focus": {
+      "activate_after_new_rooms": 10,
+      "ramp_rooms": 4,
+      "threshold": 0.3,
+      "enemy_tags": [
+        "poison_resist_candidate"
+      ],
+      "loot_bias": {
+        "fire": 0.25,
+        "ice": 0.25,
+        "physical": 0.5
+      }
+    },
+    "madness_focus": {
+      "activate_after_new_rooms": 10,
+      "ramp_rooms": 4,
+      "threshold": 0.3,
+      "enemy_tags": [
+        "madness_resist_candidate"
+      ],
+      "loot_bias": {
+        "physical": 0.45,
+        "control": 0.3,
+        "guard": 0.25
+      }
+    }
+  }
+}

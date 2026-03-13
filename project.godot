@@ -17,7 +17,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Castle 4.6"
-run/main_scene="res://scenes/Ui/main_menu.tscn"
+run/main_scene="uid://cyba2cbpi2wmd"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -26,6 +26,8 @@ config/icon="res://icon.svg"
 RunState="*res://autoload/RunState.gd"
 Global="*res://autoload/Global.gd"
 Inventory="*res://autoload/inventory_manager.gd"
+RunCombatTelemetry="*res://autoload/RunCombatTelemetry.gd"
+EnemyAdaptationDirector="*res://autoload/EnemyAdaptationDirector.gd"
 
 [display]
 

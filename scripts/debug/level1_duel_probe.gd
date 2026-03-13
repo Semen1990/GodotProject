@@ -58,7 +58,9 @@ func _run_all_scenarios() -> void:
 
 	reports.append(await _run_scenario("approach_pressure", _scenario_approach_pressure))
 	reports.append(await _run_scenario("block_counter", _scenario_block_counter))
+	reports.append(await _run_scenario("parry_window", _scenario_parry_window))
 	reports.append(await _run_scenario("slide_cross", _scenario_slide_cross))
+	reports.append(await _run_scenario("back_hit_heavy", _scenario_back_hit_heavy))
 	reports.append(await _run_scenario("sneak_backstab", _scenario_sneak_backstab))
 
 	print("")
@@ -153,6 +155,23 @@ func _scenario_block_counter() -> Dictionary:
 	}
 
 
+func _scenario_parry_window() -> Dictionary:
+	_place_player_relative_to_lizard(-102.0)
+	await _observe_for(0.45)
+
+	for attempt in range(4):
+		player.attack()
+		_log_event("probe -> warrior.attack() parry attempt %d" % (attempt + 1))
+		await _observe_for(0.8)
+
+	return {
+		"player_hp": _get_player_health(),
+		"lizard_hp": _get_lizard_health(),
+		"lizard_state_end": _lizard_state_name(),
+		"lizard_anim_end": _get_lizard_animation(),
+	}
+
+
 func _scenario_slide_cross() -> Dictionary:
 	_place_player_relative_to_lizard(-96.0)
 	await _observe_for(0.25)
@@ -166,6 +185,24 @@ func _scenario_slide_cross() -> Dictionary:
 		"player_x": snapped(player.global_position.x, 0.1),
 		"lizard_x": snapped(lizard.global_position.x, 0.1),
 		"distance": snapped(player.global_position.distance_to(lizard.global_position), 0.1),
+	}
+
+
+func _scenario_back_hit_heavy() -> Dictionary:
+	_place_player_relative_to_lizard(96.0)
+	var animated_sprite: AnimatedSprite2D = player.get_node_or_null("AnimatedSprite2D")
+	if animated_sprite:
+		animated_sprite.flip_h = false
+	_log_event("probe -> force warrior facing right for back-hit check")
+	var player_start_x: float = player.global_position.x
+	await _observe_for(2.2)
+
+	return {
+		"player_hp": _get_player_health(),
+		"player_x": snapped(player.global_position.x, 0.1),
+		"player_start_x": snapped(player_start_x, 0.1),
+		"player_knockback_delta": snapped(player.global_position.x - player_start_x, 0.1),
+		"lizard_x": snapped(lizard.global_position.x, 0.1),
 	}
 
 

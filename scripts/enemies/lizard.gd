@@ -3,6 +3,8 @@ extends CharacterBody2D
 signal died()
 signal health_changed(new_health)
 signal repeat_potion_blocking_changed(is_blocking)
+signal ui_target_requested(enemy: Node)
+signal enemy_ui_changed(snapshot: Dictionary)
 
 @export_enum("simple", "elite", "boss") var enemy_type: String = "simple"
 @export var blocks_repeat_potions: bool = true
@@ -11,11 +13,14 @@ signal repeat_potion_blocking_changed(is_blocking)
 @export var max_health: int = 20
 @export var current_health: int = 20
 @export var damage: int = 5
+@export var armor: int = 0
 @export var move_speed: float = 100.0
 @export var chase_speed: float = 120.0
 @export var attack_range: float = 120.0
 @export var detection_range: float = 150.0
 @export var patrol_distance: float = 100.0
+@export var ui_display_name: String = "Ящер-копейщик"
+@export var ui_icon_texture: Texture2D
 
 enum State { IDLE, PATROL, CHASE, ATTACK, HURT, DEAD, RETREAT, PARRY, KNOCKDOWN, PRESSURE, RECOVER }
 enum AttackProfile { NORMAL, PUNISH_RUSH, PUNISH_HEAVY }
@@ -36,8 +41,8 @@ const COMBO_CHAIN_DELAY_TIME: float = 0.12
 const NORMAL_COMBO_RECOVER_TIME: float = 0.82
 const COMBO_FATIGUE_RECOVER_TIME: float = 0.96
 const COMBO_FATIGUE_COOLDOWN_TIME: float = 1.18
-const COMBO_FATIGUE_RETREAT_CHANCE: float = 0.60
-const COMBO_FATIGUE_HOLD_CHANCE: float = 0.25
+const COMBO_FATIGUE_RETREAT_CHANCE: float = 0.30
+const COMBO_FATIGUE_HOLD_CHANCE: float = 0.15
 const RETREAT_TIME_MIN: float = 0.88
 const RETREAT_TIME_MAX: float = 1.16
 const RETREAT_MIN_COMMIT_TIME: float = 0.72
@@ -48,7 +53,11 @@ const PARRY_ACTIVE_TIME: float = 2.00
 const PARRY_RECOVER_TIME: float = 0.30
 const PARRY_COOLDOWN_TIME: float = 3.8
 const PARRY_TRIGGER_DISTANCE: float = 136.0
-const PARRY_TRIGGER_CHANCE: float = 0.70
+const PARRY_TRIGGER_CHANCE: float = 1.0
+const PARRY_ICON_PATH: String = "res://assets/Spell/shield_defence.png"
+const SEARCH_IDLE_TIME_MIN: float = 3.0
+const SEARCH_IDLE_TIME_MAX: float = 4.0
+const ENGAGED_DETECTION_RANGE_MULTIPLIER: float = 2.0
 const ALERT_RUSH_SPEED_MULTIPLIER: float = 2.6
 const PLAYER_GUARD_FEEDBACK_TIME: float = 1.2
 const BACKSTAB_KNOCKDOWN_DEFAULT: float = 0.95
@@ -111,11 +120,17 @@ var heavy_attack_pause_active: bool = false
 var heavy_attack_pause_used: bool = false
 var heavy_attack_pause_timer: float = 0.0
 var queued_counter_is_heavy: bool = false
+var parry_indicator: Sprite2D = null
 var parry_visual_cue_shown: bool = false
+var question_indicator_root: Node2D = null
+var question_indicator_labels: Array[Label] = []
+var is_searching_for_player: bool = false
+var base_detection_radius: float = 0.0
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var detection_area: Area2D = $DetectionArea
+@onready var detection_shape: CollisionShape2D = $DetectionArea/CollisionShape2D
 
 
 func _ready() -> void:
@@ -135,6 +150,9 @@ func _ready() -> void:
 		if not animated_sprite.frame_changed.is_connected(_on_frame_changed):
 			animated_sprite.frame_changed.connect(_on_frame_changed)
 
+	_setup_parry_indicator()
+	_setup_question_indicator()
+	_cache_detection_radius()
 	_ensure_persistence()
 	_configure_persistence()
 
@@ -143,8 +161,10 @@ func _ready() -> void:
 		apply_persistent_state(saved_state)
 		if not is_alive:
 			return
+		_set_engaged_detection_range_enabled(has_engaged_player)
 		return
 
+	_set_engaged_detection_range_enabled(has_engaged_player)
 	_change_state(State.IDLE)
 
 
@@ -214,7 +234,7 @@ func _physics_process(delta: float) -> void:
 	if parry_cooldown > 0.0:
 		parry_cooldown = maxf(0.0, parry_cooldown - delta)
 
-	if target == null or not is_instance_valid(target) or target.get("is_attacking") != true:
+	if not _is_target_attack_pressure_active():
 		target_attack_latched = false
 
 	if engage_rush_timer > 0.0:
@@ -281,6 +301,8 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector2.ZERO
 			return
 
+	_update_parry_indicator_visual()
+	_update_question_indicator_visual()
 	move_and_slide()
 
 
@@ -324,6 +346,9 @@ func load_state(state: Dictionary) -> void:
 		animated_sprite.modulate = Color.WHITE
 
 	health_changed.emit(current_health)
+	_emit_enemy_ui_snapshot()
+	_clear_searching_for_player()
+	_set_engaged_detection_range_enabled(has_engaged_player)
 
 	var saved_state: int = int(state.get("current_state", State.IDLE))
 	current_state = State.IDLE
@@ -368,20 +393,25 @@ func _change_state(new_state: State) -> void:
 		State.IDLE:
 			_play_anim("idle")
 			velocity.x = 0.0
-			idle_timer = IDLE_TIME
+			idle_timer = randf_range(SEARCH_IDLE_TIME_MIN, SEARCH_IDLE_TIME_MAX) if is_searching_for_player else IDLE_TIME
+			_set_question_indicator_visible(is_searching_for_player)
 		State.PATROL:
+			_set_question_indicator_visible(false)
 			if animated_sprite:
 				animated_sprite.speed_scale = 1.0
 			_play_anim("walk")
 		State.CHASE:
+			_set_question_indicator_visible(false)
 			if animated_sprite:
 				animated_sprite.speed_scale = 1.1
 			_play_anim("walk")
 		State.PRESSURE:
+			_set_question_indicator_visible(false)
 			pressure_timer = randf_range(PRESSURE_REEVALUATE_MIN, PRESSURE_REEVALUATE_MAX)
 			velocity.x = 0.0
 			_play_anim("walk")
 		State.ATTACK:
+			_set_question_indicator_visible(false)
 			velocity.x = 0.0
 			damage_dealt_this_attack = false
 			attack_elapsed = 0.0
@@ -394,6 +424,7 @@ func _change_state(new_state: State) -> void:
 				animated_sprite.speed_scale = _get_attack_speed_scale()
 			_play_anim("attack")
 		State.RETREAT:
+			_set_question_indicator_visible(false)
 			retreat_timer = randf_range(RETREAT_TIME_MIN, RETREAT_TIME_MAX)
 			retreat_commit_timer = RETREAT_MIN_COMMIT_TIME
 			retreat_target_side = 0
@@ -404,29 +435,39 @@ func _change_state(new_state: State) -> void:
 				animated_sprite.speed_scale = 1.1
 			_play_anim("Back away")
 		State.PARRY:
+			_set_question_indicator_visible(false)
 			parry_phase = ParryPhase.STARTUP
 			parry_timer = PARRY_STARTUP_TIME
-			parry_visual_cue_shown = false
 			velocity.x = 0.0
 			_face_target()
 			_play_anim("block")
+			parry_visual_cue_shown = false
+			_set_parry_indicator_visible(false)
 			if animated_sprite:
 				animated_sprite.speed_scale = 1.0
 				animated_sprite.stop()
 				animated_sprite.frame = 0
 		State.RECOVER:
+			_set_question_indicator_visible(false)
+			_set_parry_indicator_visible(false)
 			velocity.x = 0.0
 			if use_hurt_recover_pose:
 				_play_anim("hurt")
 			else:
 				_play_anim("idle")
 		State.HURT:
+			_set_question_indicator_visible(false)
+			_set_parry_indicator_visible(false)
 			_play_anim("hurt")
 			velocity.x = 0.0
 		State.KNOCKDOWN:
+			_set_question_indicator_visible(false)
+			_set_parry_indicator_visible(false)
 			velocity.x = 0.0
 			_play_anim(_get_knockdown_animation_name())
 		State.DEAD:
+			_set_question_indicator_visible(false)
+			_set_parry_indicator_visible(false)
 			_disable_collision()
 			_play_anim("death")
 			velocity = Vector2.ZERO
@@ -444,6 +485,8 @@ func _process_idle(delta: float) -> void:
 	velocity.x = 0.0
 	idle_timer -= delta
 	if idle_timer <= 0.0:
+		if is_searching_for_player:
+			_clear_searching_for_player()
 		_change_state(State.PATROL)
 
 
@@ -473,11 +516,11 @@ func _process_patrol() -> void:
 
 func _process_chase() -> void:
 	if not target or not is_instance_valid(target):
-		_change_state(State.PATROL)
+		_start_searching_for_player()
 		return
 	if target.get("is_dead") == true:
 		target = null
-		_change_state(State.PATROL)
+		_start_searching_for_player()
 		return
 
 	var dist: float = global_position.distance_to(target.global_position)
@@ -509,11 +552,11 @@ func _process_chase() -> void:
 
 func _process_pressure() -> void:
 	if not target or not is_instance_valid(target):
-		_change_state(State.PATROL)
+		_start_searching_for_player()
 		return
 	if target.get("is_dead") == true:
 		target = null
-		_change_state(State.PATROL)
+		_start_searching_for_player()
 		return
 
 	var dist: float = global_position.distance_to(target.global_position)
@@ -543,6 +586,10 @@ func _process_pressure() -> void:
 	if combo_hits_remaining > 0:
 		combo_hits_remaining = 0
 		_begin_combo_fatigue()
+		return
+
+	if dist <= PARRY_TRIGGER_DISTANCE and _should_enter_parry(dist):
+		_change_state(State.PARRY)
 		return
 
 	if dist <= attack_range + 18.0 and can_attack:
@@ -583,7 +630,7 @@ func _process_pressure() -> void:
 func _process_retreat() -> void:
 	if not target or not is_instance_valid(target) or target.get("is_dead") == true:
 		target = null
-		_change_state(State.PATROL)
+		_start_searching_for_player()
 		return
 
 	var dir_x: float = target.global_position.x - global_position.x
@@ -607,7 +654,7 @@ func _process_parry() -> void:
 	if not target or not is_instance_valid(target) or target.get("is_dead") == true:
 		queued_counter_combo = false
 		parry_phase = ParryPhase.NONE
-		_enter_recover(PARRY_RECOVER_TIME, false)
+		_start_searching_for_player()
 		return
 
 	velocity.x = 0.0
@@ -621,9 +668,9 @@ func _process_parry() -> void:
 			parry_phase = ParryPhase.ACTIVE
 			parry_timer = PARRY_ACTIVE_TIME
 			_hold_parry_frame(1)
-			if not parry_visual_cue_shown:
-				parry_visual_cue_shown = true
-				_show_combat_popup("Блок", Color(0.8, 0.95, 1.0, 1.0), 0.85)
+			parry_visual_cue_shown = true
+			_set_parry_indicator_visible(true)
+			return
 		ParryPhase.ACTIVE:
 			_hold_parry_frame(1)
 			if parry_timer > 0.0 and not queued_counter_combo:
@@ -633,6 +680,8 @@ func _process_parry() -> void:
 
 	parry_phase = ParryPhase.NONE
 	parry_visual_cue_shown = false
+	_set_parry_indicator_visible(false)
+	parry_timer = 0.0
 	parry_cooldown = PARRY_COOLDOWN_TIME
 	if queued_counter_combo:
 		queued_counter_combo = false
@@ -669,9 +718,12 @@ func _on_detection_entered(body: Node2D) -> void:
 		if body.has_method("is_hidden_from_enemy") and body.is_hidden_from_enemy(self):
 			return
 		target = body
+		_clear_searching_for_player()
 		if not has_engaged_player:
 			has_engaged_player = true
+			_set_engaged_detection_range_enabled(true)
 			repeat_potion_blocking_changed.emit(is_repeat_potion_blocker())
+		_request_ui_target()
 		engage_rush_timer = 0.65
 		combo_hits_remaining = 0
 		combo_continuation_pending = false
@@ -684,14 +736,7 @@ func _on_detection_exited(body: Node2D) -> void:
 	if not is_alive:
 		return
 	if body == target:
-		target = null
-		combo_hits_remaining = 0
-		combo_continuation_pending = false
-		queued_counter_combo = false
-		pending_post_combo_exit = PostComboExit.NONE
-		engage_rush_timer = 0.0
-		if current_state in [State.CHASE, State.PRESSURE, State.RETREAT, State.PARRY, State.RECOVER]:
-			_change_state(State.PATROL)
+		_start_searching_for_player()
 
 
 func _play_anim(anim_name: String) -> void:
@@ -788,7 +833,7 @@ func _deal_damage() -> void:
 		if _is_target_hit_in_back():
 			reaction_tag = "heavy"
 			total_damage = maxi(total_damage, int(round(damage * PUNISH_HEAVY_DAMAGE_MULTIPLIER)))
-			_show_combat_popup("Контратака", Color(1.0, 0.72, 0.32, 1.0), 0.85)
+			_show_combat_popup("Контратака", Color(1.0, 0.72, 0.32, 1.0), 0.95, 42.0, 1.08)
 		target.take_damage(total_damage, "physical", "Ящерица с копьём", reaction_tag)
 
 
@@ -802,13 +847,14 @@ func take_damage(amount: int, _type: String = "physical") -> void:
 		queued_counter_is_heavy = true
 		parry_timer = 0.0
 		_show_combat_popup("ПАРИР.", Color(0.9, 0.95, 1.0, 1.0), 0.75)
-		_show_combat_popup("Контратака", Color(1.0, 0.72, 0.32, 1.0), 0.9)
+		_show_combat_popup("Контратака", Color(1.0, 0.72, 0.32, 1.0), 0.95, 42.0, 1.08)
 		if target and is_instance_valid(target) and target.has_method("apply_guard_break_stun"):
 			target.apply_guard_break_stun(0.55)
 		return
 
 	current_health = max(0, current_health - amount)
 	health_changed.emit(current_health)
+	_emit_enemy_ui_snapshot()
 
 	if persistence:
 		persistence.save_from_owner()
@@ -846,6 +892,7 @@ func _die() -> void:
 		persistence.mark_consumed(capture_persistent_state())
 
 	repeat_potion_blocking_changed.emit(false)
+	_emit_enemy_ui_snapshot()
 	died.emit()
 
 
@@ -859,10 +906,13 @@ func force_alert(player: Node2D) -> void:
 	if not is_alive or player == null or not is_instance_valid(player):
 		return
 	target = player
+	_clear_searching_for_player()
 	engage_rush_timer = 0.65
 	if not has_engaged_player:
 		has_engaged_player = true
+		_set_engaged_detection_range_enabled(true)
 		repeat_potion_blocking_changed.emit(is_repeat_potion_blocker())
+	_request_ui_target()
 	if current_state not in [State.ATTACK, State.KNOCKDOWN, State.HURT, State.PARRY]:
 		_change_state(State.CHASE)
 
@@ -940,12 +990,20 @@ func _get_knockdown_animation_name() -> String:
 func _should_enter_parry(dist: float) -> bool:
 	if parry_cooldown > 0.0 or dist > PARRY_TRIGGER_DISTANCE:
 		return false
-	if target == null or target.get("is_attacking") != true:
+	if not _is_target_attack_pressure_active():
 		return false
 	if target_attack_latched:
 		return false
 	target_attack_latched = true
 	return randf() <= PARRY_TRIGGER_CHANCE
+
+
+func _is_target_attack_pressure_active() -> bool:
+	if target == null or not is_instance_valid(target):
+		return false
+	if target.has_method("is_parryable_attack_active"):
+		return bool(target.is_parryable_attack_active())
+	return target.get("is_attacking") == true
 
 
 func _setup_normal_combo() -> void:
@@ -1061,8 +1119,7 @@ func _resolve_post_recover_state() -> void:
 		else:
 			_change_state(State.CHASE)
 	else:
-		target = null
-		_change_state(State.PATROL)
+		_start_searching_for_player()
 
 
 func _hold_parry_frame(frame_index: int) -> void:
@@ -1097,7 +1154,50 @@ func _begin_combo_fatigue() -> void:
 	_enter_recover(COMBO_FATIGUE_RECOVER_TIME, false)
 
 
-func _show_combat_popup(text: String, color: Color, duration: float = 0.35) -> void:
+func _setup_parry_indicator() -> void:
+	if parry_indicator != null:
+		return
+	if not ResourceLoader.exists(PARRY_ICON_PATH):
+		return
+
+	parry_indicator = Sprite2D.new()
+	parry_indicator.name = "ParryIndicator"
+	parry_indicator.texture = load(PARRY_ICON_PATH)
+	parry_indicator.position = Vector2(0.0, -88.0)
+	parry_indicator.scale = Vector2(0.68, 0.68)
+	parry_indicator.z_index = 18
+	parry_indicator.modulate = Color(0.85, 0.95, 1.15, 0.0)
+	parry_indicator.visible = false
+	add_child(parry_indicator)
+
+
+func _set_parry_indicator_visible(is_visible: bool) -> void:
+	if parry_indicator == null:
+		return
+	parry_indicator.visible = is_visible
+	if not is_visible:
+		parry_indicator.modulate = Color(0.85, 0.95, 1.15, 0.0)
+		parry_indicator.scale = Vector2(0.68, 0.68)
+		return
+	parry_indicator.modulate = Color(0.95, 1.05, 1.25, 0.95)
+
+
+func _update_parry_indicator_visual() -> void:
+	if parry_indicator == null or not parry_indicator.visible:
+		return
+	var pulse_time: float = Time.get_ticks_msec() / 1000.0
+	var pulse: float = 0.5 + 0.5 * sin(pulse_time * 8.0)
+	var scale: float = 0.68 + (pulse * 0.16)
+	parry_indicator.scale = Vector2(scale, scale)
+	parry_indicator.modulate = Color(
+		0.88 + pulse * 0.20,
+		0.95 + pulse * 0.12,
+		1.18 + pulse * 0.22,
+		0.78 + pulse * 0.20
+	)
+
+
+func _show_combat_popup(text: String, color: Color, duration: float = 0.35, rise_distance: float = 18.0, popup_scale: float = 1.0) -> void:
 	if get_tree() == null or get_tree().current_scene == null:
 		return
 
@@ -1107,15 +1207,147 @@ func _show_combat_popup(text: String, color: Color, duration: float = 0.35) -> v
 	label.z_index = 100
 	label.position = global_position + Vector2(-24.0, -92.0)
 	label.modulate = color
+	label.scale = Vector2.ONE * popup_scale
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
 	label.add_theme_constant_override("outline_size", 4)
 	get_tree().current_scene.add_child(label)
 
 	var tween: Tween = create_tween()
-	tween.tween_property(label, "position", label.position + Vector2(0.0, -18.0), duration)
+	tween.tween_property(label, "position", label.position + Vector2(0.0, -rise_distance), duration)
 	tween.parallel().tween_property(label, "modulate:a", 0.0, duration)
 	tween.tween_callback(Callable(label, "queue_free"))
+
+
+func get_enemy_ui_snapshot() -> Dictionary:
+	return {
+		"enemy_id": persistence.get_persistent_id() if persistence != null else name,
+		"display_name": ui_display_name if not ui_display_name.is_empty() else name,
+		"icon_texture": _get_enemy_ui_icon(),
+		"health": current_health,
+		"max_health": max_health,
+		"armor": armor,
+		"status_effects": get_enemy_status_effects(),
+	}
+
+
+func get_enemy_status_effects() -> Array[Dictionary]:
+	return []
+
+
+func _get_enemy_ui_icon() -> Texture2D:
+	if ui_icon_texture != null:
+		return ui_icon_texture
+	if animated_sprite == null or animated_sprite.sprite_frames == null:
+		return null
+	if animated_sprite.sprite_frames.has_animation("idle") and animated_sprite.sprite_frames.get_frame_count("idle") > 0:
+		return animated_sprite.sprite_frames.get_frame_texture("idle", 0)
+	if animated_sprite.sprite_frames.has_animation(animated_sprite.animation) and animated_sprite.sprite_frames.get_frame_count(animated_sprite.animation) > 0:
+		return animated_sprite.sprite_frames.get_frame_texture(animated_sprite.animation, 0)
+	return null
+
+
+func _emit_enemy_ui_snapshot() -> void:
+	enemy_ui_changed.emit(get_enemy_ui_snapshot())
+
+
+func _request_ui_target() -> void:
+	ui_target_requested.emit(self)
+	_emit_enemy_ui_snapshot()
+
+
+func _cache_detection_radius() -> void:
+	if detection_shape == null:
+		return
+	var circle: CircleShape2D = detection_shape.shape as CircleShape2D
+	if circle == null:
+		return
+	base_detection_radius = circle.radius
+
+
+func _set_engaged_detection_range_enabled(is_enabled: bool) -> void:
+	if detection_shape == null:
+		return
+	var circle: CircleShape2D = detection_shape.shape as CircleShape2D
+	if circle == null:
+		return
+	if base_detection_radius <= 0.0:
+		base_detection_radius = circle.radius
+	circle.radius = base_detection_radius * ENGAGED_DETECTION_RANGE_MULTIPLIER if is_enabled else base_detection_radius
+
+
+func _setup_question_indicator() -> void:
+	if question_indicator_root != null:
+		return
+	question_indicator_root = Node2D.new()
+	question_indicator_root.name = "QuestionIndicator"
+	question_indicator_root.position = Vector2(0.0, -94.0)
+	question_indicator_root.z_index = 18
+	question_indicator_root.visible = false
+	add_child(question_indicator_root)
+
+	var positions: Array[Vector2] = [Vector2(-18.0, 10.0), Vector2(0.0, 0.0), Vector2(18.0, 10.0)]
+	for index in positions.size():
+		var marker := Label.new()
+		marker.text = "?"
+		marker.position = positions[index]
+		marker.modulate = Color(1.0, 0.98, 0.78, 0.0)
+		marker.z_index = 18
+		marker.add_theme_color_override("font_color", Color(1.0, 0.98, 0.78, 1.0))
+		marker.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+		marker.add_theme_constant_override("outline_size", 4)
+		question_indicator_root.add_child(marker)
+		question_indicator_labels.append(marker)
+
+
+func _set_question_indicator_visible(is_visible: bool) -> void:
+	if question_indicator_root == null:
+		return
+	question_indicator_root.visible = is_visible
+	for marker in question_indicator_labels:
+		if marker == null:
+			continue
+		marker.modulate.a = 0.95 if is_visible else 0.0
+
+
+func _update_question_indicator_visual() -> void:
+	if question_indicator_root == null or not question_indicator_root.visible:
+		return
+	var time: float = Time.get_ticks_msec() / 1000.0
+	var side_offset: float = sin(time * 6.0) * 5.0
+	var center_offset: float = -side_offset
+	var base_positions: Array[Vector2] = [Vector2(-18.0, 10.0), Vector2(0.0, 0.0), Vector2(18.0, 10.0)]
+	for index in question_indicator_labels.size():
+		var marker: Label = question_indicator_labels[index]
+		if marker == null:
+			continue
+		var offset_y: float = center_offset if index == 1 else side_offset
+		marker.position = base_positions[index] + Vector2(0.0, offset_y)
+		marker.modulate.a = 0.82 + 0.13 * sin(time * 7.0 + index)
+
+
+func _clear_searching_for_player() -> void:
+	is_searching_for_player = false
+	_set_question_indicator_visible(false)
+
+
+func _start_searching_for_player() -> void:
+	target = null
+	combo_hits_remaining = 0
+	combo_continuation_pending = false
+	queued_counter_combo = false
+	queued_counter_is_heavy = false
+	pending_post_combo_exit = PostComboExit.NONE
+	combo_chain_timer = 0.0
+	engage_rush_timer = 0.0
+	pressure_timer = 0.0
+	retreat_timer = 0.0
+	retreat_commit_timer = 0.0
+	parry_phase = ParryPhase.NONE
+	parry_timer = 0.0
+	target_attack_latched = false
+	is_searching_for_player = has_engaged_player
+	_change_state(State.IDLE)
 
 
 func activate() -> void:

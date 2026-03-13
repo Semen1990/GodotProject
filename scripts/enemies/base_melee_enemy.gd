@@ -3,6 +3,8 @@ extends CharacterBody2D
 signal died()
 signal health_changed(new_health)
 signal repeat_potion_blocking_changed(is_blocking)
+signal ui_target_requested(enemy: Node)
+signal enemy_ui_changed(snapshot: Dictionary)
 
 @export_enum("simple", "elite", "boss") var enemy_type: String = "simple"
 @export var blocks_repeat_potions: bool = true
@@ -20,6 +22,9 @@ signal repeat_potion_blocking_changed(is_blocking)
 @export var idle_time: float = 1.2
 @export var minimum_distance_to_player: float = 42.0
 @export var enable_patrol: bool = false
+@export var armor: int = 0
+@export var ui_display_name: String = ""
+@export var ui_icon_texture: Texture2D
 
 enum State { IDLE, PATROL, CHASE, ATTACK, HURT, DEAD }
 
@@ -136,6 +141,7 @@ func load_state(state: Dictionary) -> void:
 		animated_sprite.modulate = Color.WHITE
 
 	health_changed.emit(current_health)
+	_emit_enemy_ui_snapshot()
 
 	var saved_state: int = int(state.get("current_state", State.IDLE))
 	current_state = State.IDLE
@@ -242,6 +248,7 @@ func take_damage(amount: int, _damage_type: String = "physical") -> void:
 
 	current_health = max(0, current_health - amount)
 	health_changed.emit(current_health)
+	_emit_enemy_ui_snapshot()
 
 	if persistence != null:
 		persistence.save_from_owner()
@@ -461,6 +468,7 @@ func _on_detection_entered(body: Node2D) -> void:
 	if not has_engaged_player:
 		has_engaged_player = true
 		repeat_potion_blocking_changed.emit(is_repeat_potion_blocker())
+	_request_ui_target()
 
 	_change_state(State.CHASE)
 
@@ -538,6 +546,7 @@ func _die() -> void:
 		persistence.mark_consumed(capture_persistent_state())
 
 	repeat_potion_blocking_changed.emit(false)
+	_emit_enemy_ui_snapshot()
 	died.emit()
 
 
@@ -579,4 +588,52 @@ func _update_detection_range() -> void:
 	if shape_node.shape is CircleShape2D:
 		var circle: CircleShape2D = shape_node.shape as CircleShape2D
 		circle.radius = detection_range
+
+
+func get_enemy_ui_snapshot() -> Dictionary:
+	return {
+		"enemy_id": persistence.get_persistent_id() if persistence != null else name,
+		"display_name": _get_enemy_ui_display_name(),
+		"icon_texture": _get_enemy_ui_icon(),
+		"health": current_health,
+		"max_health": max_health,
+		"armor": armor,
+		"status_effects": get_enemy_status_effects(),
+	}
+
+
+func get_enemy_status_effects() -> Array[Dictionary]:
+	return []
+
+
+func _get_enemy_ui_display_name() -> String:
+	if not ui_display_name.is_empty():
+		return ui_display_name
+	return name
+
+
+func _get_enemy_ui_icon() -> Texture2D:
+	if ui_icon_texture != null:
+		return ui_icon_texture
+	if animated_sprite == null or animated_sprite.sprite_frames == null:
+		return null
+
+	var idle_animation: StringName = _select_idle_animation()
+	if animated_sprite.sprite_frames.has_animation(idle_animation) and animated_sprite.sprite_frames.get_frame_count(idle_animation) > 0:
+		return animated_sprite.sprite_frames.get_frame_texture(idle_animation, 0)
+
+	var current_animation: StringName = animated_sprite.animation
+	if animated_sprite.sprite_frames.has_animation(current_animation) and animated_sprite.sprite_frames.get_frame_count(current_animation) > 0:
+		return animated_sprite.sprite_frames.get_frame_texture(current_animation, 0)
+
+	return null
+
+
+func _emit_enemy_ui_snapshot() -> void:
+	enemy_ui_changed.emit(get_enemy_ui_snapshot())
+
+
+func _request_ui_target() -> void:
+	ui_target_requested.emit(self)
+	_emit_enemy_ui_snapshot()
 

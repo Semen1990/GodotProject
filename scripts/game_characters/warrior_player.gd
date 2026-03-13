@@ -46,11 +46,13 @@ const SLIDE_CORE_POSE_TOGGLE_TIME: float = 0.09
 
 const LIGHT_HIT_LOCK: float = 0.08
 const HURT_LOCK: float = 0.20
-const HEAVY_LOCK: float = 0.48
+const HEAVY_LOCK: float = 0.56
 const MEDIUM_HURT_SPEED_SCALE: float = 1.75
 const HEAVY_HURT_SPEED_SCALE: float = 1.0
-const HEAVY_PUSHBACK: float = 210.0
-const HEAVY_PUSHBACK_DECAY: float = 520.0
+const HEAVY_PUSHBACK: float = 360.0
+const HEAVY_PUSHBACK_DECAY: float = 260.0
+const HEAVY_PUSHBACK_HOLD_TIME: float = 0.14
+const PARRY_EXPOSURE_TIME: float = 0.42
 
 var warrior_base_armor: int = 2
 var base_armor: int = 2
@@ -79,6 +81,8 @@ var block_audio_player: AudioStreamPlayer2D = null
 var reaction_lock_timer: float = 0.0
 var current_hit_reaction: int = HitReaction.LIGHT
 var hurt_animation_speed_scale: float = 1.0
+var heavy_pushback_hold_timer: float = 0.0
+var parry_exposure_timer: float = 0.0
 var is_sneaking: bool = false
 var sneak_mode_enabled: bool = false
 var crouch_phase: int = CrouchPhase.NONE
@@ -129,11 +133,15 @@ func _physics_process(delta: float) -> void:
 		if counter_window_timer <= 0.0:
 			is_counter_attack_ready = false
 
+	if parry_exposure_timer > 0.0:
+		parry_exposure_timer = maxf(0.0, parry_exposure_timer - delta)
+
 	if reaction_lock_timer > 0.0:
 		reaction_lock_timer = maxf(0.0, reaction_lock_timer - delta)
 		if reaction_lock_timer <= 0.0:
 			is_hurt = false
 			hurt_animation_speed_scale = 1.0
+			heavy_pushback_hold_timer = 0.0
 			if animated_sprite:
 				animated_sprite.speed_scale = 1.0
 
@@ -161,7 +169,10 @@ func handle_movement(delta: float) -> void:
 	if reaction_lock_timer > 0.0:
 		_cancel_sneak_mode()
 		if current_hit_reaction == HitReaction.HEAVY:
-			velocity.x = move_toward(velocity.x, 0.0, HEAVY_PUSHBACK_DECAY * delta)
+			if heavy_pushback_hold_timer > 0.0:
+				heavy_pushback_hold_timer = maxf(0.0, heavy_pushback_hold_timer - delta)
+			else:
+				velocity.x = move_toward(velocity.x, 0.0, HEAVY_PUSHBACK_DECAY * delta)
 		else:
 			velocity.x = move_toward(velocity.x, 0.0, friction * delta * 0.75)
 		return
@@ -281,6 +292,7 @@ func block() -> void:
 	block_phase = BlockPhase.STARTUP
 	block_phase_timer = BLOCK_STARTUP_TIME
 	velocity.x = 0.0
+	combat_action_performed.emit("block_started", {})
 	play_animation("shield_defence")
 	if animated_sprite:
 		animated_sprite.play()
@@ -300,6 +312,7 @@ func attack() -> void:
 	_current_attack_started_from_sneak = is_sneaking
 	_cancel_sneak_mode()
 	is_attacking = true
+	parry_exposure_timer = PARRY_EXPOSURE_TIME
 	_attack_damage_dealt = false
 
 	if use_counter:
@@ -343,6 +356,7 @@ func slide() -> void:
 	slide_timer = SLIDE_TOTAL_DURATION
 	slide_iframe_active = false
 	_set_enemy_slide_collision_enabled(false)
+	combat_action_performed.emit("slide_started", {})
 
 	var input_direction: float = Input.get_axis("move_left", "move_right")
 	if input_direction == 0.0:
@@ -525,6 +539,9 @@ func _register_successful_block() -> void:
 	block_phase = BlockPhase.RECOVERY
 	block_phase_timer = minf(block_phase_timer, 0.12)
 	is_block_active = false
+	combat_action_performed.emit("block_success", {
+		"counter_window": COUNTER_WINDOW_TIME,
+	})
 	_show_block_flash()
 	_play_block_success_sound()
 	if last_incoming_attacker and is_instance_valid(last_incoming_attacker) and last_incoming_attacker.has_method("show_player_guard_feedback"):
@@ -565,9 +582,9 @@ func _apply_hit_reaction(reaction_type: int) -> void:
 		HitReaction.HEAVY:
 			hurt_animation_speed_scale = HEAVY_HURT_SPEED_SCALE
 			reaction_lock_timer = maxf(reaction_lock_timer, HEAVY_LOCK)
-			if not is_hurt:
-				is_hurt = true
-				play_animation("hurt")
+			heavy_pushback_hold_timer = HEAVY_PUSHBACK_HOLD_TIME
+			is_hurt = true
+			play_animation("hurt")
 			velocity.x = _get_heavy_pushback_velocity()
 
 
@@ -627,12 +644,25 @@ func _deal_damage_to_enemies() -> void:
 			Global.add_damage_dealt(damage_amount)
 
 		var is_backstab: bool = _current_attack_animation == "attack" and _current_attack_started_from_sneak and _is_behind_target(body)
+		combat_action_performed.emit("damage_dealt", {
+			"amount": damage_amount,
+			"damage_type": "physical",
+			"counter": _current_attack_animation == "attack2",
+			"backstab": is_backstab,
+			"target_name": body.name,
+			"target_node": body,
+		})
 		if is_backstab and body.has_method("apply_backstab_knockdown"):
 			body.apply_backstab_knockdown(BACKSTAB_KNOCKDOWN_DURATION, global_position.x)
 		elif is_backstab and body.has_method("apply_short_stagger"):
 			body.apply_short_stagger(BACKSTAB_STAGGER_DURATION, global_position.x)
 		if is_backstab and body.has_method("force_alert"):
 			body.force_alert(self)
+			combat_action_performed.emit("backstab", {
+				"amount": damage_amount,
+				"target_name": body.name,
+				"target_node": body,
+			})
 		elif _current_attack_stagger_duration > 0.0 and body.has_method("apply_short_stagger"):
 			body.apply_short_stagger(_current_attack_stagger_duration, global_position.x)
 
@@ -660,6 +690,14 @@ func _get_facing_direction() -> float:
 	if animated_sprite and animated_sprite.flip_h:
 		return -1.0
 	return 1.0
+
+
+func get_facing_direction() -> float:
+	return _get_facing_direction()
+
+
+func is_parryable_attack_active() -> bool:
+	return is_attacking or parry_exposure_timer > 0.0
 
 
 func _hold_block_pose_frame() -> void:
