@@ -1130,16 +1130,8 @@ func _update_double_jump_artifact() -> void:
 		return
 
 	var has_wings: bool = false
-	for slot in [
-		InventoryEnums.EquipSlot.ARTIFACT_1,
-		InventoryEnums.EquipSlot.ARTIFACT_2,
-		InventoryEnums.EquipSlot.ARTIFACT_3,
-		InventoryEnums.EquipSlot.ARTIFACT_4,
-	]:
-		var item: InventoryItem = Inventory.get_equipped_item(slot)
-		if item and item.get_item_id() == 201:
-			has_wings = true
-			break
+	if Inventory.has_method("has_special_effect"):
+		has_wings = Inventory.has_special_effect(InventoryEnums.EffectType.SPECIAL_DOUBLE_JUMP)
 
 	if current_player.has_method("set_double_jump_enabled"):
 		current_player.set_double_jump_enabled(has_wings)

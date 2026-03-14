@@ -143,7 +143,7 @@ func apply_artifacts():
 		Global.apply_all_artifacts_to_player()
 		
 		# Р СџРЎР‚Р С•Р Р†Р ВµРЎР‚РЎРЏР ВµР С Р Р…Р В°Р В»Р С‘РЎвЂЎР С‘Р Вµ РЎРѓР С—Р С•РЎРѓР С•Р В±Р Р…Р С•РЎРѓРЎвЂљР С‘ Р Т‘Р Р†Р С•Р в„–Р Р…Р С•Р С–Р С• Р С—РЎР‚РЎвЂ№Р В¶Р С”Р В°
-		set_double_jump_enabled(Global.has_ability("double_jump"))
+		set_double_jump_enabled(Global.has_ability("double_jump") or _has_equipped_double_jump_effect())
 
 
 func set_double_jump_enabled(enabled: bool) -> void:
@@ -156,6 +156,15 @@ func set_double_jump_enabled(enabled: bool) -> void:
 	if is_on_floor():
 		can_double_jump = true
 		has_double_jumped = false
+
+
+func _has_equipped_double_jump_effect() -> bool:
+	if Inventory == null:
+		return false
+	if not Inventory.has_method("has_special_effect"):
+		return false
+
+	return Inventory.has_special_effect(InventoryEnums.EffectType.SPECIAL_DOUBLE_JUMP)
 
 
 func _physics_process(delta: float):

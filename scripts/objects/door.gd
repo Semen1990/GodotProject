@@ -61,6 +61,7 @@ var lock_glow: AnimatedSprite2D = null
 var lock_hide_token: int = 0
 
 var is_open: bool = false
+var is_unlocking: bool = false
 var is_opening: bool = false
 var can_enter_open_door: bool = false
 var player_in_range: bool = false
@@ -275,10 +276,16 @@ func _hide_lock_visuals() -> void:
 func _play_unlock_animation() -> void:
 	if not requires_key or required_key == KeyColor.NONE:
 		_hide_lock_visuals()
+		is_unlocking = false
+		_start_door_open_sequence()
 		return
 	if lock_emblem == null or lock_glow == null:
+		is_unlocking = false
+		_start_door_open_sequence()
 		return
 	if lock_emblem.sprite_frames == null or not lock_emblem.sprite_frames.has_animation(LOCK_ANIMATION_NAME):
+		is_unlocking = false
+		_start_door_open_sequence()
 		return
 
 	lock_hide_token += 1
@@ -319,6 +326,9 @@ func _on_unlock_animation_finished(token: int) -> void:
 	if token != lock_hide_token:
 		return
 	_hide_lock_visuals()
+	if is_unlocking:
+		is_unlocking = false
+		_start_door_open_sequence()
 
 
 func _setup_hint() -> void:
@@ -361,6 +371,16 @@ func _has_open_animation() -> bool:
 		return false
 
 	return animated_sprite.sprite_frames.has_animation("open")
+
+
+func _start_door_open_sequence() -> void:
+	if not is_open:
+		return
+
+	is_opening = _has_open_animation()
+	can_enter_open_door = not is_opening
+	_play_door_animation()
+	_update_hint_text()
 
 
 func _on_door_animation_finished() -> void:
@@ -413,7 +433,7 @@ func _is_player(body: Node2D) -> bool:
 
 
 func _try_use_door() -> void:
-	if is_opening:
+	if is_unlocking or is_opening:
 		return
 
 	if is_open:
@@ -436,8 +456,9 @@ func _try_use_door() -> void:
 
 func _open_door() -> void:
 	is_open = true
-	is_opening = _has_open_animation()
-	can_enter_open_door = not is_opening
+	is_unlocking = requires_key and required_key != KeyColor.NONE
+	is_opening = false
+	can_enter_open_door = false
 
 	if persistence:
 		persistence.save_from_owner()
@@ -445,8 +466,10 @@ func _open_door() -> void:
 	if Global:
 		Global.mark_door_opened(name)
 
-	_play_door_animation()
-	_play_unlock_animation()
+	if is_unlocking:
+		_play_unlock_animation()
+	else:
+		_start_door_open_sequence()
 	_update_hint_text()
 	door_opened.emit()
 
