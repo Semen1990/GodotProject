@@ -61,6 +61,8 @@ var lock_glow: AnimatedSprite2D = null
 var lock_hide_token: int = 0
 
 var is_open: bool = false
+var is_opening: bool = false
+var can_enter_open_door: bool = false
 var player_in_range: bool = false
 
 
@@ -92,6 +94,10 @@ func _ready() -> void:
 		body_entered.connect(_on_body_entered)
 	if not body_exited.is_connected(_on_body_exited):
 		body_exited.connect(_on_body_exited)
+	if animated_sprite and not animated_sprite.animation_finished.is_connected(_on_door_animation_finished):
+		animated_sprite.animation_finished.connect(_on_door_animation_finished)
+
+	can_enter_open_door = is_open
 
 	_update_visual()
 	_setup_hint()
@@ -326,7 +332,7 @@ func _update_hint_text() -> void:
 		return
 
 	if is_open:
-		hint_label.text = "[F] Войти"
+		hint_label.text = "[F] Войти" if can_enter_open_door else "Открывается..."
 	elif requires_key:
 		var key_name: String = COLOR_NAMES.get(required_key, "ключ")
 		hint_label.text = "[F] Открыть (%s ключ)" % key_name
@@ -348,6 +354,26 @@ func _play_door_animation() -> void:
 			animated_sprite.play("closed")
 		elif animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("idle"):
 			animated_sprite.play("idle")
+
+
+func _has_open_animation() -> bool:
+	if not animated_sprite or animated_sprite.sprite_frames == null:
+		return false
+
+	return animated_sprite.sprite_frames.has_animation("open")
+
+
+func _on_door_animation_finished() -> void:
+	if not is_opening or not is_open:
+		return
+	if not animated_sprite:
+		return
+	if animated_sprite.animation != "open":
+		return
+
+	is_opening = false
+	can_enter_open_door = true
+	_update_hint_text()
 
 
 func _update_visual() -> void:
@@ -387,7 +413,12 @@ func _is_player(body: Node2D) -> bool:
 
 
 func _try_use_door() -> void:
+	if is_opening:
+		return
+
 	if is_open:
+		if not can_enter_open_door:
+			return
 		_use_door()
 		return
 
@@ -405,6 +436,8 @@ func _try_use_door() -> void:
 
 func _open_door() -> void:
 	is_open = true
+	is_opening = _has_open_animation()
+	can_enter_open_door = not is_opening
 
 	if persistence:
 		persistence.save_from_owner()

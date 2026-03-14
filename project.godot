@@ -28,6 +28,7 @@ Global="*res://autoload/Global.gd"
 Inventory="*res://autoload/inventory_manager.gd"
 RunCombatTelemetry="*res://autoload/RunCombatTelemetry.gd"
 EnemyAdaptationDirector="*res://autoload/EnemyAdaptationDirector.gd"
+CombatRuntimeLogger="*res://autoload/CombatRuntimeLogger.gd"
 
 [display]
 

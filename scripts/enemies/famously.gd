@@ -22,12 +22,12 @@ const DEATH_FOLDER: String = "res://assets/enemies/Famously/Death"
 @export var retreat_cast_distance: float = 176.0
 @export var cast_cooldown_time: float = 5.0
 @export var melee_hit_range: float = 235.0
-@export var melee_vertical_tolerance: float = 120.0
 @export var engaged_detection_multiplier: float = 1.3
 @export var engaged_cast_distance_multiplier: float = 1.3
 @export var spell_vertical_offset: Vector2 = Vector2(0.0, -96.0)
 @export var spell_madness_chance: float = 0.3
 @export var spell_madness_stacks: int = 1
+@export var line_spell_vertical_tolerance: float = 54.0
 @export var art_faces_left_by_default: bool = false
 @export var visual_offset_when_facing_left: Vector2 = Vector2(81.0, -112.0)
 @export var visual_offset_when_facing_right: Vector2 = Vector2(-81.0, -112.0)
@@ -136,10 +136,15 @@ func _process_chase() -> void:
 		_apply_visual_facing(dir_x)
 		_play_anim(_select_chase_animation())
 
-	if dist <= attack_range:
+	if dist <= attack_range and _can_melee_attack_target():
 		has_seen_target_in_melee = true
 		if can_attack:
 			queued_attack_mode = melee_attack_animation_name
+			if CombatRuntimeLogger:
+				CombatRuntimeLogger.log_event("decision", name, "queue_melee_attack", {
+					"distance": dist,
+					"target": target.name,
+				})
 			_change_state(State.ATTACK)
 			return
 
@@ -149,6 +154,11 @@ func _process_chase() -> void:
 	if _should_cast_on_retreat(dist) and can_attack:
 		queued_attack_mode = cast_animation_name
 		velocity.x = 0.0
+		if CombatRuntimeLogger:
+			CombatRuntimeLogger.log_event("decision", name, "queue_cast_attack", {
+				"distance": dist,
+				"target": target.name,
+			})
 		_change_state(State.ATTACK)
 		return
 
@@ -195,23 +205,43 @@ func _on_detection_entered(body: Node2D) -> void:
 		_sync_engaged_ranges()
 
 
-func _deal_damage() -> void:
+func _deal_damage() -> bool:
 	if current_attack_animation == cast_animation_name:
 		_spawn_spell_strike()
-		return
+		if CombatRuntimeLogger:
+			CombatRuntimeLogger.log_event("damage", name, "cast_release", {
+				"target": target.name if target != null and is_instance_valid(target) else "<null>",
+			})
+		return true
 
 	if not _is_target_valid():
-		return
+		if CombatRuntimeLogger:
+			CombatRuntimeLogger.log_event("damage", name, "melee_attempt", {"result": "no_target"})
+		return false
 
 	var horizontal_distance: float = absf(target.global_position.x - global_position.x)
-	var vertical_distance: float = absf(target.global_position.y - global_position.y)
-	if horizontal_distance <= melee_hit_range and vertical_distance <= melee_vertical_tolerance and target.has_method("take_damage"):
+	if horizontal_distance <= melee_hit_range and _can_confirm_committed_melee_hit(target) and target.has_method("take_damage"):
 		target.take_damage(current_attack_damage, "physical", name)
+		if CombatRuntimeLogger:
+			CombatRuntimeLogger.log_event("damage", name, "melee_attempt", {
+				"result": "applied",
+				"distance_x": horizontal_distance,
+				"damage": current_attack_damage,
+				"target": target.name,
+				"target_hp_after": target.get("current_health"),
+			})
+		return true
+
+	if CombatRuntimeLogger:
+		CombatRuntimeLogger.log_event("damage", name, "melee_attempt", {
+			"result": "blocked",
+			"distance_x": horizontal_distance,
+			"target": target.name if target != null and is_instance_valid(target) else "<null>",
+		})
+	return false
 
 
 func _should_cast_on_retreat(distance_to_target: float) -> bool:
-	if not has_seen_target_in_melee:
-		return false
 	if not _is_target_valid():
 		return false
 	if Time.get_ticks_msec() < next_cast_allowed_at_msec:
@@ -241,6 +271,16 @@ func _spawn_spell_strike() -> void:
 
 	var effect_parent: Node = _resolve_effect_parent()
 	effect_parent.add_child(spell_instance)
+
+
+func can_cast_line_spell_at_target() -> bool:
+	if not _is_target_valid():
+		return false
+	return absf(target.global_position.y - global_position.y) <= line_spell_vertical_tolerance
+
+
+func _is_cast_attack_animation(animation_name: StringName) -> bool:
+	return animation_name == cast_animation_name
 
 
 func _resolve_effect_parent() -> Node:

@@ -59,6 +59,7 @@ var max_speed: float = 300.0
 var acceleration: float = 1500.0
 var friction: float = 1200.0
 var jump_velocity: float = -400.0
+var floor_snap_length_default: float = 16.0
 
 # --- Р РЋР ВР РЋР СћР вЂўР СљР С’ Р вЂќР вЂ™Р С›Р в„ўР СњР С›Р вЂњР С› Р СџР В Р В«Р вЂ“Р С™Р С’ ---
 # Р С’Р С”РЎвЂљР С‘Р Р†Р С‘РЎР‚РЎС“Р ВµРЎвЂљРЎРѓРЎРЏ Р В°РЎР‚РЎвЂљР ВµРЎвЂћР В°Р С”РЎвЂљР В°Р СР С‘ (Р Р…Р В°Р С—РЎР‚Р С‘Р СР ВµРЎР‚, "Р С™РЎР‚РЎвЂ№Р В»РЎРЉРЎРЏ Р вЂњР ВµРЎР‚Р СР ВµРЎРѓР В°")
@@ -80,6 +81,7 @@ var last_damage_source: String = "Р СњР ВµР С‘Р В·Р Р†Р 
 var animated_sprite: AnimatedSprite2D
 var collision_shape: CollisionShape2D
 var player_controller: Node
+@onready var combat_floor_tracker: CombatFloorTracker = get_node_or_null("CombatFloorTracker") as CombatFloorTracker
 
 # --- Р вЂ™Р ВР вЂ”Р Р€Р С’Р вЂє ---
 var original_scale: Vector2 = Vector2.ONE
@@ -98,6 +100,10 @@ const ANIMATION_NAME_MAPPING: Dictionary = {
 func _ready():
 	if not is_in_group("player"):
 		add_to_group("player")
+
+	# Helps the character settle onto one-way platforms when the jump apex is
+	# close to platform height instead of requiring an oversized jump.
+	floor_snap_length = floor_snap_length_default
 	
 	# --- Р вЂР ВµР В·Р С•Р С—Р В°РЎРѓР Р…Р С•Р Вµ Р С—Р С•Р В»РЎС“РЎвЂЎР ВµР Р…Р С‘Р Вµ Р Р…Р С•Р Т‘Р С•Р Р† ---
 	animated_sprite = get_node_or_null("AnimatedSprite2D")
@@ -137,10 +143,19 @@ func apply_artifacts():
 		Global.apply_all_artifacts_to_player()
 		
 		# Р СџРЎР‚Р С•Р Р†Р ВµРЎР‚РЎРЏР ВµР С Р Р…Р В°Р В»Р С‘РЎвЂЎР С‘Р Вµ РЎРѓР С—Р С•РЎРѓР С•Р В±Р Р…Р С•РЎРѓРЎвЂљР С‘ Р Т‘Р Р†Р С•Р в„–Р Р…Р С•Р С–Р С• Р С—РЎР‚РЎвЂ№Р В¶Р С”Р В°
-		if Global.has_ability("double_jump"):
-			enable_double_jump = true
-		else:
-			enable_double_jump = false
+		set_double_jump_enabled(Global.has_ability("double_jump"))
+
+
+func set_double_jump_enabled(enabled: bool) -> void:
+	enable_double_jump = enabled
+	if not enable_double_jump:
+		can_double_jump = false
+		has_double_jumped = false
+		return
+
+	if is_on_floor():
+		can_double_jump = true
+		has_double_jumped = false
 
 
 func _physics_process(delta: float):
@@ -180,6 +195,87 @@ func fix_sprite_scale():
 			abs(original_scale.x) * current_sign,
 			original_scale.y
 		)
+
+
+func get_current_combat_floor_id() -> int:
+	if combat_floor_tracker != null:
+		var tracker_floor: int = combat_floor_tracker.get_current_floor_id()
+		if tracker_floor != -1:
+			return tracker_floor
+	return _resolve_combat_floor_id_from_world()
+
+
+func get_last_stable_combat_floor_id() -> int:
+	if combat_floor_tracker != null:
+		var tracker_floor: int = combat_floor_tracker.get_last_stable_floor_id()
+		if tracker_floor != -1:
+			return tracker_floor
+	return _resolve_combat_floor_id_from_world()
+
+
+func get_effective_combat_floor_id() -> int:
+	if combat_floor_tracker != null:
+		var tracker_floor: int = combat_floor_tracker.get_effective_floor_id()
+		if tracker_floor != -1:
+			return tracker_floor
+	return _resolve_combat_floor_id_from_world()
+
+
+func is_between_combat_floors() -> bool:
+	if combat_floor_tracker != null and combat_floor_tracker.get_effective_floor_id() != -1:
+		return combat_floor_tracker.is_between_floors()
+	return false
+
+
+func is_on_same_combat_floor(other: Node) -> bool:
+	if other == null or not other.has_method("get_effective_combat_floor_id"):
+		return false
+	var my_floor: int = get_effective_combat_floor_id()
+	var other_floor: int = int(other.call("get_effective_combat_floor_id"))
+	return my_floor != -1 and my_floor == other_floor
+
+
+func _resolve_combat_floor_id_from_world() -> int:
+	var tree := get_tree()
+	if tree == null:
+		return -1
+
+	var probe_point: Vector2 = _get_combat_floor_probe_world_point()
+	var best_floor_id: int = -1
+	var best_priority: int = -2147483648
+
+	for node in tree.get_nodes_in_group("combat_floor_areas"):
+		if node == null or not is_instance_valid(node):
+			continue
+		if not _combat_floor_area_contains_point(node as Node2D, probe_point):
+			continue
+
+		var area_priority: int = int(node.get("floor_priority"))
+		var area_floor_id: int = int(node.get("floor_id"))
+		if area_priority > best_priority or (area_priority == best_priority and area_floor_id > best_floor_id):
+			best_priority = area_priority
+			best_floor_id = area_floor_id
+
+	return best_floor_id
+
+
+func _get_combat_floor_probe_world_point() -> Vector2:
+	if collision_shape == null or collision_shape.shape == null:
+		return global_position + Vector2(0.0, 12.0)
+	return collision_shape.global_position + Vector2(0.0, 8.0)
+
+
+func _combat_floor_area_contains_point(area_node: Node2D, world_point: Vector2) -> bool:
+	if area_node == null or not is_instance_valid(area_node):
+		return false
+	var shape_node: CollisionShape2D = area_node.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if shape_node == null or not shape_node.shape is RectangleShape2D:
+		return false
+	var rect_shape := shape_node.shape as RectangleShape2D
+	var scaled_size: Vector2 = rect_shape.size * area_node.global_scale.abs()
+	var half_size: Vector2 = scaled_size * 0.5
+	var delta: Vector2 = world_point - area_node.global_position
+	return absf(delta.x) <= half_size.x and absf(delta.y) <= half_size.y
 
 
 # ===========================================

@@ -8,6 +8,7 @@ enum HitReaction { LIGHT, HURT, HEAVY }
 const BASE_DAMAGE: int = 2
 const ATTACK_RANGE: float = 60.0
 const COUNTER_ATTACK_RANGE: float = 68.0
+const ENEMY_HIT_COLLISION_MASK: int = 4
 const ATTACK_DAMAGE_FRAME: int = 3
 const COUNTER_DAMAGE_FRAME: int = 4
 const COUNTER_DAMAGE_MULTIPLIER: float = 1.8
@@ -109,7 +110,7 @@ func _ready() -> void:
 	base_speed = 180
 	current_speed = 180
 	max_speed = 180.0
-	jump_velocity = -350.0
+	jump_velocity = -560.0
 	super()
 	default_collision_mask = collision_mask
 	default_collision_layer = collision_layer
@@ -379,11 +380,21 @@ func take_damage(amount: int, damage_type: String = "physical", source: String =
 
 	var incoming_amount: int = max(0, amount)
 	var was_successfully_blocked: bool = _can_successfully_block()
+	var hp_before: int = current_health
 	if was_successfully_blocked:
 		incoming_amount = _resolve_blocked_damage(incoming_amount)
 		_register_successful_block()
 		if incoming_amount <= 0:
 			_show_block_flash()
+			if CombatRuntimeLogger:
+				CombatRuntimeLogger.log_event("player_damage", character_name, "blocked_hit", {
+					"source": source,
+					"amount": amount,
+					"damage_type": damage_type,
+					"reaction_hint": reaction_hint,
+					"hp_before": hp_before,
+					"hp_after": current_health,
+				})
 			return
 
 	var final_damage: int = incoming_amount
@@ -401,6 +412,17 @@ func take_damage(amount: int, damage_type: String = "physical", source: String =
 	var reaction_type: int = _classify_hit_reaction(final_damage, reaction_hint)
 	_apply_hit_reaction(reaction_type)
 	damage_received.emit(final_damage, _reaction_type_to_tag(reaction_type))
+	if CombatRuntimeLogger:
+		CombatRuntimeLogger.log_event("player_damage", character_name, "take_damage", {
+			"source": source,
+			"amount": amount,
+			"final_damage": final_damage,
+			"damage_type": damage_type,
+			"reaction_hint": reaction_hint,
+			"blocked": was_successfully_blocked,
+			"hp_before": hp_before,
+			"hp_after": current_health,
+		})
 
 	if current_health <= 0:
 		die()
@@ -629,6 +651,10 @@ func _deal_damage_to_enemies() -> void:
 	shape.radius = attack_range
 	query.shape = shape
 	query.transform = Transform2D(0.0, center)
+	query.collide_with_bodies = true
+	query.collide_with_areas = false
+	query.collision_mask = ENEMY_HIT_COLLISION_MASK
+	query.exclude = [get_rid()]
 
 	for result in space.intersect_shape(query):
 		var body: Node = result.get("collider")

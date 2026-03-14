@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://37jm71c64bwi"]
 
 [ext_resource type="Script" uid="uid://lgr6lv31x0v8" path="res://scripts/enemies/famously.gd" id="1_famously_script"]
+[ext_resource type="PackedScene" path="res://prefabs/tools/CombatFloorTracker.tscn" id="99_floor_tracker"]
 [ext_resource type="Texture2D" uid="uid://i1vbsoaepkn6" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_1.png" id="2_8su4f"]
 [ext_resource type="Texture2D" uid="uid://1bs552n4h4le" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_2.png" id="3_cbtu4"]
 [ext_resource type="Texture2D" uid="uid://dptdsgc40hhng" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_3.png" id="4_vbeiy"]
@@ -127,6 +128,10 @@ patrol_distance = 220.0
 attack_cooldown_time = 1.25
 minimum_distance_to_player = 44.0
 enable_patrol = true
+pre_engage_vertical_tolerance = 96.0
+melee_vertical_tolerance = 18.0
+use_combat_lane_before_engage = false
+use_combat_lane_for_melee = true
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1907635945]
 position = Vector2(0, -112.000015)
@@ -137,6 +142,8 @@ animation = &"teleport"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1550885699]
 position = Vector2(-1, -65)
 shape = SubResource("CapsuleShape2D_famously_body")
+
+[node name="CombatFloorTracker" parent="." instance=ExtResource("99_floor_tracker")]
 
 [node name="DetectionArea" type="Area2D" parent="." unique_id=424961212]
 position = Vector2(6, -34)

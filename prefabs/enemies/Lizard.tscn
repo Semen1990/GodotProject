@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bdg7rk1sn2jln"]
 
 [ext_resource type="Script" uid="uid://bodu3lrct1t41" path="res://scripts/enemies/lizard.gd" id="1_1bmd2"]
+[ext_resource type="PackedScene" path="res://prefabs/tools/CombatFloorTracker.tscn" id="99_floor_tracker"]
 [ext_resource type="Texture2D" uid="uid://bst2n6tbyyfhl" path="res://assets/enemies/lizard/Idle/Idle1.png" id="2_o4mit"]
 [ext_resource type="Texture2D" uid="uid://bhf0x8s5eriq1" path="res://assets/enemies/lizard/Attack/Attack1.png" id="2_vottj"]
 [ext_resource type="Texture2D" uid="uid://cd0ha7imafb0e" path="res://assets/enemies/lizard/Attack/Attack2.png" id="3_gywx3"]
@@ -206,6 +207,8 @@ animation = &"idle"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1608501124]
 position = Vector2(-14, 4)
 shape = SubResource("CapsuleShape2D_1bmd2")
+
+[node name="CombatFloorTracker" parent="." instance=ExtResource("99_floor_tracker")]
 
 [node name="DetectionArea" type="Area2D" parent="." unique_id=206031734]
 position = Vector2(2, -1)

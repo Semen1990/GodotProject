@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bo18j4koh2y43" path="res://scripts/game_characters/paladin_player.gd" id="2_k250y"]
 [ext_resource type="Texture2D" uid="uid://cl08rkcwed8cf" path="res://assets/players/char_blue_1.png" id="2_top5s"]
 [ext_resource type="Script" uid="uid://coq0u1yt8n6mj" path="res://scripts/game_characters/PlayerController.gd" id="3_top5s"]
+[ext_resource type="PackedScene" path="res://prefabs/tools/CombatFloorTracker.tscn" id="99_floor_tracker"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ucuwj"]
 atlas = ExtResource("2_top5s")
@@ -518,6 +519,8 @@ autoplay = "idle"
 position = Vector2(-10, 56)
 scale = Vector2(4, 4)
 shape = SubResource("CapsuleShape2D_yn5gq")
+
+[node name="CombatFloorTracker" parent="." instance=ExtResource("99_floor_tracker")]
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(1, 13)

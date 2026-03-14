@@ -62,6 +62,9 @@ var current_enemy_ui_target: Node = null
 
 
 func _ready() -> void:
+	if CombatRuntimeLogger:
+		CombatRuntimeLogger.begin_session("level=%s" % _get_room_progression_id())
+
 	_cache_level_structure()
 	_validate_level_structure()
 	_set_current_level()
@@ -490,6 +493,13 @@ func _spawn_selected_character() -> void:
 	current_player = character_scene.instantiate()
 	get_entities_root().add_child(current_player)
 	current_player.global_position = _resolve_spawn_position()
+	if CombatRuntimeLogger:
+		CombatRuntimeLogger.log_event("player", "GameplayLevelBase", "spawned_player", {
+			"selected_character": Global.selected_character,
+			"scene": character_scene_path,
+			"player_name": current_player.name,
+			"position": current_player.global_position,
+		})
 
 	if Global:
 		Global.register_player(current_player)
@@ -1131,8 +1141,16 @@ func _update_double_jump_artifact() -> void:
 			has_wings = true
 			break
 
+	if current_player.has_method("set_double_jump_enabled"):
+		current_player.set_double_jump_enabled(has_wings)
+		return
+
 	if "enable_double_jump" in current_player:
 		current_player.enable_double_jump = has_wings
+	if "can_double_jump" in current_player:
+		current_player.can_double_jump = has_wings and current_player.is_on_floor()
+	if "has_double_jumped" in current_player:
+		current_player.has_double_jumped = false
 
 
 func _consume_revival_artifact() -> void:

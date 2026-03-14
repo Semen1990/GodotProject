@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/tools/combat_floor_area.gd" id="1_combat_floor_area"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_combat_floor"]
+size = Vector2(1856, 64)
+
+[node name="CombatFloorArea" type="Area2D" groups=["combat_floor_areas"]]
+script = ExtResource("1_combat_floor_area")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_combat_floor")

@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://bur680flyw6db" path="res://assets/players/char_red_2.png" id="2_ojc0i"]
 [ext_resource type="Texture2D" uid="uid://d21tutxngphof" path="res://assets/players/char_red_1.png" id="2_u2xg8"]
 [ext_resource type="Script" uid="uid://coq0u1yt8n6mj" path="res://scripts/game_characters/PlayerController.gd" id="3_p8vhd"]
+[ext_resource type="PackedScene" path="res://prefabs/tools/CombatFloorTracker.tscn" id="99_floor_tracker"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_vlmi5"]
 atlas = ExtResource("2_ojc0i")
@@ -653,6 +654,8 @@ autoplay = "idle"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1070807085]
 position = Vector2(-1.5, 13)
 shape = SubResource("CapsuleShape2D_yn5gq")
+
+[node name="CombatFloorTracker" parent="." instance=ExtResource("99_floor_tracker")]
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=412420069]
 position = Vector2(-1, 12)

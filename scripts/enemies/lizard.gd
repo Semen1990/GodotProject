@@ -21,6 +21,17 @@ signal enemy_ui_changed(snapshot: Dictionary)
 @export var patrol_distance: float = 100.0
 @export var ui_display_name: String = "Ящер-копейщик"
 @export var ui_icon_texture: Texture2D
+@export var require_line_of_sight_before_engage: bool = true
+@export var require_line_of_sight_for_melee: bool = true
+@export_flags_2d_physics var line_of_sight_collision_mask: int = 1
+@export var line_of_sight_height_offset: float = -28.0
+@export var pre_engage_vertical_tolerance: float = 96.0
+@export var melee_vertical_tolerance: float = 48.0
+@export var use_combat_lane_before_engage: bool = false
+@export var use_combat_lane_for_melee: bool = true
+@export var combat_lane_probe_depth: float = 96.0
+@export var combat_lane_tolerance: float = 20.0
+@export var combat_lane_probe_offset_y: float = -6.0
 
 enum State { IDLE, PATROL, CHASE, ATTACK, HURT, DEAD, RETREAT, PARRY, KNOCKDOWN, PRESSURE, RECOVER }
 enum AttackProfile { NORMAL, PUNISH_RUSH, PUNISH_HEAVY }
@@ -63,6 +74,7 @@ const PLAYER_GUARD_FEEDBACK_TIME: float = 1.2
 const BACKSTAB_KNOCKDOWN_DEFAULT: float = 0.95
 const BACKSTAB_RECOVER_TIME: float = 0.65
 const ATTACK_HIT_FRAME: int = 3
+const FACING_DEADZONE_X: float = 12.0
 const NORMAL_ATTACK_HIT_TELL: float = 0.24
 const NORMAL_ATTACK_SPEED_SCALE: float = 1.05
 const NORMAL_MEDIUM_ATTACK_CHANCE: float = 0.35
@@ -77,6 +89,9 @@ const PUNISH_HEAVY_HOLD_TIME: float = 0.12
 const PUNISH_HEAVY_DAMAGE_MULTIPLIER: float = 1.8
 const PUNISH_HEAVY_RECOVER_TIME: float = 1.0
 const PUNISH_RUSH_RECOVER_TIME: float = 0.95
+const NORMAL_ATTACK_LUNGE_SPEED_MULTIPLIER: float = 0.58
+const PUNISH_RUSH_LUNGE_SPEED_MULTIPLIER: float = 0.82
+const ATTACK_LUNGE_TIME_FACTOR: float = 0.9
 
 var start_position: Vector2
 var patrol_direction: int = 1
@@ -119,6 +134,7 @@ var use_hurt_recover_pose: bool = false
 var heavy_attack_pause_active: bool = false
 var heavy_attack_pause_used: bool = false
 var heavy_attack_pause_timer: float = 0.0
+var attack_commit_direction: float = 0.0
 var queued_counter_is_heavy: bool = false
 var parry_indicator: Sprite2D = null
 var parry_visual_cue_shown: bool = false
@@ -126,11 +142,15 @@ var question_indicator_root: Node2D = null
 var question_indicator_labels: Array[Label] = []
 var is_searching_for_player: bool = false
 var base_detection_radius: float = 0.0
+var last_damage_attempt_info: Dictionary = {}
+var _debug_last_detection_signature: String = ""
+var _debug_last_melee_signature: String = ""
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var detection_area: Area2D = $DetectionArea
 @onready var detection_shape: CollisionShape2D = $DetectionArea/CollisionShape2D
+@onready var combat_floor_tracker: CombatFloorTracker = get_node_or_null("CombatFloorTracker") as CombatFloorTracker
 
 
 func _ready() -> void:
@@ -173,6 +193,87 @@ func capture_persistent_state() -> Dictionary:
 	state["dead"] = not is_alive
 	state["consumed"] = not is_alive
 	return state
+
+
+func get_current_combat_floor_id() -> int:
+	if combat_floor_tracker != null:
+		var tracker_floor: int = combat_floor_tracker.get_current_floor_id()
+		if tracker_floor != -1:
+			return tracker_floor
+	return _resolve_combat_floor_id_from_world()
+
+
+func get_last_stable_combat_floor_id() -> int:
+	if combat_floor_tracker != null:
+		var tracker_floor: int = combat_floor_tracker.get_last_stable_floor_id()
+		if tracker_floor != -1:
+			return tracker_floor
+	return _resolve_combat_floor_id_from_world()
+
+
+func get_effective_combat_floor_id() -> int:
+	if combat_floor_tracker != null:
+		var tracker_floor: int = combat_floor_tracker.get_effective_floor_id()
+		if tracker_floor != -1:
+			return tracker_floor
+	return _resolve_combat_floor_id_from_world()
+
+
+func is_between_combat_floors() -> bool:
+	if combat_floor_tracker != null and combat_floor_tracker.get_effective_floor_id() != -1:
+		return combat_floor_tracker.is_between_floors()
+	return false
+
+
+func is_on_same_combat_floor(other: Node) -> bool:
+	if other == null or not other.has_method("get_effective_combat_floor_id"):
+		return false
+	var my_floor: int = get_effective_combat_floor_id()
+	var other_floor: int = int(other.call("get_effective_combat_floor_id"))
+	return my_floor != -1 and my_floor == other_floor
+
+
+func _resolve_combat_floor_id_from_world() -> int:
+	var tree := get_tree()
+	if tree == null:
+		return -1
+
+	var probe_point: Vector2 = _get_combat_floor_probe_world_point()
+	var best_floor_id: int = -1
+	var best_priority: int = -2147483648
+
+	for node in tree.get_nodes_in_group("combat_floor_areas"):
+		if node == null or not is_instance_valid(node):
+			continue
+		if not _combat_floor_area_contains_point(node as Node2D, probe_point):
+			continue
+
+		var area_priority: int = int(node.get("floor_priority"))
+		var area_floor_id: int = int(node.get("floor_id"))
+		if area_priority > best_priority or (area_priority == best_priority and area_floor_id > best_floor_id):
+			best_priority = area_priority
+			best_floor_id = area_floor_id
+
+	return best_floor_id
+
+
+func _get_combat_floor_probe_world_point() -> Vector2:
+	if collision_shape == null or collision_shape.shape == null:
+		return global_position + Vector2(0.0, 12.0)
+	return collision_shape.global_position + Vector2(0.0, 8.0)
+
+
+func _combat_floor_area_contains_point(area_node: Node2D, world_point: Vector2) -> bool:
+	if area_node == null or not is_instance_valid(area_node):
+		return false
+	var shape_node: CollisionShape2D = area_node.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if shape_node == null or not shape_node.shape is RectangleShape2D:
+		return false
+	var rect_shape := shape_node.shape as RectangleShape2D
+	var scaled_size: Vector2 = rect_shape.size * area_node.global_scale.abs()
+	var half_size: Vector2 = scaled_size * 0.5
+	var delta: Vector2 = world_point - area_node.global_position
+	return absf(delta.x) <= half_size.x and absf(delta.y) <= half_size.y
 
 
 func apply_persistent_state(state: Dictionary) -> void:
@@ -222,6 +323,9 @@ func _physics_process(delta: float) -> void:
 	if not is_alive or not is_active:
 		velocity = Vector2.ZERO
 		return
+
+	if target == null and not has_engaged_player:
+		_try_acquire_visible_player()
 
 	if not is_on_floor():
 		velocity.y += gravity * delta
@@ -286,7 +390,7 @@ func _physics_process(delta: float) -> void:
 		State.PRESSURE:
 			_process_pressure()
 		State.ATTACK:
-			velocity.x = 0.0
+			_process_attack()
 		State.RETREAT:
 			_process_retreat()
 		State.PARRY:
@@ -386,6 +490,11 @@ func _change_state(new_state: State) -> void:
 		return
 
 	current_state = new_state
+	_debug_log_combat("state", "change_state", {
+		"state": _state_to_string(new_state),
+		"target": target.name if target != null and is_instance_valid(target) else "<null>",
+		"position": global_position,
+	})
 	if animated_sprite:
 		animated_sprite.speed_scale = 1.0
 
@@ -418,6 +527,7 @@ func _change_state(new_state: State) -> void:
 			heavy_attack_pause_active = false
 			heavy_attack_pause_used = false
 			heavy_attack_pause_timer = 0.0
+			attack_commit_direction = _resolve_attack_commit_direction()
 			_face_target()
 			_configure_attack_profile()
 			if animated_sprite:
@@ -529,10 +639,14 @@ func _process_chase() -> void:
 	if move_dir == 0.0:
 		move_dir = 1.0
 
-	if animated_sprite:
-		animated_sprite.flip_h = dir_x < 0
+	_apply_facing(dir_x)
 
-	if dist <= PRESSURE_DISTANCE:
+	if not _is_target_in_pressure_lane():
+		velocity.x = 0.0
+		_play_anim("idle")
+		return
+
+	if dist <= PRESSURE_DISTANCE and _is_target_in_pressure_lane():
 		_change_state(State.PRESSURE)
 		return
 
@@ -567,6 +681,10 @@ func _process_pressure() -> void:
 
 	_face_target()
 
+	if not _is_target_in_pressure_lane():
+		_change_state(State.CHASE)
+		return
+
 	if dist > PRESSURE_DISTANCE + 22.0:
 		_change_state(State.CHASE)
 		return
@@ -576,7 +694,7 @@ func _process_pressure() -> void:
 			velocity.x = 0.0
 			return
 		combo_continuation_pending = false
-		if combo_hits_remaining > 0 and dist <= attack_range + 18.0:
+		if combo_hits_remaining > 0 and dist <= attack_range + 18.0 and _can_melee_attack_target():
 			_change_state(State.ATTACK)
 			return
 		combo_hits_remaining = 0
@@ -592,7 +710,7 @@ func _process_pressure() -> void:
 		_change_state(State.PARRY)
 		return
 
-	if dist <= attack_range + 18.0 and can_attack:
+	if dist <= attack_range + 18.0 and can_attack and _can_melee_attack_target():
 		_setup_normal_combo()
 		_change_state(State.ATTACK)
 		return
@@ -612,7 +730,7 @@ func _process_pressure() -> void:
 		_change_state(State.PARRY)
 		return
 
-	if dist <= attack_range + 14.0 and can_attack:
+	if dist <= attack_range + 14.0 and can_attack and _can_melee_attack_target():
 		_setup_normal_combo()
 		_change_state(State.ATTACK)
 		return
@@ -639,7 +757,8 @@ func _process_retreat() -> void:
 		_change_state(State.PRESSURE)
 		return
 	if (retreat_commit_timer <= 0.0 and (retreat_timer <= 0.0 or absf(dir_x) >= RETREAT_DISTANCE_TARGET)) or is_on_wall():
-		_change_state(State.PRESSURE if absf(dir_x) <= PRESSURE_DISTANCE else State.CHASE)
+		var can_resume_pressure: bool = absf(dir_x) <= PRESSURE_DISTANCE and _is_target_in_pressure_lane()
+		_change_state(State.PRESSURE if can_resume_pressure else State.CHASE)
 		return
 
 	var retreat_dir: float = -signf(dir_x)
@@ -703,10 +822,45 @@ func _process_recover() -> void:
 	_resolve_post_recover_state()
 
 
+func _process_attack() -> void:
+	if heavy_attack_pause_active:
+		velocity.x = 0.0
+		return
+
+	var lunge_window: float = attack_hit_tell_time * ATTACK_LUNGE_TIME_FACTOR
+	if attack_elapsed >= lunge_window:
+		velocity.x = 0.0
+		return
+
+	var lunge_multiplier: float = NORMAL_ATTACK_LUNGE_SPEED_MULTIPLIER
+	if attack_profile == AttackProfile.PUNISH_RUSH:
+		lunge_multiplier = PUNISH_RUSH_LUNGE_SPEED_MULTIPLIER
+	elif attack_profile == AttackProfile.PUNISH_HEAVY:
+		lunge_multiplier = 0.0
+
+	velocity.x = attack_commit_direction * chase_speed * lunge_multiplier
+
+
 func _face_target() -> void:
 	if target and animated_sprite:
 		var dir: float = target.global_position.x - global_position.x
-		animated_sprite.flip_h = dir < 0
+		_apply_facing(dir)
+
+
+func _apply_facing(dir_x: float) -> void:
+	if not animated_sprite:
+		return
+	if absf(dir_x) < FACING_DEADZONE_X:
+		return
+	animated_sprite.flip_h = dir_x < 0
+
+
+func _resolve_attack_commit_direction() -> float:
+	if target != null and is_instance_valid(target):
+		var dir_x: float = signf(target.global_position.x - global_position.x)
+		if dir_x != 0.0:
+			return dir_x
+	return -1.0 if animated_sprite and animated_sprite.flip_h else 1.0
 
 
 func _on_detection_entered(body: Node2D) -> void:
@@ -717,7 +871,13 @@ func _on_detection_entered(body: Node2D) -> void:
 			return
 		if body.has_method("is_hidden_from_enemy") and body.is_hidden_from_enemy(self):
 			return
+		if not has_engaged_player and not _can_detect_player_before_engage(body):
+			return
 		target = body
+		_debug_log_combat("detect", "entered", {
+			"player": body.name,
+			"position": body.global_position,
+		})
 		_clear_searching_for_player()
 		if not has_engaged_player:
 			has_engaged_player = true
@@ -736,12 +896,16 @@ func _on_detection_exited(body: Node2D) -> void:
 	if not is_alive:
 		return
 	if body == target:
+		_debug_log_combat("detect", "exited", {
+			"player": body.name,
+			"position": body.global_position,
+		})
 		_start_searching_for_player()
 
 
 func _play_anim(anim_name: String) -> void:
 	if animated_sprite and animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation(anim_name):
-		if animated_sprite.animation != anim_name:
+		if animated_sprite.animation != anim_name or not animated_sprite.is_playing():
 			animated_sprite.play(anim_name)
 
 
@@ -756,16 +920,14 @@ func _on_frame_changed() -> void:
 		animated_sprite.frame = max(0, ATTACK_HIT_FRAME - 1)
 		return
 	if attack_elapsed >= attack_hit_tell_time and animated_sprite.frame >= ATTACK_HIT_FRAME:
-		_deal_damage()
-		damage_dealt_this_attack = true
+		damage_dealt_this_attack = _deal_damage()
 
 
 func _on_animation_finished() -> void:
 	match current_state:
 		State.ATTACK:
 			if not damage_dealt_this_attack:
-				_deal_damage()
-				damage_dealt_this_attack = true
+				damage_dealt_this_attack = _deal_damage()
 
 			combo_hits_remaining = maxi(0, combo_hits_remaining - 1)
 			if combo_hits_remaining > 0 and target and is_instance_valid(target) and target.get("is_dead") != true and global_position.distance_to(target.global_position) <= attack_range + 18.0:
@@ -818,14 +980,26 @@ func _hide_enemy() -> void:
 	set_physics_process(false)
 
 
-func _deal_damage() -> void:
+func _deal_damage() -> bool:
 	if not target or not is_instance_valid(target):
-		return
+		last_damage_attempt_info = {"result": "no_target"}
+		_debug_log_combat("damage", "melee_attempt", last_damage_attempt_info)
+		return false
 	if target.get("is_dead") == true:
-		return
+		last_damage_attempt_info = {"result": "dead_target"}
+		_debug_log_combat("damage", "melee_attempt", last_damage_attempt_info)
+		return false
 
 	var dist: float = global_position.distance_to(target.global_position)
-	if dist <= attack_range + 42.0 and target.has_method("take_damage"):
+	var can_confirm_hit: bool = _can_confirm_committed_melee_hit(target)
+	last_damage_attempt_info = {
+		"result": "gate_check",
+		"dist": dist,
+		"can_confirm": can_confirm_hit,
+		"target_has_take_damage": target.has_method("take_damage"),
+		"player_hp_before": target.get("current_health")
+	}
+	if dist <= attack_range + 42.0 and can_confirm_hit and target.has_method("take_damage"):
 		if target.has_method("register_incoming_attacker"):
 			target.register_incoming_attacker(self)
 		var total_damage: int = maxi(1, int(round(damage * attack_damage_multiplier)))
@@ -835,6 +1009,265 @@ func _deal_damage() -> void:
 			total_damage = maxi(total_damage, int(round(damage * PUNISH_HEAVY_DAMAGE_MULTIPLIER)))
 			_show_combat_popup("Контратака", Color(1.0, 0.72, 0.32, 1.0), 0.95, 42.0, 1.08)
 		target.take_damage(total_damage, "physical", "Ящерица с копьём", reaction_tag)
+		last_damage_attempt_info = {
+			"result": "applied",
+			"dist": dist,
+			"can_confirm": can_confirm_hit,
+			"damage": total_damage,
+			"reaction": reaction_tag,
+			"player_hp_after": target.get("current_health")
+		}
+		_debug_log_combat("damage", "melee_attempt", last_damage_attempt_info)
+		return true
+	last_damage_attempt_info = {
+		"result": "miss_gate",
+		"dist": dist,
+		"can_confirm": can_confirm_hit,
+		"target_has_take_damage": target.has_method("take_damage")
+	}
+	_debug_log_combat("damage", "melee_attempt", last_damage_attempt_info)
+	return false
+
+func _try_acquire_visible_player() -> void:
+	if detection_area == null or not detection_area.monitoring:
+		return
+
+	for body in detection_area.get_overlapping_bodies():
+		if not (body is Node2D):
+			continue
+		var player_body: Node2D = body as Node2D
+		if not player_body.is_in_group("player"):
+			continue
+		if player_body.get("is_dead") == true:
+			continue
+		if player_body.has_method("is_hidden_from_enemy") and player_body.is_hidden_from_enemy(self):
+			continue
+		if _can_detect_player_before_engage(player_body):
+			_on_detection_entered(player_body)
+			return
+
+
+func _can_detect_player_before_engage(player_body: Node2D) -> bool:
+	if player_body == null or not is_instance_valid(player_body):
+		_debug_log_detection_result(player_body, false, "invalid_target")
+		return false
+	if _uses_explicit_combat_floors(player_body):
+		if not is_on_same_combat_floor(player_body):
+			_debug_log_detection_result(player_body, false, "floor_mismatch", {
+				"enemy_floor": get_effective_combat_floor_id(),
+				"target_floor": _get_node_effective_combat_floor_id(player_body),
+			})
+			return false
+	elif use_combat_lane_before_engage:
+		var same_lane: bool = _is_same_combat_lane(player_body)
+		if not same_lane:
+			_debug_log_detection_result(player_body, false, "lane_mismatch", {"same_lane": same_lane})
+			return false
+	elif absf(player_body.global_position.y - global_position.y) > pre_engage_vertical_tolerance:
+		_debug_log_detection_result(player_body, false, "vertical_mismatch", {
+			"dy": absf(player_body.global_position.y - global_position.y),
+		})
+		return false
+	if not require_line_of_sight_before_engage:
+		_debug_log_detection_result(player_body, true, "ok_no_los")
+		return true
+	var has_los: bool = _has_line_of_sight_to(player_body)
+	_debug_log_detection_result(player_body, has_los, "ok" if has_los else "los_blocked")
+	return has_los
+
+
+func _can_melee_attack_target() -> bool:
+	if target == null or not is_instance_valid(target):
+		_debug_log_melee_result(false, "invalid_target")
+		return false
+	if target.get("is_dead") == true:
+		_debug_log_melee_result(false, "target_dead")
+		return false
+	if _uses_explicit_combat_floors(target):
+		if not is_on_same_combat_floor(target):
+			_debug_log_melee_result(false, "floor_mismatch", {
+				"enemy_floor": get_effective_combat_floor_id(),
+				"target_floor": _get_node_effective_combat_floor_id(target),
+			})
+			return false
+	elif use_combat_lane_for_melee:
+		var same_lane: bool = _is_same_combat_lane(target)
+		if not same_lane:
+			_debug_log_melee_result(false, "lane_mismatch", {"same_lane": same_lane})
+			return false
+	elif absf(target.global_position.y - global_position.y) > melee_vertical_tolerance:
+		_debug_log_melee_result(false, "vertical_mismatch", {
+			"dy": absf(target.global_position.y - global_position.y),
+		})
+		return false
+	if not require_line_of_sight_for_melee:
+		_debug_log_melee_result(true, "ok_no_los")
+		return true
+	var has_los: bool = _has_line_of_sight_to(target)
+	_debug_log_melee_result(has_los, "ok" if has_los else "los_blocked")
+	return has_los
+
+
+func _is_target_in_pressure_lane() -> bool:
+	if target == null or not is_instance_valid(target):
+		return false
+	if _uses_explicit_combat_floors(target):
+		return is_on_same_combat_floor(target)
+	if use_combat_lane_for_melee:
+		return _is_same_combat_lane(target)
+	return absf(target.global_position.y - global_position.y) <= melee_vertical_tolerance
+
+
+func _can_confirm_committed_melee_hit(target_node: Node2D) -> bool:
+	if target_node == null or not is_instance_valid(target_node):
+		return false
+	if target_node.get("is_dead") == true:
+		return false
+	if _uses_explicit_combat_floors(target_node):
+		return is_on_same_combat_floor(target_node)
+	if use_combat_lane_for_melee:
+		return _is_same_combat_lane(target_node)
+	return absf(target_node.global_position.y - global_position.y) <= melee_vertical_tolerance
+
+
+func _uses_explicit_combat_floors(target_node: Node2D) -> bool:
+	if target_node == null or not is_instance_valid(target_node):
+		return false
+	return get_effective_combat_floor_id() != -1 and _get_node_effective_combat_floor_id(target_node) != -1
+
+
+func _get_node_effective_combat_floor_id(target_node: Node) -> int:
+	if target_node == null or not is_instance_valid(target_node):
+		return -1
+	if target_node.has_method("get_effective_combat_floor_id"):
+		return int(target_node.call("get_effective_combat_floor_id"))
+	return -1
+
+
+func _is_same_combat_lane(target_node: Node2D) -> bool:
+	if target_node == null or not is_instance_valid(target_node):
+		return false
+
+	var own_support_y: float = _get_support_surface_y(self)
+	var target_support_y: float = _get_support_surface_y(target_node)
+	if is_inf(own_support_y) or is_inf(target_support_y):
+		if _is_node_grounded(self) and _is_node_grounded(target_node):
+			return absf(target_node.global_position.y - global_position.y) <= combat_lane_tolerance
+		return false
+
+	return absf(own_support_y - target_support_y) <= combat_lane_tolerance
+
+
+func _get_support_surface_y(node: Node2D) -> float:
+	var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
+	if space_state == null:
+		return INF
+
+	var half_height: float = _estimate_body_half_height(node)
+	var half_width: float = _estimate_body_half_width(node)
+	var base_origin: Vector2 = node.global_position + Vector2(0.0, -half_height + combat_lane_probe_offset_y)
+	var best_hit_y: float = INF
+	var offsets: Array[float] = [0.0, -half_width * 0.45, half_width * 0.45]
+
+	for offset_x in offsets:
+		var origin: Vector2 = base_origin + Vector2(offset_x, 0.0)
+		var target_position: Vector2 = origin + Vector2(0.0, combat_lane_probe_depth + half_height)
+		var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(
+			origin,
+			target_position,
+			line_of_sight_collision_mask
+		)
+		query.exclude = _build_lane_probe_exclusions(node)
+		query.collide_with_areas = false
+		query.hit_from_inside = true
+
+		var hit: Dictionary = space_state.intersect_ray(query)
+		if hit.is_empty():
+			continue
+
+		var hit_position = hit.get("position", Vector2.ZERO)
+		if hit_position is Vector2:
+			var support_y: float = (hit_position as Vector2).y
+			if support_y < node.global_position.y - 8.0:
+				continue
+			best_hit_y = minf(best_hit_y, support_y)
+
+	return best_hit_y
+
+
+func _build_lane_probe_exclusions(node: Node) -> Array:
+	var exclusions: Array = []
+	if self is CollisionObject2D:
+		exclusions.append((self as CollisionObject2D).get_rid())
+	if node is CollisionObject2D and node != self:
+		exclusions.append((node as CollisionObject2D).get_rid())
+	return exclusions
+
+
+func _estimate_body_half_height(node: Node2D) -> float:
+	var shape_node: CollisionShape2D = node.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if shape_node == null or shape_node.shape == null:
+		return 24.0
+
+	if shape_node.shape is RectangleShape2D:
+		return (shape_node.shape as RectangleShape2D).size.y * 0.5
+	if shape_node.shape is CapsuleShape2D:
+		var capsule: CapsuleShape2D = shape_node.shape as CapsuleShape2D
+		return capsule.height * 0.5 + capsule.radius
+	if shape_node.shape is CircleShape2D:
+		return (shape_node.shape as CircleShape2D).radius
+
+	return 24.0
+
+
+func _estimate_body_half_width(node: Node2D) -> float:
+	var shape_node: CollisionShape2D = node.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if shape_node == null or shape_node.shape == null:
+		return 14.0
+
+	if shape_node.shape is RectangleShape2D:
+		return (shape_node.shape as RectangleShape2D).size.x * 0.5
+	if shape_node.shape is CapsuleShape2D:
+		return (shape_node.shape as CapsuleShape2D).radius
+	if shape_node.shape is CircleShape2D:
+		return (shape_node.shape as CircleShape2D).radius
+
+	return 14.0
+
+
+func _is_node_grounded(node: Node) -> bool:
+	if node == null or not node.has_method("is_on_floor"):
+		return false
+	return bool(node.call("is_on_floor"))
+
+
+func _has_line_of_sight_to(target_node: Node2D) -> bool:
+	if target_node == null or not is_instance_valid(target_node):
+		return false
+
+	var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
+	if space_state == null:
+		return true
+
+	var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(
+		_get_line_of_sight_origin(),
+		_get_line_of_sight_target_position(target_node),
+		line_of_sight_collision_mask
+	)
+	query.exclude = [get_rid(), target_node.get_rid()]
+	query.collide_with_areas = false
+	query.hit_from_inside = false
+
+	var hit: Dictionary = space_state.intersect_ray(query)
+	return hit.is_empty()
+
+
+func _get_line_of_sight_origin() -> Vector2:
+	return global_position + Vector2(0.0, line_of_sight_height_offset)
+
+
+func _get_line_of_sight_target_position(target_node: Node2D) -> Vector2:
+	return target_node.global_position + Vector2(0.0, line_of_sight_height_offset)
 
 
 func take_damage(amount: int, _type: String = "physical") -> void:
@@ -863,6 +1296,7 @@ func take_damage(amount: int, _type: String = "physical") -> void:
 		Global.add_damage_dealt(amount)
 
 	_show_damage_flash()
+	_react_to_incoming_damage()
 
 	if current_health <= 0:
 		_die()
@@ -915,6 +1349,35 @@ func force_alert(player: Node2D) -> void:
 	_request_ui_target()
 	if current_state not in [State.ATTACK, State.KNOCKDOWN, State.HURT, State.PARRY]:
 		_change_state(State.CHASE)
+
+
+func _resolve_damage_attacker() -> Node2D:
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return null
+	var player: Node = tree.get_first_node_in_group("player")
+	if player == null or not (player is Node2D):
+		return null
+	var player_node: Node2D = player as Node2D
+	if player_node.get("is_dead") == true:
+		return null
+	return player_node
+
+
+func _react_to_incoming_damage() -> void:
+	var player: Node2D = _resolve_damage_attacker()
+	if player == null or not is_instance_valid(player):
+		return
+
+	if not has_engaged_player:
+		has_engaged_player = true
+		_set_engaged_detection_range_enabled(true)
+		repeat_potion_blocking_changed.emit(is_repeat_potion_blocker())
+	_request_ui_target()
+
+	target = player
+	_clear_searching_for_player()
+	engage_rush_timer = 0.65
 
 
 func apply_short_stagger(duration: float = 0.45, attacker_x: float = 0.0) -> void:
@@ -989,6 +1452,8 @@ func _get_knockdown_animation_name() -> String:
 
 func _should_enter_parry(dist: float) -> bool:
 	if parry_cooldown > 0.0 or dist > PARRY_TRIGGER_DISTANCE:
+		return false
+	if not _is_target_in_pressure_lane():
 		return false
 	if not _is_target_attack_pressure_active():
 		return false
@@ -1254,6 +1719,82 @@ func _emit_enemy_ui_snapshot() -> void:
 func _request_ui_target() -> void:
 	ui_target_requested.emit(self)
 	_emit_enemy_ui_snapshot()
+
+
+func _state_to_string(state_value: int) -> String:
+	match state_value:
+		State.IDLE:
+			return "IDLE"
+		State.PATROL:
+			return "PATROL"
+		State.CHASE:
+			return "CHASE"
+		State.ATTACK:
+			return "ATTACK"
+		State.HURT:
+			return "HURT"
+		State.DEAD:
+			return "DEAD"
+		State.RETREAT:
+			return "RETREAT"
+		State.PARRY:
+			return "PARRY"
+		State.KNOCKDOWN:
+			return "KNOCKDOWN"
+		State.PRESSURE:
+			return "PRESSURE"
+		State.RECOVER:
+			return "RECOVER"
+		_:
+			return "UNKNOWN"
+
+
+func _debug_log_combat(category: String, message: String, data: Dictionary = {}) -> void:
+	if CombatRuntimeLogger:
+		CombatRuntimeLogger.log_event(category, name, message, data)
+
+
+func _debug_log_detection_result(player_body: Node2D, result: bool, reason: String, extra: Dictionary = {}) -> void:
+	var signature: String = "%s|%s|%s" % [
+		player_body.name if player_body != null else "<null>",
+		str(result),
+		reason,
+	]
+	if signature == _debug_last_detection_signature:
+		return
+	_debug_last_detection_signature = signature
+	var payload: Dictionary = {
+		"result": result,
+		"reason": reason,
+		"player": player_body.name if player_body != null else "<null>",
+		"enemy_pos": global_position,
+		"player_pos": player_body.global_position if player_body != null else Vector2.ZERO,
+		"engaged": has_engaged_player,
+	}
+	payload.merge(extra, true)
+	_debug_log_combat("detect", "pre_engage_check", payload)
+
+
+func _debug_log_melee_result(result: bool, reason: String, extra: Dictionary = {}) -> void:
+	var signature: String = "%s|%s|%s|%s" % [
+		target.name if target != null and is_instance_valid(target) else "<null>",
+		str(result),
+		reason,
+		_state_to_string(current_state),
+	]
+	if signature == _debug_last_melee_signature:
+		return
+	_debug_last_melee_signature = signature
+	var payload: Dictionary = {
+		"result": result,
+		"reason": reason,
+		"target": target.name if target != null and is_instance_valid(target) else "<null>",
+		"enemy_pos": global_position,
+		"target_pos": target.global_position if target != null and is_instance_valid(target) else Vector2.ZERO,
+		"state": _state_to_string(current_state),
+	}
+	payload.merge(extra, true)
+	_debug_log_combat("melee", "check", payload)
 
 
 func _cache_detection_radius() -> void:

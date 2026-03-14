@@ -115,6 +115,7 @@ func _load_fresh_level() -> void:
 		push_error("Level1DuelProbe: failed to resolve player or lizard")
 		return
 
+	_log_event("probe -> floor areas count %d" % get_tree().get_nodes_in_group("combat_floor_areas").size())
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 
@@ -277,6 +278,12 @@ func _poll_player_snapshot() -> void:
 		"is_hurt": bool(player.get("is_hurt")),
 		"block_phase": WARRIOR_BLOCK_PHASE_NAMES.get(int(player.get("block_phase")), str(player.get("block_phase"))),
 		"counter_ready": bool(player.get("is_counter_attack_ready")),
+		"tracker_present": player.get_node_or_null("CombatFloorTracker") != null,
+		"floor_group_count": get_tree().get_nodes_in_group("combat_floor_areas").size(),
+		"probe_y": snapped(_get_probe_point_y(player), 0.1),
+		"current_floor": _get_node_current_floor(player),
+		"effective_floor": _get_node_effective_floor(player),
+		"between_floors": _get_node_between_floors(player),
 		"x": snapped(player.global_position.x, 0.1),
 	}
 
@@ -308,6 +315,12 @@ func _poll_lizard_snapshot() -> void:
 		"recover_timer": snapped(_variant_to_float(recover_timer_value), 0.01),
 		"retreat_timer": snapped(_variant_to_float(retreat_timer_value), 0.01),
 		"knockdown_timer": snapped(_variant_to_float(knockdown_timer_value), 0.01),
+		"tracker_present": lizard.get_node_or_null("CombatFloorTracker") != null,
+		"floor_group_count": get_tree().get_nodes_in_group("combat_floor_areas").size(),
+		"probe_y": snapped(_get_probe_point_y(lizard), 0.1),
+		"current_floor": _get_node_current_floor(lizard),
+		"effective_floor": _get_node_effective_floor(lizard),
+		"between_floors": _get_node_between_floors(lizard),
 		"x": snapped(lizard.global_position.x, 0.1),
 		"vx": snapped(lizard.velocity.x, 0.1),
 	}
@@ -349,6 +362,40 @@ func _get_player_health() -> int:
 
 func _get_lizard_health() -> int:
 	return int(lizard.get("current_health"))
+
+
+func _get_node_current_floor(node: Node) -> int:
+	if node == null or not is_instance_valid(node):
+		return -1
+	if node.has_method("get_current_combat_floor_id"):
+		return int(node.call("get_current_combat_floor_id"))
+	return -1
+
+
+func _get_node_effective_floor(node: Node) -> int:
+	if node == null or not is_instance_valid(node):
+		return -1
+	if node.has_method("get_effective_combat_floor_id"):
+		return int(node.call("get_effective_combat_floor_id"))
+	return -1
+
+
+func _get_node_between_floors(node: Node) -> bool:
+	if node == null or not is_instance_valid(node):
+		return false
+	if node.has_method("is_between_combat_floors"):
+		return bool(node.call("is_between_combat_floors"))
+	return false
+
+
+func _get_probe_point_y(node: Node) -> float:
+	if node == null or not is_instance_valid(node):
+		return -1.0
+	if node.has_method("_get_combat_floor_probe_world_point"):
+		var point: Variant = node.call("_get_combat_floor_probe_world_point")
+		if point is Vector2:
+			return (point as Vector2).y
+	return -1.0
 
 
 func _log_event(message: String) -> void:
