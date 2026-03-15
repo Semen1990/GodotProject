@@ -19,6 +19,10 @@ const COMBAT_FLOOR_LAYER: int = 1 << 4
 		probe_bottom_padding = value
 		queue_redraw()
 
+@export var floor_release_grace_time: float = 0.12:
+	set(value):
+		floor_release_grace_time = maxf(0.0, value)
+
 @export var debug_visible: bool = true:
 	set(value):
 		debug_visible = value
@@ -33,6 +37,7 @@ var current_floor_id: int = -1
 var last_stable_floor_id: int = -1
 
 var _tracked_floor_areas: Array[CombatFloorArea] = []
+var _floor_release_timer: float = 0.0
 
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
@@ -57,6 +62,8 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if follow_parent_collision_shape:
 		_sync_to_parent_collision_shape()
+	if _floor_release_timer > 0.0:
+		_floor_release_timer = maxf(0.0, _floor_release_timer - _delta)
 	_refresh_from_current_overlaps()
 	if Engine.is_editor_hint():
 		queue_redraw()
@@ -123,7 +130,20 @@ func _on_area_exited(area: Area2D) -> void:
 
 func _refresh_floor_state() -> void:
 	var best_area: CombatFloorArea = _select_best_floor_area()
-	var next_floor_id: int = best_area.floor_id if best_area != null else -1
+	var next_floor_id: int = current_floor_id
+
+	if best_area != null:
+		next_floor_id = best_area.floor_id
+		_floor_release_timer = 0.0
+	elif current_floor_id != -1 and floor_release_grace_time > 0.0:
+		if _floor_release_timer <= 0.0:
+			_floor_release_timer = floor_release_grace_time
+		if _floor_release_timer > 0.0:
+			return
+		next_floor_id = -1
+	else:
+		next_floor_id = -1
+
 	if next_floor_id == current_floor_id:
 		return
 
@@ -164,6 +184,9 @@ func _select_best_floor_area() -> CombatFloorArea:
 func _sync_to_parent_collision_shape() -> void:
 	var parent_node := get_parent()
 	if parent_node == null:
+		return
+	if not Engine.is_editor_hint() and parent_node.has_method("_get_combat_floor_probe_world_point"):
+		global_position = parent_node.call("_get_combat_floor_probe_world_point")
 		return
 	var parent_collision_shape := parent_node.get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if parent_collision_shape == null or parent_collision_shape.shape == null:

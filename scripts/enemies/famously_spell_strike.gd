@@ -5,9 +5,10 @@ const SPELL_PREFIX: String = "Bringer-of-Death_Spell_"
 const SPELL_FRAME_COUNT: int = 16
 
 @export var animation_name: StringName = &"spell"
-@export var impact_frame: int = 11
-@export var target_offset: Vector2 = Vector2(0.0, -96.0)
-@export var track_target_until_impact: bool = true
+@export var impact_frame: int = 9
+@export var strike_spacing: float = 56.0
+@export var impact_radius: float = 32.0
+@export var impact_linger_time: float = 0.16
 
 var target: Node2D = null
 var damage_amount: int = 3
@@ -15,58 +16,77 @@ var madness_chance: float = 0.3
 var madness_stacks: int = 1
 var damage_source: String = "Famously"
 var impact_applied: bool = false
+var strike_offsets: Array[Vector2] = []
+var hit_target_ids: Dictionary = {}
+var impact_center_position: Vector2 = Vector2.ZERO
+var linger_time_remaining: float = 0.0
+var impact_started: bool = false
+var all_strikes_finished: bool = false
+var completion_handled: bool = false
 
-@onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var template_sprite: AnimatedSprite2D = $AnimatedSprite2D
+
+var strike_sprites: Array[AnimatedSprite2D] = []
+var finished_sprite_count: int = 0
 
 
 func _ready() -> void:
-	_ensure_sprite_frames()
-	if animated_sprite == null or animated_sprite.sprite_frames == null:
+	_ensure_template_frames()
+	if template_sprite == null or template_sprite.sprite_frames == null:
 		push_warning("FamouslySpellStrike: AnimatedSprite2D or SpriteFrames is missing.")
 		queue_free()
 		return
 
-	if not animated_sprite.sprite_frames.has_animation(animation_name):
+	if not template_sprite.sprite_frames.has_animation(animation_name):
 		push_warning("FamouslySpellStrike: animation '%s' was not created." % String(animation_name))
 		queue_free()
 		return
 
-	if animated_sprite.sprite_frames.get_frame_count(animation_name) <= 0:
+	if template_sprite.sprite_frames.get_frame_count(animation_name) <= 0:
 		push_warning("FamouslySpellStrike: animation '%s' has no frames." % String(animation_name))
 		queue_free()
 		return
 
-	if not animated_sprite.frame_changed.is_connected(_on_frame_changed):
-		animated_sprite.frame_changed.connect(_on_frame_changed)
-	if not animated_sprite.animation_finished.is_connected(_on_animation_finished):
-		animated_sprite.animation_finished.connect(_on_animation_finished)
-
-	_update_position()
-	animated_sprite.play(animation_name)
+	template_sprite.visible = false
+	_spawn_strike_sprites()
 
 
-func _process(_delta: float) -> void:
-	if not impact_applied and track_target_until_impact:
-		_update_position()
-
-
-func setup(target_node: Node2D, damage: int, chance: float, stacks: int, source: String, offset: Vector2) -> void:
+func setup_spell0(
+	target_node: Node2D,
+	damage: int,
+	chance: float,
+	stacks: int,
+	source: String,
+	visual_center_position: Vector2,
+	impact_center: Vector2,
+	spacing: float,
+	hit_radius: float,
+	linger_time: float
+) -> void:
 	target = target_node
 	damage_amount = damage
 	madness_chance = chance
 	madness_stacks = stacks
 	damage_source = source
-	target_offset = offset
-	_update_position()
+	global_position = visual_center_position
+	impact_center_position = impact_center
+	strike_spacing = spacing
+	impact_radius = hit_radius
+	impact_linger_time = maxf(0.0, linger_time)
+	strike_offsets = [
+		Vector2(-strike_spacing, 0.0),
+		Vector2.ZERO,
+		Vector2(strike_spacing, 0.0),
+	]
 
 
-func _ensure_sprite_frames() -> void:
-	if animated_sprite == null:
+func _ensure_template_frames() -> void:
+	if template_sprite == null:
 		return
-	if animated_sprite.sprite_frames == null:
-		animated_sprite.sprite_frames = SpriteFrames.new()
+	if template_sprite.sprite_frames == null:
+		template_sprite.sprite_frames = SpriteFrames.new()
 
-	var sprite_frames: SpriteFrames = animated_sprite.sprite_frames
+	var sprite_frames: SpriteFrames = template_sprite.sprite_frames
 	if not sprite_frames.has_animation(animation_name):
 		sprite_frames.add_animation(animation_name)
 	else:
@@ -84,38 +104,141 @@ func _ensure_sprite_frames() -> void:
 			sprite_frames.add_frame(animation_name, texture)
 
 
-func _update_position() -> void:
-	if target == null or not is_instance_valid(target):
+func _spawn_strike_sprites() -> void:
+	if strike_offsets.is_empty():
+		strike_offsets = [
+			Vector2(-strike_spacing, 0.0),
+			Vector2.ZERO,
+			Vector2(strike_spacing, 0.0),
+		]
+
+	strike_sprites.clear()
+	finished_sprite_count = 0
+
+	for strike_index in range(strike_offsets.size()):
+		var sprite: AnimatedSprite2D = template_sprite.duplicate() as AnimatedSprite2D
+		if sprite == null:
+			continue
+		sprite.name = "StrikeSprite_%d" % strike_index
+		sprite.visible = true
+		sprite.position = strike_offsets[strike_index]
+		add_child(sprite)
+		strike_sprites.append(sprite)
+
+		if not sprite.frame_changed.is_connected(_on_strike_frame_changed.bind(strike_index)):
+			sprite.frame_changed.connect(_on_strike_frame_changed.bind(strike_index))
+		if not sprite.animation_finished.is_connected(_on_strike_animation_finished):
+			sprite.animation_finished.connect(_on_strike_animation_finished)
+
+		sprite.play(animation_name)
+
+
+func _on_strike_frame_changed(strike_index: int) -> void:
+	if impact_started:
 		return
-	global_position = target.global_position + target_offset
-
-
-func _on_frame_changed() -> void:
-	if impact_applied:
+	var sprite: AnimatedSprite2D = _get_strike_sprite(strike_index)
+	if sprite == null:
 		return
-	if animated_sprite.frame >= impact_frame:
-		_apply_impact()
+	if sprite.frame >= impact_frame:
+		_start_impact_window()
+
+func _process(delta: float) -> void:
+	if not impact_started or completion_handled:
+		return
+	if linger_time_remaining > 0.0:
+		linger_time_remaining = maxf(0.0, linger_time_remaining - delta)
+		_try_apply_impact()
+		if linger_time_remaining <= 0.0:
+			_finish_if_ready()
 
 
-func _apply_impact() -> void:
-	impact_applied = true
-	_update_position()
+func _start_impact_window() -> void:
+	if impact_started:
+		return
+	impact_started = true
+	linger_time_remaining = impact_linger_time
+	_try_apply_impact()
+	if impact_linger_time <= 0.0:
+		_finish_if_ready()
 
-	if target == null or not is_instance_valid(target):
+
+func _try_apply_impact() -> void:
+	var target_node: Node2D = _resolve_target()
+	if target_node == null:
 		return
 
-	if target.has_method("take_damage"):
-		target.take_damage(damage_amount, "magical", damage_source)
+	var target_id: int = target_node.get_instance_id()
+	if hit_target_ids.has(target_id):
+		return
 
-	if target.has_method("apply_effect_template"):
-		target.apply_effect_template("apply_madness", {
-			"power": madness_stacks,
-			"chance": madness_chance,
-			"source": "Безумие",
+	var max_horizontal_distance: float = strike_spacing + impact_radius
+	var horizontal_distance: float = absf(target_node.global_position.x - impact_center_position.x)
+	var vertical_distance: float = absf(target_node.global_position.y - impact_center_position.y)
+	if horizontal_distance <= max_horizontal_distance and vertical_distance <= impact_radius:
+		impact_applied = true
+		hit_target_ids[target_id] = true
+		if target_node.has_method("take_damage"):
+			target_node.take_damage(damage_amount, "magical", damage_source)
+
+		if target_node.has_method("apply_effect_template"):
+			target_node.apply_effect_template("apply_madness", {
+				"power": madness_stacks,
+				"chance": madness_chance,
+				"source": "Безумие",
+			})
+
+		if CombatRuntimeLogger:
+			CombatRuntimeLogger.log_event("spell", name, "spell0_hit", {
+				"target": target_node.name,
+				"impact_center": impact_center_position,
+				"horizontal_distance": horizontal_distance,
+				"vertical_distance": vertical_distance,
+				"damage": damage_amount,
+			})
+
+
+func _resolve_target() -> Node2D:
+	if target != null and is_instance_valid(target):
+		return target
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return null
+	var player: Node = tree.get_first_node_in_group("player")
+	if player is Node2D:
+		return player as Node2D
+	return null
+
+
+func _on_strike_animation_finished() -> void:
+	finished_sprite_count += 1
+	if finished_sprite_count >= strike_offsets.size():
+		all_strikes_finished = true
+		if not impact_started:
+			_start_impact_window()
+		_finish_if_ready()
+
+
+func _get_strike_sprite(strike_index: int) -> AnimatedSprite2D:
+	if strike_index < 0 or strike_index >= strike_sprites.size():
+		return null
+	return strike_sprites[strike_index]
+
+
+func _finish_if_ready() -> void:
+	if completion_handled:
+		return
+	if not all_strikes_finished:
+		return
+	if impact_started and linger_time_remaining > 0.0:
+		return
+	completion_handled = true
+
+	if not impact_applied and CombatRuntimeLogger:
+		var target_node: Node2D = _resolve_target()
+		CombatRuntimeLogger.log_event("spell", name, "spell0_miss", {
+			"target": target_node.name if target_node != null else "none",
+			"target_position": target_node.global_position if target_node != null else Vector2.ZERO,
+			"impact_center": impact_center_position,
 		})
 
-
-func _on_animation_finished() -> void:
-	if not impact_applied:
-		_apply_impact()
 	queue_free()

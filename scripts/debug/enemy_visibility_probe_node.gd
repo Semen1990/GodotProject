@@ -204,6 +204,7 @@ func _probe_level2_spawn_to_under_enemy() -> void:
 
 		var vertical_diff: float = absf(player.global_position.y - enemy.global_position.y)
 		var horizontal_diff: float = absf(player.global_position.x - enemy.global_position.x)
+		var planar_dist: float = enemy.global_position.distance_to(player.global_position)
 		var can_detect: bool = enemy.call("_can_detect_player_before_engage", player)
 		var has_los: bool = enemy.call("_has_line_of_sight_to", player)
 		var same_lane: bool = enemy.call("_is_same_combat_lane", player)
@@ -212,19 +213,34 @@ func _probe_level2_spawn_to_under_enemy() -> void:
 		var enemy_grounded: bool = bool(enemy.call("is_on_floor"))
 		var player_grounded: bool = bool(player.call("is_on_floor"))
 		var lane_tolerance: float = float(enemy.get("combat_lane_tolerance"))
+		var magic_controller = enemy.get("magic_controller")
+		var floor_delta: int = 999
+		var spell0_ready: bool = false
+		var magic_locked: bool = false
+		var chosen_spell: String = "<none>"
+		if magic_controller != null:
+			floor_delta = int(magic_controller.call("get_floor_delta_to_target", player))
+			spell0_ready = bool(magic_controller.call("can_begin_spell0", player, planar_dist, float(enemy.get("retreat_cast_distance"))))
+			magic_locked = bool(magic_controller.call("is_magic_locked"))
+			chosen_spell = str(magic_controller.call("choose_spell_for_target", player, planar_dist, float(enemy.get("retreat_cast_distance"))))
 		enemy.set("target", player)
 		var can_melee: bool = enemy.call("_can_melee_attack_target")
 		enemy.set("target", enemy.get("target"))
 
-		_report("%s: player=%s dx=%.1f dy=%.1f detect=%s los=%s same_lane=%s melee=%s support=(%.1f/%.1f) grounded=(%s/%s) lane_tol=%.1f state=%s engaged=%s" % [
+		_report("%s: player=%s dx=%.1f dy=%.1f dist=%.1f detect=%s los=%s same_lane=%s melee=%s spell0_ready=%s chosen_spell=%s floor_delta=%s magic_locked=%s support=(%.1f/%.1f) grounded=(%s/%s) lane_tol=%.1f state=%s engaged=%s" % [
 			String(checkpoint["name"]),
 			str((checkpoint["position"] as Vector2).round()),
 			horizontal_diff,
 			vertical_diff,
+			planar_dist,
 			str(can_detect),
 			str(has_los),
 			str(same_lane),
 			str(can_melee),
+			str(spell0_ready),
+			chosen_spell,
+			str(floor_delta),
+			str(magic_locked),
 			enemy_support_y,
 			player_support_y,
 			str(enemy_grounded),

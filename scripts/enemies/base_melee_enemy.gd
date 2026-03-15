@@ -1,5 +1,8 @@
 extends CharacterBody2D
 
+const EnemyMeleeControllerScript := preload("res://scripts/enemies/melee/enemy_melee_controller.gd")
+const EnemyMeleeProfileScript := preload("res://scripts/enemies/melee/enemy_melee_profile.gd")
+
 signal died()
 signal health_changed(new_health)
 signal repeat_potion_blocking_changed(is_blocking)
@@ -37,6 +40,7 @@ signal enemy_ui_changed(snapshot: Dictionary)
 @export var combat_lane_tolerance: float = 20.0
 @export var combat_lane_probe_offset_y: float = -6.0
 @export var facing_deadzone_x: float = 12.0
+@export var melee_profile: EnemyMeleeProfile
 
 enum State { IDLE, PATROL, CHASE, ATTACK, HURT, DEAD }
 
@@ -60,6 +64,7 @@ var current_attack_damage_frame: int = 3
 var persistence: PersistenceComponent = null
 var _debug_last_detection_signature: String = ""
 var _debug_last_melee_signature: String = ""
+var melee_controller: EnemyMeleeController = null
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -71,6 +76,7 @@ func _ready() -> void:
 	start_position = global_position
 	current_health = clampi(current_health, 1, max_health)
 	add_to_group("encounter_enemy")
+	_setup_melee_controller()
 
 	_initialize_enemy()
 	_update_detection_range()
@@ -101,6 +107,30 @@ func _ready() -> void:
 
 func _initialize_enemy() -> void:
 	pass
+
+
+func _setup_melee_controller() -> void:
+	if melee_profile == null:
+		melee_profile = EnemyMeleeProfileScript.new()
+	_apply_melee_profile_overrides()
+	melee_controller = EnemyMeleeControllerScript.new().setup(self, melee_profile)
+
+
+func _apply_melee_profile_overrides() -> void:
+	if melee_profile == null:
+		return
+	require_line_of_sight_before_engage = melee_profile.require_line_of_sight_before_engage
+	require_line_of_sight_for_melee = melee_profile.require_line_of_sight_for_melee
+	line_of_sight_collision_mask = melee_profile.line_of_sight_collision_mask
+	line_of_sight_height_offset = melee_profile.line_of_sight_height_offset
+	pre_engage_vertical_tolerance = melee_profile.pre_engage_vertical_tolerance
+	melee_vertical_tolerance = melee_profile.melee_vertical_tolerance
+	use_combat_lane_before_engage = melee_profile.use_combat_lane_before_engage
+	use_combat_lane_for_melee = melee_profile.use_combat_lane_for_melee
+	combat_lane_probe_depth = melee_profile.combat_lane_probe_depth
+	combat_lane_tolerance = melee_profile.combat_lane_tolerance
+	combat_lane_probe_offset_y = melee_profile.combat_lane_probe_offset_y
+	facing_deadzone_x = melee_profile.facing_deadzone_x
 
 
 func get_current_combat_floor_id() -> int:
@@ -630,110 +660,27 @@ func _try_acquire_visible_player() -> void:
 
 
 func _can_detect_player_before_engage(player_body: Node2D) -> bool:
-	if player_body == null or not is_instance_valid(player_body):
-		_debug_log_detection_result(player_body, false, "invalid_target")
-		return false
-	if use_combat_lane_before_engage:
-		var same_lane: bool = _is_same_combat_lane(player_body)
-		if not same_lane:
-			_debug_log_detection_result(player_body, false, "lane_mismatch", {
-				"same_lane": same_lane,
-			})
-			return false
-	elif absf(player_body.global_position.y - global_position.y) > pre_engage_vertical_tolerance:
-		_debug_log_detection_result(player_body, false, "vertical_mismatch", {
-			"dy": absf(player_body.global_position.y - global_position.y),
-		})
-		return false
-	if not require_line_of_sight_before_engage:
-		_debug_log_detection_result(player_body, true, "ok_no_los")
-		return true
-	var has_los: bool = _has_line_of_sight_to(player_body)
-	_debug_log_detection_result(player_body, has_los, "ok" if has_los else "los_blocked")
-	return has_los
+	var result: Dictionary = melee_controller.can_detect_player_before_engage(player_body)
+	_debug_log_detection_result(player_body, bool(result.get("result", false)), str(result.get("reason", "unknown")), result.get("data", {}))
+	return bool(result.get("result", false))
 
 
 func _can_melee_attack_target() -> bool:
-	if not _is_target_valid():
-		_debug_log_melee_result(false, "invalid_target")
-		return false
-	if use_combat_lane_for_melee:
-		var same_lane: bool = _is_same_combat_lane(target)
-		if not same_lane:
-			_debug_log_melee_result(false, "lane_mismatch", {"same_lane": same_lane})
-			return false
-	elif absf(target.global_position.y - global_position.y) > melee_vertical_tolerance:
-		_debug_log_melee_result(false, "vertical_mismatch", {
-			"dy": absf(target.global_position.y - global_position.y),
-		})
-		return false
-	if not require_line_of_sight_for_melee:
-		_debug_log_melee_result(true, "ok_no_los")
-		return true
-	var has_los: bool = _has_line_of_sight_to(target)
-	_debug_log_melee_result(has_los, "ok" if has_los else "los_blocked")
-	return has_los
+	var result: Dictionary = melee_controller.can_melee_attack_target(target)
+	_debug_log_melee_result(bool(result.get("result", false)), str(result.get("reason", "unknown")), result.get("data", {}))
+	return bool(result.get("result", false))
 
 
 func _can_confirm_committed_melee_hit(target_node: Node2D) -> bool:
-	if target_node == null or not is_instance_valid(target_node):
-		return false
-	if target_node.get("is_dead") == true:
-		return false
-	if use_combat_lane_for_melee:
-		return _is_same_combat_lane(target_node)
-	return absf(target_node.global_position.y - global_position.y) <= melee_vertical_tolerance
+	return melee_controller.can_confirm_committed_melee_hit(target_node)
 
 
 func _is_same_combat_lane(target_node: Node2D) -> bool:
-	if target_node == null or not is_instance_valid(target_node):
-		return false
-
-	var own_support_y: float = _get_support_surface_y(self)
-	var target_support_y: float = _get_support_surface_y(target_node)
-	if is_inf(own_support_y) or is_inf(target_support_y):
-		if _is_node_grounded(self) and _is_node_grounded(target_node):
-			return absf(target_node.global_position.y - global_position.y) <= combat_lane_tolerance
-		return false
-
-	return absf(own_support_y - target_support_y) <= combat_lane_tolerance
+	return melee_controller.is_same_combat_lane(target_node)
 
 
 func _get_support_surface_y(node: Node2D) -> float:
-	var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
-	if space_state == null:
-		return INF
-
-	var half_height: float = _estimate_body_half_height(node)
-	var half_width: float = _estimate_body_half_width(node)
-	var base_origin: Vector2 = node.global_position + Vector2(0.0, -half_height + combat_lane_probe_offset_y)
-	var best_hit_y: float = INF
-	var offsets: Array[float] = [0.0, -half_width * 0.45, half_width * 0.45]
-
-	for offset_x in offsets:
-		var origin: Vector2 = base_origin + Vector2(offset_x, 0.0)
-		var target_position: Vector2 = origin + Vector2(0.0, combat_lane_probe_depth + half_height)
-		var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(
-			origin,
-			target_position,
-			line_of_sight_collision_mask
-		)
-		query.exclude = _build_lane_probe_exclusions(node)
-		query.collide_with_areas = false
-		query.hit_from_inside = true
-
-		var hit: Dictionary = space_state.intersect_ray(query)
-		if hit.is_empty():
-			continue
-
-		var hit_position = hit.get("position", Vector2.ZERO)
-		if hit_position is Vector2:
-			var support_y: float = (hit_position as Vector2).y
-			if support_y < node.global_position.y - 8.0:
-				continue
-			best_hit_y = minf(best_hit_y, support_y)
-
-	return best_hit_y
+	return melee_controller.get_support_surface_y(node)
 
 
 func _build_lane_probe_exclusions(node: Node) -> Array:
@@ -783,32 +730,15 @@ func _is_node_grounded(node: Node) -> bool:
 
 
 func _has_line_of_sight_to(target_node: Node2D) -> bool:
-	if target_node == null or not is_instance_valid(target_node):
-		return false
-
-	var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
-	if space_state == null:
-		return true
-
-	var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(
-		_get_line_of_sight_origin(),
-		_get_line_of_sight_target_position(target_node),
-		line_of_sight_collision_mask
-	)
-	query.exclude = [get_rid(), target_node.get_rid()]
-	query.collide_with_areas = false
-	query.hit_from_inside = false
-
-	var hit: Dictionary = space_state.intersect_ray(query)
-	return hit.is_empty()
+	return melee_controller.has_line_of_sight_to(target_node)
 
 
 func _get_line_of_sight_origin() -> Vector2:
-	return global_position + Vector2(0.0, line_of_sight_height_offset)
+	return melee_controller.get_line_of_sight_origin()
 
 
 func _get_line_of_sight_target_position(target_node: Node2D) -> Vector2:
-	return target_node.global_position + Vector2(0.0, line_of_sight_height_offset)
+	return melee_controller.get_line_of_sight_target_position(target_node)
 
 
 func _can_continue_current_attack() -> bool:
@@ -1030,4 +960,3 @@ func _debug_log_melee_result(result: bool, reason: String, extra: Dictionary = {
 	}
 	payload.merge(extra, true)
 	_debug_log_combat("melee", "check", payload)
-

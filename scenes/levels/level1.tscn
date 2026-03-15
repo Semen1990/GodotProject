@@ -14,6 +14,7 @@
 [ext_resource type="Script" uid="uid://dngtc882c5x73" path="res://scripts/encounters/combat_encounter_zone.gd" id="12_encounter_script"]
 [ext_resource type="PackedScene" path="res://prefabs/tools/FloorGuides.tscn" id="13_floor_guides"]
 [ext_resource type="PackedScene" path="res://prefabs/tools/CombatFloorArea.tscn" id="14_combat_floor_area"]
+[ext_resource type="Script" path="res://scripts/debug/level1_lizard_overlay.gd" id="15_lizard_overlay"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dd0lh"]
 texture = ExtResource("2_dd0lh")
@@ -598,25 +599,25 @@ layer_0/tile_data = PackedInt32Array(3604489, 524288, 0, 3670025, 524288, 1, 360
 [node name="CombatFloors" type="Node2D" parent="World" unique_id=1313106298]
 
 [node name="Floor1" parent="World/CombatFloors" unique_id=108040938 instance=ExtResource("14_combat_floor_area")]
-position = Vector2(962, 922)
+position = Vector2(962, 880)
 scale = Vector2(2, 2)
 floor_id = 1
 floor_label = "Этаж 1"
 
 [node name="Floor2" parent="World/CombatFloors" unique_id=269289648 instance=ExtResource("14_combat_floor_area")]
-position = Vector2(957, 777)
+position = Vector2(957, 736)
 scale = Vector2(2, 2)
 floor_id = 2
 floor_label = "Этаж 2"
 
 [node name="Floor3" parent="World/CombatFloors" unique_id=1512208270 instance=ExtResource("14_combat_floor_area")]
-position = Vector2(967, 633)
+position = Vector2(967, 592)
 scale = Vector2(2, 2)
 floor_id = 3
 floor_label = "Этаж 3"
 
 [node name="Floor4" parent="World/CombatFloors" unique_id=2026066002 instance=ExtResource("14_combat_floor_area")]
-position = Vector2(968, 488)
+position = Vector2(968, 448)
 scale = Vector2(2, 2)
 floor_id = 4
 floor_label = "Этаж 4"
@@ -681,6 +682,17 @@ key_color = 4
 
 [node name="GameUI" type="CanvasLayer" parent="UI" unique_id=1129016619]
 script = ExtResource("7_2r1tl")
+
+[node name="LizardDebugLayer" type="CanvasLayer" parent="UI"]
+layer = 10
+
+[node name="LizardDebugLabel" type="Label" parent="UI/LizardDebugLayer"]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 560.0
+offset_bottom = 320.0
+mouse_filter = 2
+script = ExtResource("15_lizard_overlay")
 
 [node name="DeathMenu" type="CanvasLayer" parent="UI" unique_id=753190612 groups=["death_menu"]]
 script = ExtResource("8_8a7m2")

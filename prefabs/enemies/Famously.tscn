@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://lgr6lv31x0v8" path="res://scripts/enemies/famously.gd" id="1_famously_script"]
 [ext_resource type="PackedScene" path="res://prefabs/tools/CombatFloorTracker.tscn" id="99_floor_tracker"]
+[ext_resource type="Resource" path="res://resources/enemies/melee/cyclops_melee_profile.tres" id="100_cyclops_melee_profile"]
+[ext_resource type="Resource" path="res://resources/enemies/magic/cyclops_magic_profile.tres" id="101_cyclops_magic_profile"]
 [ext_resource type="Texture2D" uid="uid://i1vbsoaepkn6" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_1.png" id="2_8su4f"]
 [ext_resource type="Texture2D" uid="uid://1bs552n4h4le" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_2.png" id="3_cbtu4"]
 [ext_resource type="Texture2D" uid="uid://dptdsgc40hhng" path="res://assets/enemies/Famously/Idle/Bringer-of-Death_Idle_3.png" id="4_vbeiy"]
@@ -115,6 +117,8 @@ position = Vector2(0, -1)
 collision_layer = 4
 collision_mask = 3
 script = ExtResource("1_famously_script")
+melee_profile = ExtResource("100_cyclops_melee_profile")
+magic_profile = ExtResource("101_cyclops_magic_profile")
 visual_offset_when_facing_left = Vector2(81, -112.000015)
 visual_offset_when_facing_right = Vector2(-81, -112.000015)
 max_health = 12

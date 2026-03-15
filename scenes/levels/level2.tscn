@@ -14,6 +14,7 @@
 [ext_resource type="Script" uid="uid://dngtc882c5x73" path="res://scripts/encounters/combat_encounter_zone.gd" id="10_gorgon_encounter"]
 [ext_resource type="PackedScene" path="res://prefabs/tools/FloorGuides.tscn" id="11_floor_guides"]
 [ext_resource type="PackedScene" path="res://prefabs/tools/CombatFloorArea.tscn" id="12_combat_floor_area"]
+[ext_resource type="Script" path="res://scripts/debug/level2_cyclops_overlay.gd" id="13_level2_cyclops_overlay"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_brxtv"]
 texture = ExtResource("2_b0vvs")
@@ -482,7 +483,7 @@ layer_0/tile_data = PackedInt32Array(4128768, 65537, 0, 4128769, 131073, 0, 4128
 [node name="CombatFloors" type="Node2D" parent="World" unique_id=653967023]
 
 [node name="Floor1" parent="World/CombatFloors" unique_id=304503694 instance=ExtResource("12_combat_floor_area")]
-position = Vector2(961, 946)
+position = Vector2(930, 974)
 scale = Vector2(2, 2)
 collision_layer = 16
 collision_mask = 0
@@ -490,7 +491,7 @@ monitoring = false
 floor_label = "Этаж 1"
 
 [node name="Floor2" parent="World/CombatFloors" unique_id=1093730892 instance=ExtResource("12_combat_floor_area")]
-position = Vector2(961, 799)
+position = Vector2(929, 831)
 scale = Vector2(2, 2)
 collision_layer = 16
 collision_mask = 0
@@ -499,7 +500,7 @@ floor_id = 2
 floor_label = "Этаж 2"
 
 [node name="Floor3" parent="World/CombatFloors" unique_id=1800315810 instance=ExtResource("12_combat_floor_area")]
-position = Vector2(977, 658)
+position = Vector2(933, 689)
 scale = Vector2(2, 2)
 collision_layer = 16
 collision_mask = 0
@@ -508,7 +509,7 @@ floor_id = 3
 floor_label = "Этаж 3"
 
 [node name="Floor4" parent="World/CombatFloors" unique_id=1028719053 instance=ExtResource("12_combat_floor_area")]
-position = Vector2(978, 512)
+position = Vector2(932, 543)
 scale = Vector2(2, 2)
 collision_layer = 16
 collision_mask = 0
@@ -519,6 +520,8 @@ floor_label = "Этаж 4"
 [node name="Markers" type="Node2D" parent="World" unique_id=1878271117]
 
 [node name="FloorGuides" parent="World/Markers" unique_id=1231213926 instance=ExtResource("11_floor_guides")]
+base_floor_y = 974.0
+floor_step = 143.5
 guide_left_x = 32.0
 guide_right_x = 1888.0
 
@@ -536,8 +539,6 @@ position = Vector2(800, 861)
 art_faces_left_by_default = true
 visual_offset_when_facing_left = Vector2(-81, -112.000015)
 visual_offset_when_facing_right = Vector2(81, -112.000015)
-attack_range = 140.0
-use_combat_lane_for_melee = false
 
 [node name="Encounters" type="Node2D" parent="World" unique_id=476011681]
 
@@ -573,8 +574,24 @@ key_color = 5
 [node name="UI" type="Node" parent="." unique_id=1520951143]
 
 [node name="GameUI" parent="UI" unique_id=278020147 instance=ExtResource("2_game_ui")]
+visible = false
 
 [node name="DeathMenu" parent="UI" unique_id=2080965026 groups=["death_menu"] instance=ExtResource("3_oyk6k")]
+visible = false
 script = ExtResource("4_gycjm")
 
 [node name="SimplePauseMenu" parent="UI" unique_id=1460008930 instance=ExtResource("6_hgky1")]
+visible = false
+
+[node name="CyclopsDebugLayer" type="CanvasLayer" parent="UI"]
+layer = 30
+
+[node name="CyclopsDebugLabel" type="Label" parent="UI/CyclopsDebugLayer"]
+offset_left = 24.0
+offset_top = 18.0
+offset_right = 700.0
+offset_bottom = 250.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 18
+text = "Cyclops debug"
+script = ExtResource("13_level2_cyclops_overlay")

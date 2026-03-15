@@ -271,7 +271,21 @@ func _resolve_combat_floor_id_from_world() -> int:
 func _get_combat_floor_probe_world_point() -> Vector2:
 	if collision_shape == null or collision_shape.shape == null:
 		return global_position + Vector2(0.0, 12.0)
-	return collision_shape.global_position + Vector2(0.0, 8.0)
+	var local_offset := Vector2(0.0, _get_collision_bottom_extent(collision_shape.shape) + 2.0)
+	return collision_shape.to_global(local_offset)
+
+
+func _get_collision_bottom_extent(shape: Shape2D) -> float:
+	if shape is CapsuleShape2D:
+		var capsule := shape as CapsuleShape2D
+		return capsule.radius + capsule.height * 0.5
+	if shape is RectangleShape2D:
+		var rectangle := shape as RectangleShape2D
+		return rectangle.size.y * 0.5
+	if shape is CircleShape2D:
+		var circle := shape as CircleShape2D
+		return circle.radius
+	return 0.0
 
 
 func _combat_floor_area_contains_point(area_node: Node2D, world_point: Vector2) -> bool:

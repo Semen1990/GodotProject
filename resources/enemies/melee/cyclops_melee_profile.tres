@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="EnemyMeleeProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/melee/enemy_melee_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+require_line_of_sight_before_engage = true
+require_line_of_sight_for_melee = true
+line_of_sight_collision_mask = 1
+line_of_sight_height_offset = -28.0
+prefer_explicit_combat_floors = true
+pre_engage_vertical_tolerance = 96.0
+melee_vertical_tolerance = 18.0
+use_combat_lane_before_engage = false
+use_combat_lane_for_melee = true
+combat_lane_probe_depth = 96.0
+combat_lane_tolerance = 20.0
+combat_lane_probe_offset_y = -6.0
+facing_deadzone_x = 12.0
