@@ -136,6 +136,7 @@ var heavy_attack_pause_used: bool = false
 var heavy_attack_pause_timer: float = 0.0
 var attack_commit_direction: float = 0.0
 var queued_counter_is_heavy: bool = false
+var queued_counter_popup: bool = false
 var parry_indicator: Sprite2D = null
 var parry_visual_cue_shown: bool = false
 var question_indicator_root: Node2D = null
@@ -489,6 +490,10 @@ func _change_state(new_state: State) -> void:
 	if current_state == new_state:
 		return
 
+	if new_state != State.PARRY:
+		parry_visual_cue_shown = false
+		_set_parry_indicator_visible(false)
+
 	current_state = new_state
 	_debug_log_combat("state", "change_state", {
 		"state": _state_to_string(new_state),
@@ -530,6 +535,9 @@ func _change_state(new_state: State) -> void:
 			attack_commit_direction = _resolve_attack_commit_direction()
 			_face_target()
 			_configure_attack_profile()
+			if queued_counter_popup:
+				_show_combat_popup("Контратака", Color(1.0, 0.72, 0.32, 1.0), 0.95, 42.0, 1.08)
+				queued_counter_popup = false
 			if animated_sprite:
 				animated_sprite.speed_scale = _get_attack_speed_scale()
 			_play_anim("attack")
@@ -639,6 +647,11 @@ func _process_chase() -> void:
 	if move_dir == 0.0:
 		move_dir = 1.0
 
+	if _is_target_stealth_backstab_active():
+		velocity.x = 0.0
+		_play_anim("idle")
+		return
+
 	_apply_facing(dir_x)
 
 	if not _is_target_in_pressure_lane():
@@ -678,6 +691,11 @@ func _process_pressure() -> void:
 	var move_dir: float = signf(dir_x)
 	if move_dir == 0.0:
 		move_dir = 1.0
+
+	if _is_target_stealth_backstab_active():
+		velocity.x = 0.0
+		_play_anim("idle")
+		return
 
 	_face_target()
 
@@ -810,6 +828,7 @@ func _process_parry() -> void:
 		return
 
 	queued_counter_is_heavy = false
+	queued_counter_popup = false
 	_enter_recover(PARRY_RECOVER_TIME, false)
 
 
@@ -889,6 +908,8 @@ func _on_detection_entered(body: Node2D) -> void:
 		combo_continuation_pending = false
 		queued_counter_combo = false
 		pending_post_combo_exit = PostComboExit.NONE
+		if _is_knockdown_locked():
+			return
 		_change_state(State.CHASE)
 
 
@@ -900,6 +921,8 @@ func _on_detection_exited(body: Node2D) -> void:
 			"player": body.name,
 			"position": body.global_position,
 		})
+		if _is_knockdown_locked():
+			return
 		_start_searching_for_player()
 
 
@@ -1007,7 +1030,6 @@ func _deal_damage() -> bool:
 		if _is_target_hit_in_back():
 			reaction_tag = "heavy"
 			total_damage = maxi(total_damage, int(round(damage * PUNISH_HEAVY_DAMAGE_MULTIPLIER)))
-			_show_combat_popup("Контратака", Color(1.0, 0.72, 0.32, 1.0), 0.95, 42.0, 1.08)
 		target.take_damage(total_damage, "physical", "Ящерица с копьём", reaction_tag)
 		last_damage_attempt_info = {
 			"result": "applied",
@@ -1278,9 +1300,9 @@ func take_damage(amount: int, _type: String = "physical") -> void:
 	if current_state == State.PARRY and parry_phase == ParryPhase.ACTIVE:
 		queued_counter_combo = true
 		queued_counter_is_heavy = true
+		queued_counter_popup = true
 		parry_timer = 0.0
 		_show_combat_popup("ПАРИР.", Color(0.9, 0.95, 1.0, 1.0), 0.75)
-		_show_combat_popup("Контратака", Color(1.0, 0.72, 0.32, 1.0), 0.95, 42.0, 1.08)
 		if target and is_instance_valid(target) and target.has_method("apply_guard_break_stun"):
 			target.apply_guard_break_stun(0.55)
 		return
@@ -1388,10 +1410,13 @@ func apply_short_stagger(duration: float = 0.45, attacker_x: float = 0.0) -> voi
 	combo_continuation_pending = false
 	queued_counter_combo = false
 	queued_counter_is_heavy = false
+	queued_counter_popup = false
 	pending_post_combo_exit = PostComboExit.NONE
 	combo_chain_timer = 0.0
 	parry_phase = ParryPhase.NONE
 	parry_timer = 0.0
+	parry_visual_cue_shown = false
+	_set_parry_indicator_visible(false)
 	if attacker_x != 0.0 and animated_sprite:
 		animated_sprite.flip_h = attacker_x < global_position.x
 	if current_state != State.HURT:
@@ -1413,11 +1438,14 @@ func apply_backstab_knockdown(duration: float = BACKSTAB_KNOCKDOWN_DEFAULT, atta
 	combo_continuation_pending = false
 	queued_counter_combo = false
 	queued_counter_is_heavy = false
+	queued_counter_popup = false
 	pending_post_combo_exit = PostComboExit.NONE
 	combo_chain_timer = 0.0
 	velocity.x = 0.0
 	parry_phase = ParryPhase.NONE
 	parry_timer = 0.0
+	parry_visual_cue_shown = false
+	_set_parry_indicator_visible(false)
 	if attacker_x != 0.0 and animated_sprite:
 		animated_sprite.flip_h = attacker_x > global_position.x
 	_change_state(State.KNOCKDOWN)
@@ -1431,6 +1459,7 @@ func show_player_guard_feedback(duration: float = PLAYER_GUARD_FEEDBACK_TIME) ->
 	combo_continuation_pending = false
 	queued_counter_combo = false
 	queued_counter_is_heavy = false
+	queued_counter_popup = false
 	pending_post_combo_exit = PostComboExit.NONE
 	combo_chain_timer = 0.0
 	parry_phase = ParryPhase.NONE
@@ -1453,6 +1482,9 @@ func _get_knockdown_animation_name() -> String:
 func _should_enter_parry(dist: float) -> bool:
 	if parry_cooldown > 0.0 or dist > PARRY_TRIGGER_DISTANCE:
 		return false
+	if target != null and is_instance_valid(target) and target.has_method("is_stealth_backstab_attack_active_against"):
+		if bool(target.is_stealth_backstab_attack_active_against(self)):
+			return false
 	if not _is_target_in_pressure_lane():
 		return false
 	if not _is_target_attack_pressure_active():
@@ -1526,6 +1558,14 @@ func _setup_punish_attack(force_heavy: bool = false) -> void:
 func _configure_attack_profile() -> void:
 	if combo_hits_remaining <= 0:
 		_setup_normal_combo()
+
+
+func _is_target_stealth_backstab_active() -> bool:
+	if target == null or not is_instance_valid(target):
+		return false
+	if not target.has_method("is_stealth_backstab_attack_active_against"):
+		return false
+	return bool(target.is_stealth_backstab_attack_active_against(self))
 
 
 func _is_target_hit_in_back() -> bool:
@@ -1648,7 +1688,13 @@ func _set_parry_indicator_visible(is_visible: bool) -> void:
 
 
 func _update_parry_indicator_visual() -> void:
-	if parry_indicator == null or not parry_indicator.visible:
+	if parry_indicator == null:
+		return
+	if current_state != State.PARRY or parry_phase != ParryPhase.ACTIVE:
+		if parry_indicator.visible:
+			_set_parry_indicator_visible(false)
+		return
+	if not parry_indicator.visible:
 		return
 	var pulse_time: float = Time.get_ticks_msec() / 1000.0
 	var pulse: float = 0.5 + 0.5 * sin(pulse_time * 8.0)
@@ -1873,6 +1919,9 @@ func _clear_searching_for_player() -> void:
 
 
 func _start_searching_for_player() -> void:
+	if _is_knockdown_locked():
+		is_searching_for_player = has_engaged_player
+		return
 	target = null
 	combo_hits_remaining = 0
 	combo_continuation_pending = false
@@ -1889,6 +1938,10 @@ func _start_searching_for_player() -> void:
 	target_attack_latched = false
 	is_searching_for_player = has_engaged_player
 	_change_state(State.IDLE)
+
+
+func _is_knockdown_locked() -> bool:
+	return current_state == State.KNOCKDOWN and knockdown_timer > 0.0
 
 
 func activate() -> void:

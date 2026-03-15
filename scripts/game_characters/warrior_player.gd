@@ -95,6 +95,7 @@ var _current_attack_animation: String = "attack"
 var _current_attack_damage_multiplier: float = 1.0
 var _current_attack_stagger_duration: float = 0.0
 var _current_attack_started_from_sneak: bool = false
+var _latched_backstab_target_ids: Array[int] = []
 
 
 func _ready() -> void:
@@ -311,6 +312,9 @@ func attack() -> void:
 
 	var use_counter: bool = is_counter_attack_ready and counter_window_timer > 0.0
 	_current_attack_started_from_sneak = is_sneaking
+	_latched_backstab_target_ids.clear()
+	if _current_attack_started_from_sneak:
+		_latched_backstab_target_ids = _capture_backstab_targets()
 	_cancel_sneak_mode()
 	is_attacking = true
 	parry_exposure_timer = PARRY_EXPOSURE_TIME
@@ -341,6 +345,7 @@ func attack() -> void:
 
 	is_attacking = false
 	_current_attack_started_from_sneak = false
+	_latched_backstab_target_ids.clear()
 	handle_animations()
 
 
@@ -454,9 +459,15 @@ func reset_potion_bonuses() -> void:
 
 
 func is_hidden_from_enemy(enemy: Node2D) -> bool:
-	if not is_sneaking or enemy == null:
+	if enemy == null:
 		return false
-	return _is_behind_target(enemy)
+	if is_sneaking and _is_behind_target(enemy):
+		return true
+	# Keep stealth against the latched backstab target until the hit-frame lands,
+	# otherwise the enemy can turn during attack startup and visually counter first.
+	if is_stealth_backstab_attack_active_against(enemy) and not _attack_damage_dealt:
+		return true
+	return false
 
 
 func _update_block_state(delta: float) -> void:
@@ -643,21 +654,7 @@ func _deal_damage_to_enemies() -> void:
 
 	var attack_dir: float = _get_facing_direction()
 	var attack_range: float = ATTACK_RANGE if _current_attack_animation == "attack" else COUNTER_ATTACK_RANGE
-	var center: Vector2 = global_position + Vector2(attack_range * 0.72 * attack_dir, 0.0)
-
-	var space := get_world_2d().direct_space_state
-	var query := PhysicsShapeQueryParameters2D.new()
-	var shape := CircleShape2D.new()
-	shape.radius = attack_range
-	query.shape = shape
-	query.transform = Transform2D(0.0, center)
-	query.collide_with_bodies = true
-	query.collide_with_areas = false
-	query.collision_mask = ENEMY_HIT_COLLISION_MASK
-	query.exclude = [get_rid()]
-
-	for result in space.intersect_shape(query):
-		var body: Node = result.get("collider")
+	for body in _get_attack_hit_targets(attack_dir, attack_range):
 		if body == null or body == self or not body.has_method("take_damage"):
 			continue
 
@@ -669,7 +666,7 @@ func _deal_damage_to_enemies() -> void:
 		if Global and Global.has_method("add_damage_dealt"):
 			Global.add_damage_dealt(damage_amount)
 
-		var is_backstab: bool = _current_attack_animation == "attack" and _current_attack_started_from_sneak and _is_behind_target(body)
+		var is_backstab: bool = _current_attack_animation == "attack" and _current_attack_started_from_sneak and _is_backstab_latched_for_target(body)
 		combat_action_performed.emit("damage_dealt", {
 			"amount": damage_amount,
 			"damage_type": "physical",
@@ -691,6 +688,46 @@ func _deal_damage_to_enemies() -> void:
 			})
 		elif _current_attack_stagger_duration > 0.0 and body.has_method("apply_short_stagger"):
 			body.apply_short_stagger(_current_attack_stagger_duration, global_position.x)
+
+
+func _capture_backstab_targets() -> Array[int]:
+	var captured_ids: Array[int] = []
+	var attack_dir: float = _get_facing_direction()
+	for body in _get_attack_hit_targets(attack_dir, ATTACK_RANGE):
+		if body == null or not is_instance_valid(body):
+			continue
+		if _is_behind_target(body):
+			captured_ids.append(body.get_instance_id())
+	return captured_ids
+
+
+func _is_backstab_latched_for_target(target: Node) -> bool:
+	if target == null or not is_instance_valid(target):
+		return false
+	if _latched_backstab_target_ids.has(target.get_instance_id()):
+		return true
+	return _is_behind_target(target)
+
+
+func _get_attack_hit_targets(attack_dir: float, attack_range: float) -> Array[Node]:
+	var center: Vector2 = global_position + Vector2(attack_range * 0.72 * attack_dir, 0.0)
+	var space := get_world_2d().direct_space_state
+	var query := PhysicsShapeQueryParameters2D.new()
+	var shape := CircleShape2D.new()
+	shape.radius = attack_range
+	query.shape = shape
+	query.transform = Transform2D(0.0, center)
+	query.collide_with_bodies = true
+	query.collide_with_areas = false
+	query.collision_mask = ENEMY_HIT_COLLISION_MASK
+	query.exclude = [get_rid()]
+
+	var targets: Array[Node] = []
+	for result in space.intersect_shape(query):
+		var body: Node = result.get("collider")
+		if body != null:
+			targets.append(body)
+	return targets
 
 
 func _is_behind_target(target: Node) -> bool:
@@ -724,6 +761,14 @@ func get_facing_direction() -> float:
 
 func is_parryable_attack_active() -> bool:
 	return is_attacking or parry_exposure_timer > 0.0
+
+
+func is_stealth_backstab_attack_active_against(target: Node) -> bool:
+	if not is_attacking or not _current_attack_started_from_sneak:
+		return false
+	if _current_attack_animation != "attack":
+		return false
+	return _is_backstab_latched_for_target(target)
 
 
 func _hold_block_pose_frame() -> void:
