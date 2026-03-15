@@ -218,13 +218,6 @@ frame_progress = 0.9164008
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1927939321]
 shape = SubResource("CircleShape2D_1")
 
-[node name="Label" type="Label" parent="." unique_id=743788403]
-offset_left = -60.0
-offset_top = -35.0
-offset_right = 60.0
-offset_bottom = -15.0
-horizontal_alignment = 1
-
 [node name="HintLabel" type="Label" parent="." unique_id=186195179]
 visible = false
 offset_left = -35.0

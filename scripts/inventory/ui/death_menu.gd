@@ -540,7 +540,7 @@ func _go_to_main_menu():
 		Global.full_reset()
 	
 	main_menu_requested.emit()
-	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+	get_tree().change_scene_to_file("res://scenes/Ui/main_menu.tscn")
 
 
 func _restart_game():

@@ -370,7 +370,7 @@ func change_level(level_path: String):
 
 func return_to_main_menu():
 	full_reset()
-	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+	get_tree().change_scene_to_file("res://scenes/Ui/main_menu.tscn")
 
 
 func quit_game():

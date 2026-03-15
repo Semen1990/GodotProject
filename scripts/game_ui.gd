@@ -40,12 +40,22 @@ var current_stats: Dictionary = {
 }
 
 var key_labels: Array[Label] = []
-var key_icons: Array[Label] = []
+var key_icons: Array[TextureRect] = []
 var health_trail_target: float = 12.0
 var health_trail_delay_timer: float = 0.0
 const HEALTH_TRAIL_DELAY := 0.12
 const HEALTH_TRAIL_SPEED := 48.0
 const ABILITY_PANEL_SIZE := Vector2(56, 56)
+const KEY_SLOT_SIZE := Vector2(46, 66)
+const KEY_ICON_SIZE := Vector2(36, 36)
+const KEY_ICON_PATHS: Array[String] = [
+	"res://assets/items/keys_game/gold/frame_00.png",
+	"res://assets/items/keys_game/silver/frame_00.png",
+	"res://assets/items/keys_game/red/frame_00.png",
+	"res://assets/items/keys_game/blue/frame_00.png",
+	"res://assets/items/keys_game/green/frame_00.png",
+	"res://assets/items/keys_game/purple/frame_00.png",
+]
 var key_colors: Array[Color] = [
 	Color(1.0, 0.85, 0.0),
 	Color(0.75, 0.75, 0.85),
@@ -322,17 +332,15 @@ func _create_keys_ui() -> void:
 
 	for i in range(6):
 		var slot: VBoxContainer = VBoxContainer.new()
-		slot.custom_minimum_size = Vector2(36, 52)
+		slot.custom_minimum_size = KEY_SLOT_SIZE
 		slot.add_theme_constant_override("separation", 2)
 
-		var icon: Label = Label.new()
-		icon.text = "🗝"
-		icon.add_theme_font_size_override("font_size", 22)
-		icon.add_theme_color_override("font_color", key_colors[i])
-		icon.add_theme_color_override("font_shadow_color", Color(0.08, 0.08, 0.08, 0.9))
-		icon.add_theme_constant_override("shadow_offset_x", 1)
-		icon.add_theme_constant_override("shadow_offset_y", 1)
-		icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var icon: TextureRect = TextureRect.new()
+		icon.custom_minimum_size = KEY_ICON_SIZE
+		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		if i < KEY_ICON_PATHS.size() and ResourceLoader.exists(KEY_ICON_PATHS[i]):
+			icon.texture = load(KEY_ICON_PATHS[i]) as Texture2D
 		slot.add_child(icon)
 		key_icons.append(icon)
 
@@ -631,7 +639,7 @@ func _update_key_visual(index: int, count: int) -> void:
 		icon_color.a = 0.45
 		count_color.a = 0.7
 
-	key_icons[index].add_theme_color_override("font_color", icon_color)
+	key_icons[index].modulate = icon_color
 	key_labels[index].add_theme_color_override("font_color", count_color)
 
 

@@ -21,13 +21,13 @@ const COLOR_NAMES := {
 	KeyColor.GREEN: "\u0417\u0435\u043b\u0451\u043d\u044b\u0439",
 	KeyColor.PURPLE: "\u0424\u0438\u043e\u043b\u0435\u0442\u043e\u0432\u044b\u0439",
 }
-const KEY_ANIMATION_DIRS := {
-	KeyColor.GOLD: "res://assets/items/keys_game/gold",
-	KeyColor.SILVER: "res://assets/items/keys_game/silver",
-	KeyColor.RED: "res://assets/items/keys_game/red",
-	KeyColor.BLUE: "res://assets/items/keys_game/blue",
-	KeyColor.GREEN: "res://assets/items/keys_game/green",
-	KeyColor.PURPLE: "res://assets/items/keys_game/purple",
+const KEY_SPRITE_FRAMES := {
+	KeyColor.GOLD: preload("res://resources/items/keys_game/key_pickup_frames_gold.tres"),
+	KeyColor.SILVER: preload("res://resources/items/keys_game/key_pickup_frames_silver.tres"),
+	KeyColor.RED: preload("res://resources/items/keys_game/key_pickup_frames_red.tres"),
+	KeyColor.BLUE: preload("res://resources/items/keys_game/key_pickup_frames_blue.tres"),
+	KeyColor.GREEN: preload("res://resources/items/keys_game/key_pickup_frames_green.tres"),
+	KeyColor.PURPLE: preload("res://resources/items/keys_game/key_pickup_frames_purple.tres"),
 }
 
 @export var key_color: KeyColor = KeyColor.GOLD
@@ -156,54 +156,24 @@ func _setup_sprite() -> void:
 		add_child(animated_sprite)
 		move_child(animated_sprite, 0)
 
-	var sprite_frames: SpriteFrames = _build_key_sprite_frames()
+	var sprite_frames: SpriteFrames = _get_key_sprite_frames()
 	animated_sprite.sprite_frames = sprite_frames
 	animated_sprite.scale = Vector2.ONE * sprite_scale
 	animated_sprite.play("idle")
 
 
-func _build_key_sprite_frames() -> SpriteFrames:
-	var frames := SpriteFrames.new()
-	frames.add_animation("idle")
-	frames.set_animation_loop("idle", true)
-	frames.set_animation_speed("idle", animation_speed)
-
-	var frames_dir := str(KEY_ANIMATION_DIRS.get(key_color, ""))
-	var file_paths: Array[String] = _collect_png_files(frames_dir)
-	if file_paths.is_empty():
+func _get_key_sprite_frames() -> SpriteFrames:
+	var source_frames: SpriteFrames = KEY_SPRITE_FRAMES.get(key_color, null)
+	if source_frames == null:
 		return _create_fallback_sprite_frames()
 
-	for file_path in file_paths:
-		var texture: Texture2D = load(file_path) as Texture2D
-		if texture:
-			frames.add_frame("idle", texture)
-
-	if frames.get_frame_count("idle") == 0:
+	var frames: SpriteFrames = source_frames.duplicate(true) as SpriteFrames
+	if frames == null:
 		return _create_fallback_sprite_frames()
 
+	if frames.has_animation("idle"):
+		frames.set_animation_speed("idle", animation_speed)
 	return frames
-
-
-func _collect_png_files(dir_path: String) -> Array[String]:
-	var files: Array[String] = []
-	var dir: DirAccess = DirAccess.open(dir_path)
-	if dir == null:
-		return files
-
-	dir.list_dir_begin()
-	while true:
-		var file_name: String = dir.get_next()
-		if file_name.is_empty():
-			break
-		if dir.current_is_dir():
-			continue
-		if file_name.get_extension().to_lower() != "png":
-			continue
-		files.append(dir_path.path_join(file_name))
-	dir.list_dir_end()
-
-	files.sort()
-	return files
 
 
 func _create_fallback_sprite_frames() -> SpriteFrames:

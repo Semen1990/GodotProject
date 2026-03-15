@@ -28,7 +28,7 @@ func _on_start_button_pressed():
 	get_tree().paused = false
 	
 	# Переход к выбору персонажа
-	get_tree().change_scene_to_file("res://scenes/Levels/character_selection.tscn")
+	get_tree().change_scene_to_file("res://scenes/levels/character_selection.tscn")
 
 func _on_exit_button_pressed():
 	print("Выходим из игры")

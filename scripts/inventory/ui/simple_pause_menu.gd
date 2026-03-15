@@ -44,10 +44,11 @@ func _on_continue_pressed() -> void:
 	close_pause_menu()
 
 func _on_menu_pressed() -> void:
+	hide()
 	get_tree().paused = false
 
 	if Inventory:
 		Inventory.clear_all()
 
 	Global.reset_all_for_new_game()
-	get_tree().call_deferred("change_scene_to_file", "res://scenes/ui/main_menu.tscn")
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/Ui/main_menu.tscn")
