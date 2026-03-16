@@ -100,6 +100,7 @@ func choose_spell_for_target(target_node: Node, distance_to_target: float, max_c
 	if is_magic_locked():
 		return SPELL_NONE
 
+	var floor_delta: int = get_floor_delta_to_target(target_node)
 	var available_spells: Array[StringName] = []
 
 	if can_begin_spell0(target_node, distance_to_target, max_cast_distance):
@@ -113,6 +114,12 @@ func choose_spell_for_target(target_node: Node, distance_to_target: float, max_c
 
 	if available_spells.is_empty():
 		return SPELL_NONE
+
+	if floor_delta == 1:
+		return _choose_weighted_spell(available_spells, {
+			SPELL1: 0.6,
+			SPELL0: 0.4,
+		})
 
 	return available_spells.pick_random()
 
@@ -288,3 +295,31 @@ func _get_node_floor_probe_world_point(node: Node) -> Vector2:
 	if node is Node2D:
 		return (node as Node2D).global_position
 	return Vector2.ZERO
+
+
+func _choose_weighted_spell(available_spells: Array[StringName], weights: Dictionary) -> StringName:
+	var weighted_options: Array[Dictionary] = []
+	var total_weight: float = 0.0
+
+	for spell_id in available_spells:
+		var weight: float = float(weights.get(spell_id, 1.0))
+		if weight <= 0.0:
+			continue
+		weighted_options.append({
+			"spell_id": spell_id,
+			"weight": weight,
+		})
+		total_weight += weight
+
+	if weighted_options.is_empty():
+		return SPELL_NONE
+	if weighted_options.size() == 1:
+		return weighted_options[0]["spell_id"]
+
+	var roll: float = randf() * total_weight
+	for option in weighted_options:
+		roll -= float(option["weight"])
+		if roll <= 0.0:
+			return option["spell_id"]
+
+	return weighted_options[weighted_options.size() - 1]["spell_id"]

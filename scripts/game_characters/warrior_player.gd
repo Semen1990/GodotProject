@@ -1,7 +1,10 @@
 extends "res://scripts/game_characters/base_game_character.gd"
 
+const WarriorShieldRushVfxScript := preload("res://scripts/vfx/warrior_shield_rush_vfx.gd")
+
 enum BlockPhase { NONE, STARTUP, ACTIVE, RECOVERY }
 enum CrouchPhase { NONE, STARTUP, ACTIVE, RECOVERY }
+enum ShieldRushPhase { NONE, APPROACH, FOLLOW_THROUGH }
 
 enum HitReaction { LIGHT, HURT, HEAVY }
 
@@ -32,18 +35,25 @@ const BLOCK_EARLY_GRACE_TIME: float = 0.08
 const BLOCK_SUCCESS_STUN_DURATION: float = 1.6
 const BLOCK_SOUND_PATH: String = "res://sounds/players/block1-shield.mp3"
 const BLOCK_ICON_PATH: String = "res://assets/Spell/shield_defence.png"
-const SLIDE_ICON_PATH: String = "res://assets/Spell/Icon43.png"
+const SHIELD_RUSH_ICON_PATH: String = "res://assets/Spell/Icon43.png"
 const BLOCK_LIGHT_THRESHOLD: int = 4
 const BLOCK_MEDIUM_THRESHOLD: int = 6
 
-const SLIDE_TOTAL_DURATION: float = 0.68
-const SLIDE_STARTUP_TIME: float = 0.10
-const SLIDE_IFRAME_TIME: float = 0.28
-const SLIDE_COOLDOWN_TIME: float = 1.5
-const SLIDE_SPEED_MULTIPLIER: float = 3.0
+const SHIELD_RUSH_TRAVEL_TIME: float = 0.34
+const SHIELD_RUSH_FOLLOW_THROUGH_TIME: float = 0.26
+const SHIELD_RUSH_TOTAL_DURATION: float = SHIELD_RUSH_TRAVEL_TIME + SHIELD_RUSH_FOLLOW_THROUGH_TIME
+const SHIELD_RUSH_COOLDOWN_TIME: float = 4.5
+const SHIELD_RUSH_TRAVEL_VISUAL_FRAMES: int = 8
+const SHIELD_RUSH_TOTAL_VISUAL_FRAMES: int = 13
+const SHIELD_RUSH_FINAL_IMPACT_VISUAL_FRAME: int = 12
+const SHIELD_RUSH_MAX_DISTANCE: float = 420.0
+const SHIELD_RUSH_STOP_DISTANCE: float = 42.0
+const SHIELD_RUSH_MAX_SPEED: float = 900.0
+const SHIELD_RUSH_MICRO_STAGGER_DURATION: float = 0.18
+const SHIELD_RUSH_FINAL_STUN_DURATION: float = 1.15
+const SHIELD_RUSH_FINAL_PUSHBACK: float = 180.0
+const SHIELD_RUSH_IMPACT_OFFSET_Y: float = -18.0
 const ENEMY_COLLISION_LAYER_BIT: int = 4
-const SLIDE_CORE_POSE_START_TIME: float = 0.16
-const SLIDE_CORE_POSE_TOGGLE_TIME: float = 0.09
 
 const LIGHT_HIT_LOCK: float = 0.08
 const HURT_LOCK: float = 0.20
@@ -69,15 +79,20 @@ var is_block_active: bool = false
 var counter_window_timer: float = 0.0
 var is_counter_attack_ready: bool = false
 
-var slide_cooldown: float = 0.0
-var slide_timer: float = 0.0
-var slide_direction: float = 1.0
+var shield_rush_cooldown: float = 0.0
+var shield_rush_timer: float = 0.0
+var shield_rush_phase: int = ShieldRushPhase.NONE
+var shield_rush_direction: float = 1.0
+var shield_rush_target: Node2D = null
+var shield_rush_micro_stagger_applied: bool = false
+var shield_rush_final_stun_applied: bool = false
 var slide_iframe_active: bool = false
 var default_collision_mask: int = 0
 var default_collision_layer: int = 0
 var slide_enemy_collision_disabled: bool = false
 var last_incoming_attacker: Node2D = null
 var block_audio_player: AudioStreamPlayer2D = null
+var shield_rush_vfx: Node = null
 
 var reaction_lock_timer: float = 0.0
 var current_hit_reaction: int = HitReaction.LIGHT
@@ -116,16 +131,23 @@ func _ready() -> void:
 	default_collision_mask = collision_mask
 	default_collision_layer = collision_layer
 	_setup_block_audio()
+	_setup_shield_rush_vfx()
 	_configure_skill_ui()
 	_update_block_cooldown_ui()
 
 
 func _physics_process(delta: float) -> void:
+	if is_dead:
+		if animated_sprite:
+			animated_sprite.speed_scale = 1.0
+		super(delta)
+		return
+
 	if block_cooldown > 0.0:
 		block_cooldown = maxf(0.0, block_cooldown - delta)
 
-	if slide_cooldown > 0.0:
-		slide_cooldown = maxf(0.0, slide_cooldown - delta)
+	if shield_rush_cooldown > 0.0:
+		shield_rush_cooldown = maxf(0.0, shield_rush_cooldown - delta)
 
 	if crouch_cooldown > 0.0:
 		crouch_cooldown = maxf(0.0, crouch_cooldown - delta)
@@ -148,17 +170,25 @@ func _physics_process(delta: float) -> void:
 				animated_sprite.speed_scale = 1.0
 
 	_update_block_state(delta)
-	_update_slide_state(delta)
+	_update_shield_rush_state(delta)
 	_update_crouch_state(delta)
 	_update_block_cooldown_ui()
 
 	super(delta)
 
 
+func die():
+	if is_dead:
+		return
+
+	_interrupt_warrior_actions_on_death()
+	super.die()
+
+
 func handle_movement(delta: float) -> void:
 	if is_inventory_open:
 		_cancel_sneak_mode()
-		velocity.x = move_toward(velocity.x, 0.0, friction * delta)
+		velocity.x = move_toward(velocity.x, 0.0, _get_horizontal_friction_step(delta))
 		return
 
 	var direction: float = Input.get_axis("move_left", "move_right")
@@ -167,6 +197,10 @@ func handle_movement(delta: float) -> void:
 
 	if Input.is_action_just_pressed("sneak_toggle"):
 		_toggle_sneak_mode()
+
+	if is_sliding:
+		_update_shield_rush_movement(delta)
+		return
 
 	if reaction_lock_timer > 0.0:
 		_cancel_sneak_mode()
@@ -181,7 +215,7 @@ func handle_movement(delta: float) -> void:
 
 	if is_attacking or block_phase != BlockPhase.NONE or (is_casting and not is_using_consumable):
 		_cancel_sneak_mode()
-		velocity.x = move_toward(velocity.x, 0.0, friction * delta)
+		velocity.x = move_toward(velocity.x, 0.0, _get_horizontal_friction_step(delta))
 		return
 
 	if crouch_pressed:
@@ -189,13 +223,7 @@ func handle_movement(delta: float) -> void:
 
 	if crouch_phase != CrouchPhase.NONE:
 		_cancel_sneak_mode()
-		velocity.x = move_toward(velocity.x, 0.0, friction * delta * 1.2)
-		return
-
-	if is_sliding:
-		var slide_progress: float = 1.0 - (slide_timer / SLIDE_TOTAL_DURATION)
-		var slide_speed: float = lerpf(current_speed * SLIDE_SPEED_MULTIPLIER, current_speed * 1.05, slide_progress)
-		velocity.x = slide_direction * slide_speed
+		velocity.x = move_toward(velocity.x, 0.0, _get_horizontal_friction_step(delta) * 1.2)
 		return
 
 	is_sneaking = sneak_mode_enabled and is_on_floor() and direction != 0.0 and not is_blocking and not is_attacking and not is_using_consumable
@@ -206,24 +234,15 @@ func handle_movement(delta: float) -> void:
 			target_speed *= SNEAK_SPEED_MULTIPLIER
 		if is_using_consumable:
 			target_speed *= consumable_move_speed_multiplier
-		velocity.x = move_toward(velocity.x, direction * target_speed, acceleration * delta)
+		velocity.x = move_toward(velocity.x, direction * target_speed, _get_horizontal_acceleration_step(delta))
 		if animated_sprite:
 			animated_sprite.flip_h = direction < 0.0
 	else:
-		velocity.x = move_toward(velocity.x, 0.0, friction * delta)
+		velocity.x = move_toward(velocity.x, 0.0, _get_horizontal_friction_step(delta))
 
 	if is_jumping and not is_blocking and not is_using_consumable:
 		_cancel_sneak_mode()
-		if is_on_floor() or coyote_timer > 0.0:
-			velocity.y = jump_velocity
-			can_double_jump = enable_double_jump
-			has_double_jumped = false
-			coyote_timer = 0.0
-		elif enable_double_jump and can_double_jump and not has_double_jumped:
-			velocity.y = jump_velocity * 0.8
-			has_double_jumped = true
-			can_double_jump = false
-			_show_double_jump_effect()
+		_try_perform_jump()
 
 
 func handle_animations() -> void:
@@ -235,6 +254,10 @@ func handle_animations() -> void:
 		return
 
 	if is_attacking:
+		return
+
+	if is_sliding:
+		_update_shield_rush_visual()
 		return
 
 	if is_hurt:
@@ -250,10 +273,6 @@ func handle_animations() -> void:
 		play_animation("crouch")
 		if crouch_phase == CrouchPhase.ACTIVE:
 			_hold_crouch_pose_frame()
-		return
-
-	if is_sliding:
-		_update_slide_visual()
 		return
 
 	if block_phase != BlockPhase.NONE:
@@ -352,27 +371,44 @@ func attack() -> void:
 func slide() -> void:
 	if is_dead or is_attacking or is_casting or is_hurt:
 		return
-	if is_sliding or block_phase != BlockPhase.NONE or slide_cooldown > 0.0 or crouch_phase != CrouchPhase.NONE:
+	if is_sliding or block_phase != BlockPhase.NONE or shield_rush_cooldown > 0.0 or crouch_phase != CrouchPhase.NONE:
 		return
 	if not is_on_floor():
 		return
 
+	var rush_target: Node2D = _get_shield_rush_target()
+	if rush_target == null:
+		return
+
 	_cancel_sneak_mode()
 	is_sliding = true
-	slide_timer = SLIDE_TOTAL_DURATION
+	shield_rush_timer = SHIELD_RUSH_TOTAL_DURATION
+	shield_rush_phase = ShieldRushPhase.APPROACH
+	shield_rush_target = rush_target
+	shield_rush_micro_stagger_applied = false
+	shield_rush_final_stun_applied = false
 	slide_iframe_active = false
 	_set_enemy_slide_collision_enabled(false)
-	combat_action_performed.emit("slide_started", {})
-
-	var input_direction: float = Input.get_axis("move_left", "move_right")
-	if input_direction == 0.0:
-		slide_direction = -1.0 if animated_sprite and animated_sprite.flip_h else 1.0
-	else:
-		slide_direction = signf(input_direction)
-		if animated_sprite:
-			animated_sprite.flip_h = slide_direction < 0.0
-
-	_update_slide_visual()
+	shield_rush_direction = _resolve_shield_rush_direction(rush_target)
+	if animated_sprite:
+		animated_sprite.flip_h = shield_rush_direction < 0.0
+	if shield_rush_target != null and shield_rush_target.has_method("force_alert"):
+		shield_rush_target.force_alert(self)
+	if shield_rush_vfx != null and shield_rush_vfx.has_method("start_rush"):
+		shield_rush_vfx.start_rush(global_position + Vector2(0.0, SHIELD_RUSH_IMPACT_OFFSET_Y), shield_rush_direction)
+	if CombatRuntimeLogger:
+		CombatRuntimeLogger.log_event("shield_rush", character_name, "start", {
+			"target": shield_rush_target,
+			"distance": global_position.distance_to(shield_rush_target.global_position) if shield_rush_target != null else -1.0,
+			"player_floor": get_effective_combat_floor_id(),
+			"target_floor": int(shield_rush_target.call("get_effective_combat_floor_id")) if shield_rush_target != null and shield_rush_target.has_method("get_effective_combat_floor_id") else -1,
+			"direction": shield_rush_direction,
+		})
+	combat_action_performed.emit("shield_rush_started", {
+		"target_name": shield_rush_target.name if shield_rush_target != null else "",
+		"cooldown": SHIELD_RUSH_COOLDOWN_TIME,
+	})
+	_update_shield_rush_visual()
 
 
 func take_damage(amount: int, damage_type: String = "physical", source: String = "Неизвестно", reaction_hint: String = "") -> void:
@@ -384,7 +420,7 @@ func take_damage(amount: int, damage_type: String = "physical", source: String =
 	last_damage_source = source
 
 	var incoming_amount: int = max(0, amount)
-	var was_successfully_blocked: bool = _can_successfully_block()
+	var was_successfully_blocked: bool = _can_successfully_block(damage_type)
 	var hp_before: int = current_health
 	if was_successfully_blocked:
 		incoming_amount = _resolve_blocked_damage(incoming_amount)
@@ -403,9 +439,9 @@ func take_damage(amount: int, damage_type: String = "physical", source: String =
 			return
 
 	var final_damage: int = incoming_amount
-	if damage_type == "magical":
+	if _is_magical_damage_type(damage_type):
 		final_damage -= int(armor * 0.5)
-	elif damage_type != "true":
+	elif not _is_true_damage_type(damage_type):
 		final_damage -= armor
 	final_damage = max(1, final_damage)
 
@@ -471,6 +507,8 @@ func is_hidden_from_enemy(enemy: Node2D) -> bool:
 
 
 func _update_block_state(delta: float) -> void:
+	if is_dead:
+		return
 	if block_phase == BlockPhase.NONE:
 		return
 
@@ -494,21 +532,40 @@ func _update_block_state(delta: float) -> void:
 				_finish_block_sequence(false)
 
 
-func _update_slide_state(delta: float) -> void:
+func _update_shield_rush_state(delta: float) -> void:
 	if not is_sliding:
 		slide_iframe_active = false
 		_set_enemy_slide_collision_enabled(true)
+		shield_rush_phase = ShieldRushPhase.NONE
 		return
 
-	slide_timer = maxf(0.0, slide_timer - delta)
-	var elapsed: float = SLIDE_TOTAL_DURATION - slide_timer
-	slide_iframe_active = elapsed >= SLIDE_STARTUP_TIME and elapsed < (SLIDE_STARTUP_TIME + SLIDE_IFRAME_TIME)
+	shield_rush_timer = maxf(0.0, shield_rush_timer - delta)
+	slide_iframe_active = false
+	var elapsed: float = SHIELD_RUSH_TOTAL_DURATION - shield_rush_timer
+	var current_visual_frame: int = _get_shield_rush_visual_frame_index(elapsed)
 
-	if slide_timer <= 0.0:
+	if shield_rush_phase == ShieldRushPhase.APPROACH and elapsed >= SHIELD_RUSH_TRAVEL_TIME:
+		shield_rush_phase = ShieldRushPhase.FOLLOW_THROUGH
+		velocity.x = 0.0
+		if not shield_rush_micro_stagger_applied:
+			_apply_shield_rush_micro_stagger()
+			shield_rush_micro_stagger_applied = true
+
+	if not shield_rush_final_stun_applied and current_visual_frame >= SHIELD_RUSH_FINAL_IMPACT_VISUAL_FRAME - 1:
+		_apply_shield_rush_final_stun()
+		shield_rush_final_stun_applied = true
+
+	if shield_rush_timer <= 0.0:
 		is_sliding = false
+		shield_rush_phase = ShieldRushPhase.NONE
+		shield_rush_timer = 0.0
+		shield_rush_cooldown = SHIELD_RUSH_COOLDOWN_TIME
+		shield_rush_target = null
+		velocity.x = 0.0
 		slide_iframe_active = false
-		slide_cooldown = SLIDE_COOLDOWN_TIME
 		_set_enemy_slide_collision_enabled(true)
+		if shield_rush_vfx != null and shield_rush_vfx.has_method("stop_rush"):
+			shield_rush_vfx.stop_rush()
 
 
 func _finish_block_sequence(force_cooldown: bool) -> void:
@@ -521,6 +578,29 @@ func _finish_block_sequence(force_cooldown: bool) -> void:
 	block_phase_timer = 0.0
 	if force_cooldown or block_cooldown <= 0.0:
 		block_cooldown = BLOCK_COOLDOWN_TIME
+
+
+func _interrupt_warrior_actions_on_death() -> void:
+	is_blocking = false
+	is_block_active = false
+	block_phase = BlockPhase.NONE
+	block_phase_timer = 0.0
+
+	is_crouching = false
+	crouch_phase = CrouchPhase.NONE
+	crouch_phase_timer = 0.0
+
+	is_sliding = false
+	slide_iframe_active = false
+	shield_rush_phase = ShieldRushPhase.NONE
+	shield_rush_timer = 0.0
+	shield_rush_target = null
+	shield_rush_micro_stagger_applied = false
+	shield_rush_final_stun_applied = false
+	_set_enemy_slide_collision_enabled(true)
+
+	if shield_rush_vfx != null and shield_rush_vfx.has_method("stop_rush"):
+		shield_rush_vfx.stop_rush()
 func _set_enemy_slide_collision_enabled(enabled: bool) -> void:
 	if enabled:
 		if slide_enemy_collision_disabled:
@@ -536,7 +616,9 @@ func _set_enemy_slide_collision_enabled(enabled: bool) -> void:
 	slide_enemy_collision_disabled = true
 
 
-func _can_successfully_block() -> bool:
+func _can_successfully_block(damage_type: String = "physical") -> bool:
+	if not _is_blockable_damage_type(damage_type):
+		return false
 	if not _is_attack_in_front():
 		return false
 	if block_phase == BlockPhase.ACTIVE and is_block_active:
@@ -544,6 +626,10 @@ func _can_successfully_block() -> bool:
 	if block_phase == BlockPhase.STARTUP and block_phase_timer <= BLOCK_EARLY_GRACE_TIME:
 		return true
 	return false
+
+
+func _is_blockable_damage_type(damage_type: String) -> bool:
+	return damage_type != "magical_unblockable"
 
 
 func _is_attack_in_front() -> bool:
@@ -839,33 +925,52 @@ func _play_block_success_sound() -> void:
 		block_audio_player.play()
 
 
-func _update_slide_visual() -> void:
+func _update_shield_rush_visual() -> void:
 	if not animated_sprite or animated_sprite.sprite_frames == null:
 		return
-	if not animated_sprite.sprite_frames.has_animation("sliding"):
-		play_animation("sliding")
+	var anim_name: String = _get_shield_rush_animation_name()
+	if not animated_sprite.sprite_frames.has_animation(anim_name):
+		play_animation(anim_name)
 		return
-	if animated_sprite.animation != "sliding":
-		animated_sprite.play("sliding")
+	if animated_sprite.animation != anim_name:
+		animated_sprite.play(anim_name)
 
-	var frame_count: int = animated_sprite.sprite_frames.get_frame_count("sliding")
+	var frame_count: int = animated_sprite.sprite_frames.get_frame_count(anim_name)
 	if frame_count <= 0:
 		return
 
-	var elapsed: float = SLIDE_TOTAL_DURATION - slide_timer
+	var elapsed: float = SHIELD_RUSH_TOTAL_DURATION - shield_rush_timer
 	animated_sprite.stop()
+	animated_sprite.frame = _get_shield_rush_visual_frame_index(elapsed, frame_count)
 
-	if frame_count < 6:
-		var normalized: float = clampf(elapsed / SLIDE_TOTAL_DURATION, 0.0, 0.999)
-		animated_sprite.frame = mini(frame_count - 1, int(floor(normalized * frame_count)))
-		return
 
-	if elapsed < SLIDE_CORE_POSE_START_TIME:
-		animated_sprite.frame = 3
-		return
+func _get_shield_rush_visual_frame_index(elapsed: float, frame_count: int = -1) -> int:
+	if not animated_sprite or animated_sprite.sprite_frames == null:
+		return 0
+	var anim_name: String = _get_shield_rush_animation_name()
+	if frame_count < 0:
+		if not animated_sprite.sprite_frames.has_animation(anim_name):
+			return 0
+		frame_count = animated_sprite.sprite_frames.get_frame_count(anim_name)
+	if frame_count <= 0:
+		return 0
 
-	var toggle_index: int = int(floor((elapsed - SLIDE_CORE_POSE_START_TIME) / SLIDE_CORE_POSE_TOGGLE_TIME)) % 2
-	animated_sprite.frame = 4 + toggle_index
+	var travel_frames: int
+	var follow_through_frames: int
+	if anim_name == "The jerk" and frame_count >= SHIELD_RUSH_TOTAL_VISUAL_FRAMES:
+		travel_frames = SHIELD_RUSH_TRAVEL_VISUAL_FRAMES
+		follow_through_frames = SHIELD_RUSH_TOTAL_VISUAL_FRAMES - SHIELD_RUSH_TRAVEL_VISUAL_FRAMES
+	else:
+		follow_through_frames = mini(3, frame_count)
+		travel_frames = max(1, frame_count - follow_through_frames)
+
+	if elapsed < SHIELD_RUSH_TRAVEL_TIME or frame_count <= follow_through_frames:
+		var travel_normalized: float = clampf(elapsed / maxf(SHIELD_RUSH_TRAVEL_TIME, 0.001), 0.0, 0.999)
+		return mini(travel_frames - 1, int(floor(travel_normalized * travel_frames)))
+
+	var follow_elapsed: float = elapsed - SHIELD_RUSH_TRAVEL_TIME
+	var follow_normalized: float = clampf(follow_elapsed / maxf(SHIELD_RUSH_FOLLOW_THROUGH_TIME, 0.001), 0.0, 0.999)
+	return mini(frame_count - 1, travel_frames + int(floor(follow_normalized * follow_through_frames)))
 
 
 func _stop_sneak() -> void:
@@ -967,8 +1072,8 @@ func _update_block_cooldown_ui() -> void:
 		var slide_percent: float = 1.0
 		if is_sliding:
 			slide_percent = 0.0
-		elif slide_cooldown > 0.0:
-			slide_percent = 1.0 - (slide_cooldown / SLIDE_COOLDOWN_TIME)
+		elif shield_rush_cooldown > 0.0:
+			slide_percent = 1.0 - (shield_rush_cooldown / SHIELD_RUSH_COOLDOWN_TIME)
 		Global.game_ui.update_ability_cooldown("slide", clampf(slide_percent, 0.0, 1.0))
 
 
@@ -977,9 +1082,146 @@ func _configure_skill_ui() -> void:
 		return
 	if Global.game_ui.has_method("configure_ability_slot"):
 		Global.game_ui.configure_ability_slot("block", "Блок", "E", BLOCK_ICON_PATH)
-		Global.game_ui.configure_ability_slot("slide", "Подкат", "ПКМ", SLIDE_ICON_PATH)
+		Global.game_ui.configure_ability_slot("slide", "Рывок", "ПКМ", SHIELD_RUSH_ICON_PATH)
 
 
 func apply_artifacts() -> void:
 	super.apply_artifacts()
 	recalculate_armor()
+
+
+func _setup_shield_rush_vfx() -> void:
+	if shield_rush_vfx != null:
+		return
+	shield_rush_vfx = WarriorShieldRushVfxScript.new()
+	if shield_rush_vfx == null:
+		return
+	shield_rush_vfx.name = "ShieldRushVfx"
+	add_child(shield_rush_vfx)
+	if shield_rush_vfx.has_method("setup"):
+		shield_rush_vfx.setup(self)
+
+
+func _update_shield_rush_movement(delta: float) -> void:
+	if shield_rush_phase != ShieldRushPhase.APPROACH:
+		velocity.x = move_toward(velocity.x, 0.0, friction * delta * 4.0)
+		return
+
+	if not _is_valid_shield_rush_target(shield_rush_target):
+		velocity.x = move_toward(velocity.x, 0.0, friction * delta * 4.0)
+		return
+
+	shield_rush_direction = _resolve_shield_rush_direction(shield_rush_target)
+	if animated_sprite:
+		animated_sprite.flip_h = shield_rush_direction < 0.0
+
+	var desired_x: float = shield_rush_target.global_position.x - shield_rush_direction * SHIELD_RUSH_STOP_DISTANCE
+	var delta_x: float = desired_x - global_position.x
+	var desired_speed: float = clampf(delta_x / maxf(delta, 0.001), -SHIELD_RUSH_MAX_SPEED, SHIELD_RUSH_MAX_SPEED)
+	velocity.x = desired_speed
+
+
+func _get_shield_rush_target() -> Node2D:
+	var level_root: Node = get_tree().current_scene
+	if level_root == null:
+		return null
+
+	var candidate: Node = null
+	if level_root.has_method("get_current_enemy_ui_target"):
+		candidate = level_root.get_current_enemy_ui_target()
+	else:
+		candidate = level_root.get("current_enemy_ui_target")
+
+	if candidate == null or not (candidate is Node2D):
+		return null
+
+	var candidate_body: Node2D = candidate as Node2D
+	if not _is_valid_shield_rush_target(candidate_body):
+		return null
+
+	return candidate_body
+
+
+func _is_valid_shield_rush_target(candidate: Node2D) -> bool:
+	if candidate == null or not is_instance_valid(candidate):
+		return false
+	if candidate.get("is_alive") == false:
+		return false
+	if not candidate.is_inside_tree():
+		return false
+
+	var my_floor: int = get_effective_combat_floor_id()
+	var target_floor: int = -1
+	if candidate.has_method("get_effective_combat_floor_id"):
+		target_floor = int(candidate.call("get_effective_combat_floor_id"))
+	if my_floor == -1 or target_floor == -1 or my_floor != target_floor:
+		return false
+
+	return global_position.distance_to(candidate.global_position) <= SHIELD_RUSH_MAX_DISTANCE
+
+
+func _resolve_shield_rush_direction(candidate: Node2D) -> float:
+	if candidate == null:
+		return _get_facing_direction()
+	var dir: float = signf(candidate.global_position.x - global_position.x)
+	if dir == 0.0:
+		dir = _get_facing_direction()
+	return dir
+
+
+func _apply_shield_rush_micro_stagger() -> void:
+	if not _is_valid_shield_rush_target(shield_rush_target):
+		return
+
+	if shield_rush_target.has_method("force_alert"):
+		shield_rush_target.force_alert(self)
+	if shield_rush_target.has_method("apply_shield_rush_opening_stagger"):
+		shield_rush_target.apply_shield_rush_opening_stagger(SHIELD_RUSH_MICRO_STAGGER_DURATION, global_position.x)
+	elif shield_rush_target.has_method("apply_short_stagger"):
+		shield_rush_target.apply_short_stagger(SHIELD_RUSH_MICRO_STAGGER_DURATION, global_position.x)
+	if CombatRuntimeLogger:
+		CombatRuntimeLogger.log_event("shield_rush", character_name, "opening_stagger", {
+			"target": shield_rush_target,
+			"duration": SHIELD_RUSH_MICRO_STAGGER_DURATION,
+			"target_state": shield_rush_target.get("current_state") if shield_rush_target != null else -1,
+			"target_position": shield_rush_target.global_position if shield_rush_target != null else Vector2.ZERO,
+		})
+	if shield_rush_vfx != null and shield_rush_vfx.has_method("emit_contact_flash"):
+		shield_rush_vfx.emit_contact_flash(shield_rush_target.global_position + Vector2(0.0, SHIELD_RUSH_IMPACT_OFFSET_Y), false)
+
+
+func _apply_shield_rush_final_stun() -> void:
+	if not _is_valid_shield_rush_target(shield_rush_target):
+		return
+
+	if shield_rush_target.has_method("force_alert"):
+		shield_rush_target.force_alert(self)
+	if shield_rush_target.has_method("apply_shield_rush_impact"):
+		shield_rush_target.apply_shield_rush_impact(SHIELD_RUSH_FINAL_STUN_DURATION, SHIELD_RUSH_FINAL_PUSHBACK, global_position.x)
+	elif shield_rush_target.has_method("show_player_guard_feedback"):
+		shield_rush_target.show_player_guard_feedback(SHIELD_RUSH_FINAL_STUN_DURATION)
+	elif shield_rush_target.has_method("apply_short_stagger"):
+		shield_rush_target.apply_short_stagger(SHIELD_RUSH_FINAL_STUN_DURATION, global_position.x)
+	if CombatRuntimeLogger:
+		CombatRuntimeLogger.log_event("shield_rush", character_name, "final_impact", {
+			"target": shield_rush_target,
+			"stun_duration": SHIELD_RUSH_FINAL_STUN_DURATION,
+			"pushback": SHIELD_RUSH_FINAL_PUSHBACK,
+			"target_state": shield_rush_target.get("current_state") if shield_rush_target != null else -1,
+			"target_position": shield_rush_target.global_position if shield_rush_target != null else Vector2.ZERO,
+		})
+
+	if shield_rush_vfx != null and shield_rush_vfx.has_method("emit_contact_flash"):
+		shield_rush_vfx.emit_contact_flash(shield_rush_target.global_position + Vector2(0.0, SHIELD_RUSH_IMPACT_OFFSET_Y), true)
+
+	combat_action_performed.emit("shield_rush_connected", {
+		"target_name": shield_rush_target.name,
+		"stun_duration": SHIELD_RUSH_FINAL_STUN_DURATION,
+	})
+
+
+func _get_shield_rush_animation_name() -> String:
+	if animated_sprite != null and animated_sprite.sprite_frames != null:
+		if animated_sprite.sprite_frames.has_animation("The jerk"):
+			return "The jerk"
+	return "sliding"

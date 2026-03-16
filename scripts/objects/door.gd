@@ -435,6 +435,8 @@ func _is_player(body: Node2D) -> bool:
 func _try_use_door() -> void:
 	if is_unlocking or is_opening:
 		return
+	if _is_player_interaction_locked():
+		return
 
 	if is_open:
 		if not can_enter_open_door:
@@ -490,6 +492,19 @@ func _use_door() -> void:
 	Global.spawn_point = spawn_point_id
 	door_used.emit()
 	get_tree().change_scene_to_file(target_scene)
+
+
+func _is_player_interaction_locked() -> bool:
+	var player: Node = Global.current_player if Global else null
+	if player != null and is_instance_valid(player):
+		if bool(player.get("is_dead")):
+			return true
+
+	var current_death_menu: Node = get_tree().get_first_node_in_group("death_menu")
+	if current_death_menu is CanvasLayer and bool((current_death_menu as CanvasLayer).visible):
+		return true
+
+	return false
 
 
 func _save_player_stats_direct() -> void:

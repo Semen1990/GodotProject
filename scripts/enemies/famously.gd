@@ -1,10 +1,12 @@
 extends "res://scripts/enemies/base_melee_enemy.gd"
 
 const FAMOUSLY_SPELL_SCENE: PackedScene = preload("res://prefabs/enemies/FamouslySpellStrike.tscn")
+const FAMOUSLY_SPELL1_SCENE: PackedScene = preload("res://prefabs/enemies/FamouslySpell1Volley.tscn")
 const CyclopsMagicControllerScript := preload("res://scripts/enemies/magic/cyclops_magic_controller.gd")
 const CyclopsMagicProfileScript := preload("res://scripts/enemies/magic/cyclops_magic_profile.gd")
 const MELEE_ATTACK_DAMAGE: int = 2
 const SPELL_ATTACK_DAMAGE: int = 3
+const SPELL1_ATTACK_DAMAGE: int = 2
 
 const IDLE_FOLDER: String = "res://assets/enemies/Famously/Idle"
 const WALK_FOLDER: String = "res://assets/enemies/Famously/Walk"
@@ -329,6 +331,24 @@ func _apply_visual_facing(dir_x: float) -> void:
 	animated_sprite.position = visual_offset_when_facing_left if facing_left else visual_offset_when_facing_right
 
 
+func _get_facing_direction() -> float:
+	if animated_sprite == null:
+		return -1.0
+	var facing_left: bool = animated_sprite.position == visual_offset_when_facing_left
+	return -1.0 if facing_left else 1.0
+
+
+func _get_target_facing_direction(target_node: Node) -> float:
+	if target_node == null or not is_instance_valid(target_node):
+		return 1.0
+	if target_node.has_method("get_facing_direction"):
+		return float(target_node.call("get_facing_direction"))
+	var target_sprite: AnimatedSprite2D = target_node.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if target_sprite == null:
+		return 1.0
+	return -1.0 if target_sprite.flip_h else 1.0
+
+
 func _sync_engaged_ranges() -> void:
 	var detection_multiplier: float = engaged_detection_multiplier if has_engaged_player else 1.0
 	detection_range = base_detection_range_value * detection_multiplier
@@ -353,7 +373,7 @@ func _deal_damage() -> bool:
 		var spell_instance: Node = _spawn_spell_strike(queued_magic_spell_id)
 		if spell_instance != null and magic_controller != null:
 			magic_controller.register_spell_started(queued_magic_spell_id, spell_instance)
-			next_cast_allowed_at_msec = magic_controller.get_spell_ready_time_msec(CyclopsMagicControllerScript.SPELL0)
+			next_cast_allowed_at_msec = magic_controller.get_spell_ready_time_msec(queued_magic_spell_id)
 		if CombatRuntimeLogger:
 			CombatRuntimeLogger.log_event("damage", name, "cast_release", {
 				"spell_id": String(queued_magic_spell_id),
@@ -402,16 +422,23 @@ func _choose_magic_spell(distance_to_target: float) -> StringName:
 
 
 func _spawn_spell_strike(spell_id: StringName) -> Node:
-	if FAMOUSLY_SPELL_SCENE == null or not _is_target_valid():
-		return null
-	if spell_id != CyclopsMagicControllerScript.SPELL0:
+	if not _is_target_valid():
 		return null
 
-	var spell_instance: Node = FAMOUSLY_SPELL_SCENE.instantiate()
-	if spell_instance == null:
-		return null
+	var spell_instance: Node = null
+	match spell_id:
+		CyclopsMagicControllerScript.SPELL0:
+			if FAMOUSLY_SPELL_SCENE == null:
+				return null
+			spell_instance = FAMOUSLY_SPELL_SCENE.instantiate()
+		CyclopsMagicControllerScript.SPELL1:
+			if FAMOUSLY_SPELL1_SCENE == null:
+				return null
+			spell_instance = FAMOUSLY_SPELL1_SCENE.instantiate()
+		_:
+			return null
 
-	if spell_instance.has_method("setup_spell0"):
+	if spell_id == CyclopsMagicControllerScript.SPELL0 and spell_instance.has_method("setup_spell0"):
 		spell_instance.setup_spell0(
 			target,
 			SPELL_ATTACK_DAMAGE,
@@ -421,8 +448,47 @@ func _spawn_spell_strike(spell_id: StringName) -> Node:
 			target.global_position + spell_vertical_offset,
 			target.global_position,
 			magic_profile.spell0_strike_spacing,
-			magic_profile.spell0_hit_radius,
-			magic_profile.spell0_linger_time
+			magic_profile.spell0_hit_radius
+		)
+	elif spell_id == CyclopsMagicControllerScript.SPELL1 and spell_instance.has_method("setup_spell1"):
+		var target_facing: float = _get_target_facing_direction(target)
+		var target_body_point: Vector2 = target.global_position + magic_profile.spell1_target_body_offset
+		spell_instance.setup_spell1(
+			target,
+			target_body_point,
+			target_facing,
+			magic_profile.spell1_projectile_count,
+			magic_profile.spell1_projectile_speed,
+			magic_profile.spell1_hit_radius,
+			magic_profile.spell1_lifetime,
+			SPELL1_ATTACK_DAMAGE,
+			"%s: arcane bolt" % name,
+			magic_profile.spell1_face_side_distance,
+			magic_profile.spell1_spawn_vertical_offset,
+			magic_profile.spell1_spawn_horizontal_step,
+			magic_profile.spell1_spawn_vertical_step,
+			magic_profile.spell1_impact_horizontal_step,
+			magic_profile.spell1_target_body_offset
+		)
+	elif spell_id == CyclopsMagicControllerScript.SPELL1 and spell_instance.has_method("setup_spell1_volley"):
+		var target_facing: float = _get_target_facing_direction(target)
+		var target_body_point: Vector2 = target.global_position + magic_profile.spell1_target_body_offset
+		spell_instance.setup_spell1_volley(
+			target,
+			target_body_point,
+			target_facing,
+			magic_profile.spell1_projectile_count,
+			magic_profile.spell1_projectile_speed,
+			magic_profile.spell1_hit_radius,
+			magic_profile.spell1_lifetime,
+			SPELL1_ATTACK_DAMAGE,
+			"%s: arcane bolt volley" % name,
+			magic_profile.spell1_face_side_distance,
+			magic_profile.spell1_spawn_vertical_offset,
+			magic_profile.spell1_spawn_horizontal_step,
+			magic_profile.spell1_spawn_vertical_step,
+			magic_profile.spell1_impact_horizontal_step,
+			magic_profile.spell1_target_body_offset
 		)
 
 	var effect_parent: Node = _resolve_effect_parent()

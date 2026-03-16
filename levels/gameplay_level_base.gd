@@ -1,6 +1,7 @@
 extends Node2D
 
 const DEFAULT_GAME_UI_SCENE := preload("res://scenes/Ui/game_ui.tscn")
+const DEATH_MENU_SCENE := preload("res://scenes/ui/death_menu.tscn")
 const CONSUMABLE_USE_CONTROLLER_SCRIPT := preload("res://scripts/consumables/consumable_use_controller.gd")
 const DEFAULT_ITEM_DATABASE_PATH := "res://data/items/demo_database.tres"
 const ARMOR_POLL_INTERVAL := 0.1
@@ -59,6 +60,7 @@ var equipment_bonus_damage: int = 0
 var potion_bonus_armor: int = 0
 var potion_bonus_damage: int = 0
 var current_enemy_ui_target: Node = null
+var death_menu: DeathMenu = null
 
 
 func _ready() -> void:
@@ -568,6 +570,9 @@ func _connect_player_lifecycle_signals() -> void:
 	if current_player.has_signal("died") and not current_player.died.is_connected(_on_player_died):
 		current_player.died.connect(_on_player_died)
 
+	if current_player.has_signal("death_sequence_finished") and not current_player.death_sequence_finished.is_connected(_on_player_death_sequence_finished):
+		current_player.death_sequence_finished.connect(_on_player_death_sequence_finished)
+
 	if current_player.has_signal("revived") and not current_player.revived.is_connected(_on_player_revived):
 		current_player.revived.connect(_on_player_revived)
 
@@ -647,6 +652,12 @@ func _clear_current_enemy_ui_target() -> void:
 	current_enemy_ui_target = null
 	if game_ui and game_ui.has_method("hide_enemy_target"):
 		game_ui.hide_enemy_target()
+
+
+func get_current_enemy_ui_target() -> Node:
+	if _is_valid_enemy_ui_target(current_enemy_ui_target):
+		return current_enemy_ui_target
+	return null
 
 
 func _refresh_enemy_target_ui() -> void:
@@ -1189,11 +1200,105 @@ func _on_player_died() -> void:
 	_on_level_player_died()
 
 
+func _on_player_death_sequence_finished() -> void:
+	_show_death_menu_for_player()
+
+
 func _on_player_revived() -> void:
 	_consume_revival_artifact()
 	_apply_current_equipment_state()
 	call_deferred("_refresh_current_encounter_zone")
 	_on_level_player_revived()
+
+
+func _ensure_death_menu() -> DeathMenu:
+	if is_instance_valid(death_menu):
+		return death_menu
+
+	var existing: Node = get_tree().get_first_node_in_group("death_menu")
+	if existing is DeathMenu:
+		death_menu = existing as DeathMenu
+	else:
+		if DEATH_MENU_SCENE == null:
+			return null
+		death_menu = DEATH_MENU_SCENE.instantiate() as DeathMenu
+		if death_menu == null:
+			return null
+		get_ui_root().add_child(death_menu)
+
+	if death_menu != null:
+		if death_menu.has_signal("revive_requested") and not death_menu.revive_requested.is_connected(_on_death_menu_revive_requested):
+			death_menu.revive_requested.connect(_on_death_menu_revive_requested)
+		if death_menu.has_signal("restart_requested") and not death_menu.restart_requested.is_connected(_on_death_menu_restart_requested):
+			death_menu.restart_requested.connect(_on_death_menu_restart_requested)
+		if death_menu.has_signal("main_menu_requested") and not death_menu.main_menu_requested.is_connected(_on_death_menu_main_menu_requested):
+			death_menu.main_menu_requested.connect(_on_death_menu_main_menu_requested)
+
+	return death_menu
+
+
+func _show_death_menu_for_player() -> void:
+	var resolved_death_menu: DeathMenu = _ensure_death_menu()
+	if resolved_death_menu == null:
+		return
+
+	var stats: Dictionary = {}
+	if Global and Global.has_method("get_run_statistics"):
+		stats = Global.get_run_statistics()
+
+	var revival_artifact: String = ""
+	if Global and Global.has_method("get_revival_artifact"):
+		revival_artifact = Global.get_revival_artifact()
+
+	var safe_room: String = ""
+	var safe_position: Vector2 = Vector2.ZERO
+	if Global:
+		safe_room = String(Global.last_room_path)
+		safe_position = Global.last_safe_position
+
+	resolved_death_menu.show_death_menu(stats, revival_artifact, safe_room, safe_position)
+
+
+func _on_death_menu_revive_requested(data: Dictionary) -> void:
+	if current_player == null or not is_instance_valid(current_player):
+		return
+
+	if Global and Global.has_method("use_revival_artifact"):
+		Global.use_revival_artifact()
+
+	if current_player.has_method("revive"):
+		current_player.revive()
+
+	var revive_room: String = String(data.get("last_room", ""))
+	var revive_position: Vector2 = data.get("last_position", Vector2.ZERO)
+	if revive_room == _get_room_progression_id() and revive_position != Vector2.ZERO:
+		var player_body: Node2D = current_player as Node2D
+		if player_body != null:
+			player_body.global_position = revive_position
+
+
+func _on_death_menu_restart_requested() -> void:
+	get_tree().paused = false
+
+	if Inventory:
+		Inventory.clear_all()
+
+	if Global and Global.has_method("full_reset"):
+		Global.full_reset()
+
+	get_tree().change_scene_to_file("res://scenes/levels/level1.tscn")
+
+
+func _on_death_menu_main_menu_requested() -> void:
+	get_tree().paused = false
+
+	if Inventory:
+		Inventory.clear_all()
+
+	if Global and Global.has_method("full_reset"):
+		Global.full_reset()
+
+	get_tree().change_scene_to_file("res://scenes/Ui/main_menu.tscn")
 
 
 func _clear_level_potion_effects() -> void:

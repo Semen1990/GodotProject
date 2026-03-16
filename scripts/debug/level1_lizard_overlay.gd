@@ -90,6 +90,9 @@ func _refresh_text() -> void:
 	var recover_timer: float = float(enemy.get("recover_timer"))
 	var retreat_timer: float = float(enemy.get("retreat_timer"))
 	var knockdown_timer: float = float(enemy.get("knockdown_timer"))
+	var forced_stagger_timer: float = float(enemy.get("forced_stagger_timer"))
+	var pushback_timer: float = float(enemy.get("shield_rush_pushback_timer"))
+	var pushback_velocity: float = float(enemy.get("shield_rush_pushback_velocity"))
 	var floor_delta: int = -1
 	if enemy_effective_floor >= 0 and player_effective_floor >= 0:
 		floor_delta = abs(enemy_effective_floor - player_effective_floor)
@@ -103,6 +106,7 @@ func _refresh_text() -> void:
 		"State: %s   Engaged: %s   Can attack: %s" % [enemy_state_name, str(engaged), str(can_attack)],
 		"Combo left: %d   Parry: %s" % [combo_hits_remaining, _fmt_float(parry_timer)],
 		"Recover: %s   Retreat: %s   Knockdown: %s" % [_fmt_float(recover_timer), _fmt_float(retreat_timer), _fmt_float(knockdown_timer)],
+		"Forced stagger: %s   Pushback: %s / %s" % [_fmt_float(forced_stagger_timer), _fmt_float(pushback_timer), _fmt_float(pushback_velocity)],
 		"Enemy support/probe: %s / %s" % [_fmt_float(enemy_support_y), str(enemy_probe.round())],
 		"Player support/probe: %s / %s" % [_fmt_float(player_support_y), str(player_probe.round())],
 		"Enemy pos: %s" % str((enemy as Node2D).global_position.round()),

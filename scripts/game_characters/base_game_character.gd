@@ -18,6 +18,7 @@ signal damage_received(final_damage: int, reaction_tag: String)
 signal combat_action_performed(action_name: String, payload: Dictionary)
 signal died()
 signal revived()
+signal death_sequence_finished()
 
 # --- Р вЂР С’Р вЂ”Р С›Р вЂ™Р В«Р вЂў Р ТђР С’Р В Р С’Р С™Р СћР вЂўР В Р ВР РЋР СћР ВР С™Р В ---
 # Р СџР ВµРЎР‚Р ВµР С•Р С—РЎР‚Р ВµР Т‘Р ВµР В»РЎРЏРЎР‹РЎвЂљРЎРѓРЎРЏ Р Р† Р Т‘Р С•РЎвЂЎР ВµРЎР‚Р Р…Р С‘РЎвЂ¦ Р С”Р В»Р В°РЎРѓРЎРѓР В°РЎвЂ¦ Р Р† _ready()
@@ -60,6 +61,18 @@ var acceleration: float = 1500.0
 var friction: float = 1200.0
 var jump_velocity: float = -400.0
 var floor_snap_length_default: float = 16.0
+var rise_gravity_multiplier: float = 1.0
+var fall_gravity_multiplier: float = 1.9
+var jump_cut_velocity_multiplier: float = 0.42
+var max_fall_speed: float = 980.0
+var air_acceleration_multiplier: float = 0.72
+var air_friction_multiplier: float = 0.38
+const ENEMY_FLOOR_SLIDE_OFF_SPEED: float = 220.0
+const ENEMY_FLOOR_DOWNWARD_SPEED: float = 160.0
+const ENEMY_WALL_PIN_DOWNWARD_SPEED: float = 260.0
+const ENEMY_WALL_PIN_RELEASE_NUDGE: float = 4.0
+const ENEMY_WALL_PIN_ENEMY_SEPARATION: float = 10.0
+const ENEMY_WALL_PIN_ENEMY_SPEED: float = 180.0
 
 # --- Р РЋР ВР РЋР СћР вЂўР СљР С’ Р вЂќР вЂ™Р С›Р в„ўР СњР С›Р вЂњР С› Р СџР В Р В«Р вЂ“Р С™Р С’ ---
 # Р С’Р С”РЎвЂљР С‘Р Р†Р С‘РЎР‚РЎС“Р ВµРЎвЂљРЎРѓРЎРЏ Р В°РЎР‚РЎвЂљР ВµРЎвЂћР В°Р С”РЎвЂљР В°Р СР С‘ (Р Р…Р В°Р С—РЎР‚Р С‘Р СР ВµРЎР‚, "Р С™РЎР‚РЎвЂ№Р В»РЎРЉРЎРЏ Р вЂњР ВµРЎР‚Р СР ВµРЎРѓР В°")
@@ -176,15 +189,8 @@ func _physics_process(delta: float):
 		animated_sprite.modulate.a = 0.7 + sin(Time.get_ticks_msec() * 0.01) * 0.3
 	
 	# --- Р вЂњРЎР‚Р В°Р Р†Р С‘РЎвЂљР В°РЎвЂ Р С‘РЎРЏ Р С‘ coyote time ---
-	if not is_on_floor():
-		velocity.y += gravity * delta
-		if coyote_timer > 0:
-			coyote_timer -= delta
-	else:
-		# Р РЋР В±РЎР‚Р С•РЎРѓ Р Т‘Р Р†Р С•Р в„–Р Р…Р С•Р С–Р С• Р С—РЎР‚РЎвЂ№Р В¶Р С”Р В° Р С—РЎР‚Р С‘ Р С”Р В°РЎРѓР В°Р Р…Р С‘Р С‘ Р В·Р ВµР СР В»Р С‘
-		has_double_jumped = false
-		can_double_jump = false
-		coyote_timer = coyote_time
+	_apply_vertical_physics(delta)
+	_apply_jump_cut()
 	
 	# --- Р С›Р В±РЎР‚Р В°Р В±Р С•РЎвЂљР С”Р В° Р Т‘Р Р†Р С‘Р В¶Р ВµР Р…Р С‘РЎРЏ Р С‘ Р В°Р Р…Р С‘Р СР В°РЎвЂ Р С‘Р в„– ---
 	handle_movement(delta)
@@ -192,6 +198,8 @@ func _physics_process(delta: float):
 	fix_sprite_scale()
 	
 	move_and_slide()
+	_resolve_enemy_floor_support()
+	_resolve_enemy_wall_pinch()
 
 
 func fix_sprite_scale():
@@ -204,6 +212,163 @@ func fix_sprite_scale():
 			abs(original_scale.x) * current_sign,
 			original_scale.y
 		)
+
+
+func _resolve_enemy_floor_support() -> void:
+	var enemy_floor_collision: KinematicCollision2D = _find_enemy_floor_collision()
+	if enemy_floor_collision == null:
+		floor_snap_length = floor_snap_length_default
+		return
+
+	floor_snap_length = 0.0
+	var collider_node: Node2D = enemy_floor_collision.get_collider() as Node2D
+	var away_direction: float = 0.0
+	if collider_node != null:
+		away_direction = signf(global_position.x - collider_node.global_position.x)
+	if away_direction == 0.0:
+		away_direction = signf(velocity.x)
+	if away_direction == 0.0:
+		away_direction = -1.0 if animated_sprite != null and animated_sprite.flip_h else 1.0
+
+	velocity.x = away_direction * maxf(absf(velocity.x), ENEMY_FLOOR_SLIDE_OFF_SPEED)
+	velocity.y = maxf(velocity.y, ENEMY_FLOOR_DOWNWARD_SPEED)
+	coyote_timer = 0.0
+	can_double_jump = false
+
+
+func _apply_vertical_physics(delta: float) -> void:
+	if not is_on_floor():
+		var gravity_scale: float = rise_gravity_multiplier if velocity.y < 0.0 else fall_gravity_multiplier
+		velocity.y += gravity * gravity_scale * delta
+		velocity.y = minf(velocity.y, max_fall_speed)
+		if coyote_timer > 0.0:
+			coyote_timer -= delta
+		return
+
+	has_double_jumped = false
+	can_double_jump = false
+	coyote_timer = coyote_time
+
+
+func _apply_jump_cut() -> void:
+	if not Input.is_action_just_released("jump"):
+		return
+	if velocity.y >= 0.0:
+		return
+	velocity.y = maxf(velocity.y, jump_velocity * jump_cut_velocity_multiplier)
+
+
+func _get_horizontal_acceleration_step(delta: float) -> float:
+	var multiplier: float = air_acceleration_multiplier if not is_on_floor() else 1.0
+	return acceleration * multiplier * delta
+
+
+func _get_horizontal_friction_step(delta: float) -> float:
+	var multiplier: float = air_friction_multiplier if not is_on_floor() else 1.0
+	return friction * multiplier * delta
+
+
+func _try_perform_jump() -> bool:
+	if is_on_floor() or coyote_timer > 0.0:
+		velocity.y = jump_velocity
+		can_double_jump = enable_double_jump
+		has_double_jumped = false
+		coyote_timer = 0.0
+		return true
+
+	if enable_double_jump and can_double_jump and not has_double_jumped:
+		velocity.y = jump_velocity * 0.8
+		has_double_jumped = true
+		can_double_jump = false
+		_show_double_jump_effect()
+		return true
+
+	return false
+
+
+func _find_enemy_floor_collision() -> KinematicCollision2D:
+	var slide_count: int = get_slide_collision_count()
+	for collision_index in range(slide_count):
+		var collision: KinematicCollision2D = get_slide_collision(collision_index)
+		if collision == null:
+			continue
+		var collider: Object = collision.get_collider()
+		if not _is_enemy_floor_collider(collider):
+			continue
+		var collision_normal: Vector2 = collision.get_normal()
+		if collision_normal.y <= -0.55:
+			return collision
+	return null
+
+
+func _is_enemy_floor_collider(collider: Object) -> bool:
+	if not (collider is Node):
+		return false
+	return (collider as Node).is_in_group("encounter_enemy")
+
+
+func _resolve_enemy_wall_pinch() -> void:
+	var enemy_side: int = 0
+	var wall_side: int = 0
+	var enemy_body: Node2D = null
+	var slide_count: int = get_slide_collision_count()
+
+	for collision_index in range(slide_count):
+		var collision: KinematicCollision2D = get_slide_collision(collision_index)
+		if collision == null:
+			continue
+
+		var normal: Vector2 = collision.get_normal()
+		if absf(normal.x) < 0.55:
+			continue
+
+		var collider: Object = collision.get_collider()
+		if _is_enemy_floor_collider(collider):
+			enemy_side = int(signf(normal.x))
+			enemy_body = collider as Node2D
+		elif _is_world_wall_collider(collider):
+			wall_side = int(signf(normal.x))
+
+	if enemy_side == 0 or wall_side == 0:
+		return
+	if enemy_side != -wall_side:
+		return
+
+	floor_snap_length = 0.0
+	velocity.x = 0.0
+	velocity.y = maxf(velocity.y, ENEMY_WALL_PIN_DOWNWARD_SPEED)
+	global_position.y += ENEMY_WALL_PIN_RELEASE_NUDGE
+	_apply_enemy_wall_pinch_repel(enemy_body, -float(enemy_side))
+	coyote_timer = 0.0
+	can_double_jump = false
+
+
+func _is_world_wall_collider(collider: Object) -> bool:
+	if not (collider is Node):
+		return false
+	var collider_node := collider as Node
+	if collider_node.is_in_group("encounter_enemy"):
+		return false
+	if collider_node.is_in_group("player"):
+		return false
+	return true
+
+
+func _apply_enemy_wall_pinch_repel(enemy_node: Node2D, push_direction: float) -> void:
+	if enemy_node == null or not is_instance_valid(enemy_node):
+		return
+	if is_zero_approx(push_direction):
+		return
+
+	enemy_node.global_position.x += push_direction * ENEMY_WALL_PIN_ENEMY_SEPARATION
+
+	var enemy_velocity_value = enemy_node.get("velocity")
+	if typeof(enemy_velocity_value) != TYPE_VECTOR2:
+		return
+
+	var enemy_velocity: Vector2 = enemy_velocity_value
+	enemy_velocity.x = push_direction * maxf(absf(enemy_velocity.x), ENEMY_WALL_PIN_ENEMY_SPEED)
+	enemy_node.set("velocity", enemy_velocity)
 
 
 func get_current_combat_floor_id() -> int:
@@ -310,7 +475,7 @@ func handle_movement(delta: float):
 	# Р ВР С–РЎР‚Р С•Р С” Р Р…Р Вµ Р СР С•Р В¶Р ВµРЎвЂљ Р Т‘Р Р†Р С‘Р С–Р В°РЎвЂљРЎРЉРЎРѓРЎРЏ Р С‘ Р С‘РЎРѓР С—Р С•Р В»РЎРЉР В·Р С•Р Р†Р В°РЎвЂљРЎРЉ РЎРѓР С—Р С•РЎРѓР С•Р В±Р Р…Р С•РЎРѓРЎвЂљР С‘,
 	# Р Р…Р С• Р Р†РЎР‚Р В°Р С–Р С‘ Р С—РЎР‚Р С•Р Т‘Р С•Р В»Р В¶Р В°РЎР‹РЎвЂљ Р Т‘Р ВµР в„–РЎРѓРЎвЂљР Р†Р С•Р Р†Р В°РЎвЂљРЎРЉ Р С‘ Р СР С•Р С–РЎС“РЎвЂљ Р Р…Р В°Р Р…Р С•РЎРѓР С‘РЎвЂљРЎРЉ РЎС“РЎР‚Р С•Р Р…
 	if is_inventory_open:
-		velocity.x = move_toward(velocity.x, 0, friction * delta)
+		velocity.x = move_toward(velocity.x, 0, _get_horizontal_friction_step(delta))
 		return
 	
 	# --- Р СџР С•Р В»РЎС“РЎвЂЎР ВµР Р…Р С‘Р Вµ Р Р†Р Р†Р С•Р Т‘Р В° ---
@@ -321,7 +486,7 @@ func handle_movement(delta: float):
 	
 	# --- Р вЂР В»Р С•Р С”Р С‘РЎР‚Р С•Р Р†Р С”Р В° Р Т‘Р Р†Р С‘Р В¶Р ВµР Р…Р С‘РЎРЏ Р Р†Р С• Р Р†РЎР‚Р ВµР СРЎРЏ РЎРѓР С—Р ВµРЎвЂ Р С‘Р В°Р В»РЎРЉР Р…РЎвЂ№РЎвЂ¦ Р Т‘Р ВµР в„–РЎРѓРЎвЂљР Р†Р С‘Р в„– ---
 	if is_attacking or is_sliding or (is_casting and not is_using_consumable):
-		velocity.x = move_toward(velocity.x, 0, friction * delta)
+		velocity.x = move_toward(velocity.x, 0, _get_horizontal_friction_step(delta))
 		return
 	
 	# --- Р СџР В Р ВР РЋР вЂўР вЂќР С’Р СњР ВР вЂў ---
@@ -341,33 +506,22 @@ func handle_movement(delta: float):
 			var target_speed: float = current_speed
 			if is_using_consumable:
 				target_speed *= consumable_move_speed_multiplier
-			velocity.x = move_toward(velocity.x, direction * target_speed, acceleration * delta)
+			velocity.x = move_toward(velocity.x, direction * target_speed, _get_horizontal_acceleration_step(delta))
 			# Р СџР С•Р Р†Р С•РЎР‚Р С•РЎвЂљ РЎРѓР С—РЎР‚Р В°Р в„–РЎвЂљР В°
 			if animated_sprite:
 				animated_sprite.flip_h = direction < 0
 		else:
-			velocity.x = move_toward(velocity.x, 0, friction * delta)
+			velocity.x = move_toward(velocity.x, 0, _get_horizontal_friction_step(delta))
 	elif is_crouching:
 		# Р СџРЎР‚Р С‘ Р С—РЎР‚Р С‘РЎРѓР ВµР Т‘Р В°Р Р…Р С‘Р С‘ - Р В·Р В°Р СР ВµР Т‘Р В»Р ВµР Р…Р С‘Р Вµ Р Т‘Р С• Р С•РЎРѓРЎвЂљР В°Р Р…Р С•Р Р†Р С”Р С‘
-		velocity.x = move_toward(velocity.x, 0, friction * delta)
+		velocity.x = move_toward(velocity.x, 0, _get_horizontal_friction_step(delta))
 	else:
 		# Р СџРЎР‚Р С‘ Р В±Р В»Р С•Р С”Р Вµ - Р В±РЎвЂ№РЎРѓРЎвЂљРЎР‚Р В°РЎРЏ Р С•РЎРѓРЎвЂљР В°Р Р…Р С•Р Р†Р С”Р В°
-		velocity.x = move_toward(velocity.x, 0, friction * delta * 2)
+		velocity.x = move_toward(velocity.x, 0, _get_horizontal_friction_step(delta) * 2.0)
 	
 	# --- Р СџР В Р В«Р вЂ“Р С™Р В ---
 	if is_jumping and not is_blocking and not is_crouching:
-		if is_on_floor() or coyote_timer > 0:
-			# Р С›Р В±РЎвЂ№РЎвЂЎР Р…РЎвЂ№Р в„– Р С—РЎР‚РЎвЂ№Р В¶Р С•Р С”
-			velocity.y = jump_velocity
-			can_double_jump = enable_double_jump
-			has_double_jumped = false
-			coyote_timer = 0
-		elif enable_double_jump and can_double_jump and not has_double_jumped:
-			# Р вЂќР Р†Р С•Р в„–Р Р…Р С•Р в„– Р С—РЎР‚РЎвЂ№Р В¶Р С•Р С” (РЎРѓР В»Р В°Р В±Р ВµР Вµ Р С•Р В±РЎвЂ№РЎвЂЎР Р…Р С•Р С–Р С•)
-			velocity.y = jump_velocity * 0.8
-			has_double_jumped = true
-			can_double_jump = false
-			_show_double_jump_effect()
+		_try_perform_jump()
 
 
 # ===========================================
@@ -589,6 +743,10 @@ func take_damage(amount: int, damage_type: String = "physical", source: String =
 	
 	# Р В Р В°РЎРѓРЎвЂЎРЎвЂРЎвЂљ РЎС“РЎР‚Р С•Р Р…Р В° РЎРѓ РЎС“РЎвЂЎРЎвЂРЎвЂљР С•Р С Р В±РЎР‚Р С•Р Р…Р С‘
 	var reduced_amount = max(1, amount - armor)
+	if _is_magical_damage_type(damage_type):
+		reduced_amount = max(1, amount - int(armor * 0.5))
+	elif _is_true_damage_type(damage_type):
+		reduced_amount = max(1, amount)
 	current_health -= reduced_amount
 	current_health = max(0, current_health)
 	
@@ -663,52 +821,8 @@ func _finish_death_sequence() -> void:
 	# Р С›РЎвЂљР С”Р В»РЎР‹РЎвЂЎР В°Р ВµР С Р С”Р С•Р В»Р В»Р С‘Р В·Р С‘РЎР‹
 	if collision_shape:
 		collision_shape.set_deferred("disabled", true)
-	
-	# Р СџР С•Р С”Р В°Р В·РЎвЂ№Р Р†Р В°Р ВµР С Р СР ВµР Р…РЎР‹ РЎРѓР СР ВµРЎР‚РЎвЂљР С‘
-	_show_death_menu()
 
-
-func _show_death_menu():
-	"""Р СџР С•Р С”Р В°Р В·РЎвЂ№Р Р†Р В°Р ВµРЎвЂљ Р СР ВµР Р…РЎР‹ РЎРѓР СР ВµРЎР‚РЎвЂљР С‘"""
-	
-	# Р СџР С•Р В»РЎС“РЎвЂЎР В°Р ВµР С РЎРѓРЎвЂљР В°РЎвЂљР С‘РЎРѓРЎвЂљР С‘Р С”РЎС“
-	var stats = {}
-	if Global and Global.has_method("get_run_statistics"):
-		stats = Global.get_run_statistics()
-	
-	# Р СџРЎР‚Р С•Р Р†Р ВµРЎР‚РЎРЏР ВµР С Р В°РЎР‚РЎвЂљР ВµРЎвЂћР В°Р С”РЎвЂљ Р Р†Р С•Р В·РЎР‚Р С•Р В¶Р Т‘Р ВµР Р…Р С‘РЎРЏ
-	var revival_artifact = ""
-	if Global and Global.has_method("get_revival_artifact"):
-		revival_artifact = Global.get_revival_artifact()
-	
-	# Р ВРЎвЂ°Р ВµР С Р С‘Р В»Р С‘ РЎРѓР С•Р В·Р Т‘Р В°РЎвЂР С Р СР ВµР Р…РЎР‹ РЎРѓР СР ВµРЎР‚РЎвЂљР С‘
-	var death_menu = get_tree().get_first_node_in_group("death_menu")
-	
-	if not death_menu:
-		var death_menu_scene = load("res://scenes/ui/death_menu.tscn")
-		if death_menu_scene:
-			death_menu = death_menu_scene.instantiate()
-			death_menu.add_to_group("death_menu")
-			get_tree().current_scene.add_child(death_menu)
-	
-	if death_menu:
-		# Р СџР С•Р Т‘Р С”Р В»РЎР‹РЎвЂЎР В°Р ВµР С РЎРѓР С‘Р С–Р Р…Р В°Р В» Р Р†Р С•Р В·РЎР‚Р С•Р В¶Р Т‘Р ВµР Р…Р С‘РЎРЏ
-		if death_menu.has_signal("revive_requested"):
-			if not death_menu.revive_requested.is_connected(_on_revive_requested):
-				death_menu.revive_requested.connect(_on_revive_requested)
-		
-		# Р СџР С•Р С”Р В°Р В·РЎвЂ№Р Р†Р В°Р ВµР С Р СР ВµР Р…РЎР‹
-		if death_menu.has_method("show_death_menu"):
-			death_menu.show_death_menu(stats, revival_artifact)
-
-
-func _on_revive_requested(_data: Dictionary):
-	"""Р С›Р В±РЎР‚Р В°Р В±Р С•РЎвЂљР С”Р В° Р Р†Р С•Р В·РЎР‚Р С•Р В¶Р Т‘Р ВµР Р…Р С‘РЎРЏ Р С‘Р В· Р СР ВµР Р…РЎР‹ РЎРѓР СР ВµРЎР‚РЎвЂљР С‘"""
-	
-	if Global and Global.has_method("use_revival_artifact"):
-		Global.use_revival_artifact()
-	
-	revive()
+	death_sequence_finished.emit()
 
 
 func revive():
@@ -807,6 +921,14 @@ func _normalize_effect_chance(raw_chance: Variant) -> float:
 	if chance > 1.0:
 		chance /= 100.0
 	return clampf(chance, 0.0, 1.0)
+
+
+func _is_magical_damage_type(damage_type: String) -> bool:
+	return damage_type.begins_with("magical")
+
+
+func _is_true_damage_type(damage_type: String) -> bool:
+	return damage_type == "true"
 func give_temporary_invincibility(duration: float):
 	"""Р вЂќР В°РЎвЂРЎвЂљ Р Р†РЎР‚Р ВµР СР ВµР Р…Р Р…РЎС“РЎР‹ Р Р…Р ВµРЎС“РЎРЏР В·Р Р†Р С‘Р СР С•РЎРѓРЎвЂљРЎРЉ"""
 	is_invincible = true

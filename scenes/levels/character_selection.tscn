@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" uid="uid://bb5y78itq0ebn" path="res://scripts/character_selection.gd" id="1_cdix0"]
 [ext_resource type="Texture2D" uid="uid://wvw8vjvprg8q" path="res://assets/background/Free-Moon-Pixel-Game-Backgrounds5.png" id="2_5bvvd"]
@@ -6,7 +6,6 @@
 [ext_resource type="PackedScene" uid="uid://c2f3brcpnbfmq" path="res://scenes/characters/rogue.tscn" id="3_ytn4t"]
 [ext_resource type="PackedScene" uid="uid://t7vi0ab1x20r" path="res://scenes/characters/paladin.tscn" id="4_8u4g5"]
 [ext_resource type="PackedScene" uid="uid://blg16q5rxnvrw" path="res://scenes/characters/warrior.tscn" id="4_gvd7t"]
-[ext_resource type="PackedScene" uid="uid://ceck3rjiaby11" path="res://scenes/Ui/simple_pause_menu.tscn" id="6_corwa"]
 [ext_resource type="Texture2D" uid="uid://depyifnyk23en" path="res://assets/icon/heart.jpg" id="6_k67mm"]
 [ext_resource type="Texture2D" uid="uid://gp3lyexce4j5" path="res://assets/icon/shield.png" id="7_100ye"]
 [ext_resource type="Texture2D" uid="uid://defwvenqtljdy" path="res://assets/icon/mana.png" id="8_m6x4y"]
@@ -167,4 +166,3 @@ text = "Начать игру"
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
-[node name="PauseMenu" parent="." instance=ExtResource("6_corwa")]

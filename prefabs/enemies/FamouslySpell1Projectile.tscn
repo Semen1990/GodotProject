@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/famously_spell1_projectile.gd" id="1_spell1_script"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_spell1"]
+animations = []
+
+[node name="FamouslySpell1Projectile" type="Node2D"]
+script = ExtResource("1_spell1_script")
+process_mode = 1
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+scale = Vector2(1.6, 1.6)
+sprite_frames = SubResource("SpriteFrames_spell1")

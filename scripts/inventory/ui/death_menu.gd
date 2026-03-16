@@ -32,6 +32,9 @@ const RARITY_NAMES = {
 	"epic": "Эпический",
 	"legendary": "Легендарный"
 }
+const REVIVAL_ARTIFACT_DISPLAY_NAMES := {
+	"phoenix_feather": "Перо Феникса",
+}
 
 var background: ColorRect
 var main_container: CenterContainer
@@ -442,16 +445,7 @@ func _get_artifact_rarity(artifact_id: String) -> String:
 func _update_revival_info():
 	var artifact_name_node = revival_panel.find_child("ArtifactName", true, false)
 	if artifact_name_node:
-		var artifact_name = "Артефакт возрождения"
-		if Global and Global.has_method("get_artifact_data"):
-			var data = Global.get_artifact_data(current_revival_artifact_id)
-			if data and data.has("name"):
-				artifact_name = data["name"]
-		else:
-			match current_revival_artifact_id:
-				"phoenix_feather":
-					artifact_name = "Перо Феникса"
-		artifact_name_node.text = artifact_name
+		artifact_name_node.text = _get_revival_artifact_display_name()
 
 
 func _on_revive_pressed():
@@ -482,11 +476,7 @@ func _show_confirmation(action: String):
 	pending_action = action
 	is_confirmation_active = true
 	
-	var artifact_name = "артефакт возрождения"
-	if Global and Global.has_method("get_artifact_data"):
-		var data = Global.get_artifact_data(current_revival_artifact_id)
-		if data and data.has("name"):
-			artifact_name = data["name"]
+	var artifact_name = _get_revival_artifact_display_name().to_lower()
 	
 	confirmation_text.text = "Вы потеряете " + artifact_name + "!\nВы уверены?"
 	current_countdown = countdown_time
@@ -494,6 +484,19 @@ func _show_confirmation(action: String):
 	confirmation_dialog.visible = true
 	confirm_no_button.grab_focus()
 	countdown_timer.start(0.1)
+
+
+func _get_revival_artifact_display_name() -> String:
+	if REVIVAL_ARTIFACT_DISPLAY_NAMES.has(current_revival_artifact_id):
+		return String(REVIVAL_ARTIFACT_DISPLAY_NAMES[current_revival_artifact_id])
+
+	if Global and Global.has_method("get_artifact_data"):
+		var data = Global.get_artifact_data(current_revival_artifact_id)
+		var resolved_name: String = String(data.get("name", "")).strip_edges()
+		if not resolved_name.is_empty() and not resolved_name.contains("Р"):
+			return resolved_name
+
+	return "Артефакт возрождения"
 
 
 func _on_confirm_yes():
@@ -531,32 +534,13 @@ func _on_countdown_tick():
 func _go_to_main_menu():
 	get_tree().paused = false
 	hide()
-	
-	# Очищаем инвентарь при выходе в меню
-	if Inventory:
-		Inventory.clear_all()
-	
-	if Global and Global.has_method("full_reset"):
-		Global.full_reset()
-	
 	main_menu_requested.emit()
-	get_tree().change_scene_to_file("res://scenes/Ui/main_menu.tscn")
 
 
 func _restart_game():
 	get_tree().paused = false
 	hide()
-	
-	# ВАЖНО: Очищаем инвентарь ПЕРЕД загрузкой сцены!
-	if Inventory:
-		Inventory.clear_all()
-		print("🗑️ Инвентарь очищен перед рестартом")
-	
-	if Global and Global.has_method("reset_artifacts"):
-		Global.reset_artifacts()
-	
 	restart_requested.emit()
-	get_tree().change_scene_to_file("res://scenes/levels/level1.tscn")
 
 
 func _input(event):

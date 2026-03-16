@@ -5,10 +5,10 @@ const SPELL_PREFIX: String = "Bringer-of-Death_Spell_"
 const SPELL_FRAME_COUNT: int = 16
 
 @export var animation_name: StringName = &"spell"
-@export var impact_frame: int = 9
+@export var tracking_end_frame: int = 7
+@export var impact_frame: int = 8
 @export var strike_spacing: float = 56.0
 @export var impact_radius: float = 32.0
-@export var impact_linger_time: float = 0.16
 
 var target: Node2D = null
 var damage_amount: int = 3
@@ -19,10 +19,12 @@ var impact_applied: bool = false
 var strike_offsets: Array[Vector2] = []
 var hit_target_ids: Dictionary = {}
 var impact_center_position: Vector2 = Vector2.ZERO
-var linger_time_remaining: float = 0.0
 var impact_started: bool = false
 var all_strikes_finished: bool = false
 var completion_handled: bool = false
+var tracking_locked: bool = false
+var initial_visual_y: float = 0.0
+var initial_impact_y: float = 0.0
 
 @onready var template_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
@@ -60,8 +62,7 @@ func setup_spell0(
 	visual_center_position: Vector2,
 	impact_center: Vector2,
 	spacing: float,
-	hit_radius: float,
-	linger_time: float
+	hit_radius: float
 ) -> void:
 	target = target_node
 	damage_amount = damage
@@ -70,9 +71,10 @@ func setup_spell0(
 	damage_source = source
 	global_position = visual_center_position
 	impact_center_position = impact_center
+	initial_visual_y = visual_center_position.y
+	initial_impact_y = impact_center.y
 	strike_spacing = spacing
 	impact_radius = hit_radius
-	impact_linger_time = maxf(0.0, linger_time)
 	strike_offsets = [
 		Vector2(-strike_spacing, 0.0),
 		Vector2.ZERO,
@@ -139,27 +141,27 @@ func _on_strike_frame_changed(strike_index: int) -> void:
 	var sprite: AnimatedSprite2D = _get_strike_sprite(strike_index)
 	if sprite == null:
 		return
+	_update_tracking_from_sprite(sprite)
 	if sprite.frame >= impact_frame:
 		_start_impact_window()
 
+
 func _process(delta: float) -> void:
-	if not impact_started or completion_handled:
+	if completion_handled:
 		return
-	if linger_time_remaining > 0.0:
-		linger_time_remaining = maxf(0.0, linger_time_remaining - delta)
-		_try_apply_impact()
-		if linger_time_remaining <= 0.0:
-			_finish_if_ready()
+	if not impact_started:
+		var tracking_sprite: AnimatedSprite2D = _get_tracking_sprite()
+		if tracking_sprite != null:
+			_update_tracking_from_sprite(tracking_sprite)
 
 
 func _start_impact_window() -> void:
 	if impact_started:
 		return
 	impact_started = true
-	linger_time_remaining = impact_linger_time
+	tracking_locked = true
 	_try_apply_impact()
-	if impact_linger_time <= 0.0:
-		_finish_if_ready()
+	_finish_if_ready()
 
 
 func _try_apply_impact() -> void:
@@ -178,7 +180,7 @@ func _try_apply_impact() -> void:
 		impact_applied = true
 		hit_target_ids[target_id] = true
 		if target_node.has_method("take_damage"):
-			target_node.take_damage(damage_amount, "magical", damage_source)
+			target_node.take_damage(damage_amount, "magical_unblockable", damage_source)
 
 		if target_node.has_method("apply_effect_template"):
 			target_node.apply_effect_template("apply_madness", {
@@ -229,8 +231,6 @@ func _finish_if_ready() -> void:
 		return
 	if not all_strikes_finished:
 		return
-	if impact_started and linger_time_remaining > 0.0:
-		return
 	completion_handled = true
 
 	if not impact_applied and CombatRuntimeLogger:
@@ -242,3 +242,24 @@ func _finish_if_ready() -> void:
 		})
 
 	queue_free()
+
+
+func _get_tracking_sprite() -> AnimatedSprite2D:
+	for sprite in strike_sprites:
+		if sprite != null and is_instance_valid(sprite):
+			return sprite
+	return null
+
+
+func _update_tracking_from_sprite(sprite: AnimatedSprite2D) -> void:
+	if sprite == null or tracking_locked:
+		return
+	if sprite.frame > tracking_end_frame:
+		tracking_locked = true
+		return
+	var target_node: Node2D = _resolve_target()
+	if target_node == null:
+		return
+	var tracked_x: float = target_node.global_position.x
+	global_position = Vector2(tracked_x, initial_visual_y)
+	impact_center_position = Vector2(tracked_x, initial_impact_y)

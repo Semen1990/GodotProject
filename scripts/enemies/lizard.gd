@@ -77,6 +77,7 @@ const ALERT_RUSH_SPEED_MULTIPLIER: float = 2.6
 const PLAYER_GUARD_FEEDBACK_TIME: float = 1.2
 const BACKSTAB_KNOCKDOWN_DEFAULT: float = 0.95
 const BACKSTAB_RECOVER_TIME: float = 0.65
+const SHIELD_RUSH_PUSHBACK_TIME: float = 0.22
 const ATTACK_HIT_FRAME: int = 3
 const FACING_DEADZONE_X: float = 12.0
 const NORMAL_ATTACK_HIT_TELL: float = 0.24
@@ -111,6 +112,8 @@ var is_active: bool = true
 var persistence: PersistenceComponent = null
 var has_engaged_player: bool = false
 var forced_stagger_timer: float = 0.0
+var shield_rush_pushback_timer: float = 0.0
+var shield_rush_pushback_velocity: float = 0.0
 var pressure_timer: float = 0.0
 var retreat_timer: float = 0.0
 var recover_timer: float = 0.0
@@ -150,6 +153,7 @@ var base_detection_radius: float = 0.0
 var last_damage_attempt_info: Dictionary = {}
 var _debug_last_detection_signature: String = ""
 var _debug_last_melee_signature: String = ""
+var _debug_last_shield_rush_signature: String = ""
 var melee_controller: EnemyMeleeController = null
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -414,6 +418,13 @@ func _physics_process(delta: float) -> void:
 		if forced_stagger_timer <= 0.0 and current_state == State.HURT:
 			_resolve_post_recover_state()
 
+	if shield_rush_pushback_timer > 0.0:
+		shield_rush_pushback_timer = maxf(0.0, shield_rush_pushback_timer - delta)
+	elif not is_zero_approx(shield_rush_pushback_velocity):
+		shield_rush_pushback_velocity = 0.0
+
+	_debug_log_shield_rush_state()
+
 	if current_state == State.ATTACK:
 		if heavy_attack_pause_active:
 			heavy_attack_pause_timer = maxf(0.0, heavy_attack_pause_timer - delta)
@@ -442,7 +453,10 @@ func _physics_process(delta: float) -> void:
 		State.RECOVER:
 			_process_recover()
 		State.HURT:
-			velocity.x = 0.0
+			if shield_rush_pushback_timer > 0.0:
+				velocity.x = shield_rush_pushback_velocity
+			else:
+				velocity.x = 0.0
 		State.KNOCKDOWN:
 			velocity.x = 0.0
 		State.DEAD:
@@ -953,6 +967,8 @@ func _on_detection_entered(body: Node2D) -> void:
 		pending_post_combo_exit = PostComboExit.NONE
 		if _is_knockdown_locked():
 			return
+		if current_state == State.HURT and (forced_stagger_timer > 0.0 or shield_rush_pushback_timer > 0.0):
+			return
 		_change_state(State.CHASE)
 
 
@@ -1336,6 +1352,8 @@ func apply_short_stagger(duration: float = 0.45, attacker_x: float = 0.0) -> voi
 	parry_phase = ParryPhase.NONE
 	parry_timer = 0.0
 	parry_visual_cue_shown = false
+	shield_rush_pushback_timer = 0.0
+	shield_rush_pushback_velocity = 0.0
 	_set_parry_indicator_visible(false)
 	if attacker_x != 0.0 and animated_sprite:
 		animated_sprite.flip_h = attacker_x < global_position.x
@@ -1343,6 +1361,42 @@ func apply_short_stagger(duration: float = 0.45, attacker_x: float = 0.0) -> voi
 		_change_state(State.HURT)
 	else:
 		_play_anim("hurt")
+
+
+func apply_shield_rush_opening_stagger(duration: float = 0.18, attacker_x: float = 0.0) -> void:
+	if not is_alive or current_state == State.DEAD or current_state == State.KNOCKDOWN:
+		return
+	forced_stagger_timer = maxf(forced_stagger_timer, duration)
+	combo_hits_remaining = 0
+	combo_continuation_pending = false
+	queued_counter_combo = false
+	queued_counter_is_heavy = false
+	queued_counter_popup = false
+	pending_post_combo_exit = PostComboExit.NONE
+	combo_chain_timer = 0.0
+	parry_phase = ParryPhase.NONE
+	parry_timer = 0.0
+	parry_visual_cue_shown = false
+	can_attack = false
+	attack_cooldown = maxf(attack_cooldown, duration)
+	shield_rush_pushback_timer = 0.0
+	shield_rush_pushback_velocity = 0.0
+	_set_parry_indicator_visible(false)
+	if attacker_x != 0.0 and animated_sprite:
+		animated_sprite.flip_h = attacker_x < global_position.x
+	if current_state != State.HURT:
+		_change_state(State.HURT)
+	else:
+		_play_anim("hurt")
+	if CombatRuntimeLogger:
+		CombatRuntimeLogger.log_event("shield_rush", name, "opening_applied", {
+			"duration": duration,
+			"attacker_x": attacker_x,
+			"state": _state_to_string(current_state),
+			"forced_stagger_timer": forced_stagger_timer,
+			"attack_cooldown": attack_cooldown,
+			"position": global_position,
+		})
 
 
 func apply_backstab_knockdown(duration: float = BACKSTAB_KNOCKDOWN_DEFAULT, attacker_x: float = 0.0) -> void:
@@ -1386,9 +1440,86 @@ func show_player_guard_feedback(duration: float = PLAYER_GUARD_FEEDBACK_TIME) ->
 	parry_timer = 0.0
 	can_attack = false
 	attack_cooldown = maxf(attack_cooldown, duration * 0.9)
+	shield_rush_pushback_timer = 0.0
+	shield_rush_pushback_velocity = 0.0
 	_show_combat_popup("✦ ✦ ✦", Color(1.0, 0.95, 0.55, 1.0), maxf(1.0, duration))
 	use_hurt_recover_pose = true
 	_enter_recover(duration, true)
+
+
+func apply_shield_rush_impact(duration: float = PLAYER_GUARD_FEEDBACK_TIME, pushback: float = 96.0, attacker_x: float = 0.0) -> void:
+	if not is_alive or current_state == State.DEAD or current_state == State.KNOCKDOWN:
+		return
+
+	forced_stagger_timer = maxf(forced_stagger_timer, duration)
+	combo_hits_remaining = 0
+	combo_continuation_pending = false
+	queued_counter_combo = false
+	queued_counter_is_heavy = false
+	queued_counter_popup = false
+	pending_post_combo_exit = PostComboExit.NONE
+	combo_chain_timer = 0.0
+	parry_phase = ParryPhase.NONE
+	parry_timer = 0.0
+	parry_visual_cue_shown = false
+	can_attack = false
+	attack_cooldown = maxf(attack_cooldown, duration * 0.9)
+	_set_parry_indicator_visible(false)
+
+	var push_dir: float = 0.0
+	if attacker_x != 0.0:
+		push_dir = signf(global_position.x - attacker_x)
+		if animated_sprite:
+			animated_sprite.flip_h = attacker_x < global_position.x
+	if push_dir == 0.0:
+		push_dir = -1.0 if animated_sprite and animated_sprite.flip_h else 1.0
+
+	shield_rush_pushback_timer = SHIELD_RUSH_PUSHBACK_TIME
+	shield_rush_pushback_velocity = push_dir * absf(pushback)
+	_show_combat_popup("✦ ✦ ✦", Color(1.0, 0.95, 0.55, 1.0), maxf(1.0, duration))
+
+	if current_state != State.HURT:
+		_change_state(State.HURT)
+	else:
+		_play_anim("hurt")
+	if CombatRuntimeLogger:
+		CombatRuntimeLogger.log_event("shield_rush", name, "impact_applied", {
+			"duration": duration,
+			"pushback": pushback,
+			"push_dir": push_dir,
+			"pushback_timer": shield_rush_pushback_timer,
+			"pushback_velocity": shield_rush_pushback_velocity,
+			"state": _state_to_string(current_state),
+			"forced_stagger_timer": forced_stagger_timer,
+			"attack_cooldown": attack_cooldown,
+			"position": global_position,
+		})
+
+
+func _debug_log_shield_rush_state() -> void:
+	if CombatRuntimeLogger == null:
+		return
+	var signature: String = "%s|%.2f|%.1f|%.1f|%s" % [
+		_state_to_string(current_state),
+		shield_rush_pushback_timer,
+		shield_rush_pushback_velocity,
+		velocity.x,
+		str(can_attack),
+	]
+	if signature == _debug_last_shield_rush_signature:
+		return
+	_debug_last_shield_rush_signature = signature
+	if shield_rush_pushback_timer <= 0.0 and is_zero_approx(shield_rush_pushback_velocity) and current_state != State.HURT:
+		return
+	CombatRuntimeLogger.log_event("shield_rush", name, "pushback_state", {
+		"state": _state_to_string(current_state),
+		"pushback_timer": shield_rush_pushback_timer,
+		"pushback_velocity": shield_rush_pushback_velocity,
+		"velocity_x": velocity.x,
+		"forced_stagger_timer": forced_stagger_timer,
+		"can_attack": can_attack,
+		"position": global_position,
+	})
 func _has_animation(anim_name: String) -> bool:
 	return animated_sprite != null and animated_sprite.sprite_frames != null and animated_sprite.sprite_frames.has_animation(anim_name)
 

@@ -1,6 +1,8 @@
 extends CanvasLayer
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+
 	var panel = $Panel
 	if not panel:
 		return
@@ -31,6 +33,7 @@ func _input(event: InputEvent) -> void:
 			close_pause_menu()
 		else:
 			open_pause_menu()
+		get_viewport().set_input_as_handled()
 
 func open_pause_menu() -> void:
 	show()

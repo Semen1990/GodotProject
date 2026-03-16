@@ -25,7 +25,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F8:
+	if event is InputEventKey and event.pressed and not event.echo and (event.keycode == KEY_F7 or event.keycode == KEY_F8):
 		visible = not visible
 
 
@@ -87,7 +87,7 @@ func _refresh_text() -> void:
 
 	var state_name: String = String(STATE_NAMES.get(int(enemy.get("current_state")), "UNKNOWN"))
 	text = "\n".join([
-		"F8: hide/show cyclops debug",
+		"F7: hide/show cyclops debug",
 		"Enemy floor cur/eff: %d / %d" % [enemy_current_floor, enemy_effective_floor],
 		"Player floor cur/eff: %d / %d" % [player_current_floor, player_effective_floor],
 		"Floor delta: %d" % floor_delta,
