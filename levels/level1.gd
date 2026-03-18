@@ -1,4 +1,4 @@
-extends "res://levels/gameplay_level_base.gd"
+extends GameplayLevelBase
 
 
 func _setup_level_after_player_spawn() -> void:

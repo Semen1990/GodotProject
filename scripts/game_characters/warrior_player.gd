@@ -1,6 +1,7 @@
 extends "res://scripts/game_characters/base_game_character.gd"
 
 const WarriorShieldRushVfxScript := preload("res://scripts/vfx/warrior_shield_rush_vfx.gd")
+const WarriorDefenseVfxScript := preload("res://scripts/vfx/warrior_defense_vfx.gd")
 
 enum BlockPhase { NONE, STARTUP, ACTIVE, RECOVERY }
 enum CrouchPhase { NONE, STARTUP, ACTIVE, RECOVERY }
@@ -34,8 +35,11 @@ const BLOCK_COOLDOWN_TIME: float = 2.0
 const BLOCK_EARLY_GRACE_TIME: float = 0.08
 const BLOCK_SUCCESS_STUN_DURATION: float = 1.6
 const BLOCK_SOUND_PATH: String = "res://sounds/players/block1-shield.mp3"
+const SWORD_HIT_SOUND_PATH: String = "res://sounds/playersounds/kick.wav"
 const BLOCK_ICON_PATH: String = "res://assets/Spell/shield_defence.png"
 const SHIELD_RUSH_ICON_PATH: String = "res://assets/Spell/Icon43.png"
+const BULWARK_BARRIER_ICON_PATH: String = "res://assets/Spell/Bulwark Barrier.png"
+const LAST_BASTION_ICON_PATH: String = "res://assets/Spell/Last Bastion.png"
 const BLOCK_LIGHT_THRESHOLD: int = 4
 const BLOCK_MEDIUM_THRESHOLD: int = 6
 
@@ -55,6 +59,17 @@ const SHIELD_RUSH_FINAL_PUSHBACK: float = 180.0
 const SHIELD_RUSH_IMPACT_OFFSET_Y: float = -18.0
 const ENEMY_COLLISION_LAYER_BIT: int = 4
 
+const BULWARK_BARRIER_STRENGTH: int = 18
+const BULWARK_BARRIER_DURATION: float = 10.0
+const BULWARK_BARRIER_COOLDOWN_TIME: float = 16.0
+
+const LAST_BASTION_DURATION: float = 5.0
+const LAST_BASTION_COOLDOWN_TIME: float = 24.0
+const LAST_BASTION_ARMOR_BONUS: int = 5
+const LAST_BASTION_MAGIC_DAMAGE_REDUCTION: float = 0.60
+
+const DEFENSIVE_GCD_TIME: float = 0.45
+
 const LIGHT_HIT_LOCK: float = 0.08
 const HURT_LOCK: float = 0.20
 const HEAVY_LOCK: float = 0.56
@@ -70,6 +85,7 @@ var base_armor: int = 2
 var equipment_armor_bonus: int = 0
 var potion_armor_bonus: int = 0
 var block_armor_bonus: int = 0
+var last_bastion_armor_bonus: int = 0
 
 var block_cooldown: float = 0.0
 var block_phase: int = BlockPhase.NONE
@@ -92,7 +108,16 @@ var default_collision_layer: int = 0
 var slide_enemy_collision_disabled: bool = false
 var last_incoming_attacker: Node2D = null
 var block_audio_player: AudioStreamPlayer2D = null
+var sword_hit_audio_player: AudioStreamPlayer2D = null
 var shield_rush_vfx: Node = null
+var defense_vfx: Node = null
+
+var bulwark_barrier_cooldown: float = 0.0
+var bulwark_barrier_timer: float = 0.0
+var bulwark_barrier_strength: int = 0
+var last_bastion_cooldown: float = 0.0
+var last_bastion_timer: float = 0.0
+var defensive_gcd_timer: float = 0.0
 
 var reaction_lock_timer: float = 0.0
 var current_hit_reaction: int = HitReaction.LIGHT
@@ -131,7 +156,9 @@ func _ready() -> void:
 	default_collision_mask = collision_mask
 	default_collision_layer = collision_layer
 	_setup_block_audio()
+	_setup_sword_hit_audio()
 	_setup_shield_rush_vfx()
+	_setup_defense_vfx()
 	_configure_skill_ui()
 	_update_block_cooldown_ui()
 
@@ -148,6 +175,25 @@ func _physics_process(delta: float) -> void:
 
 	if shield_rush_cooldown > 0.0:
 		shield_rush_cooldown = maxf(0.0, shield_rush_cooldown - delta)
+
+	if bulwark_barrier_cooldown > 0.0:
+		bulwark_barrier_cooldown = maxf(0.0, bulwark_barrier_cooldown - delta)
+
+	if last_bastion_cooldown > 0.0:
+		last_bastion_cooldown = maxf(0.0, last_bastion_cooldown - delta)
+
+	if defensive_gcd_timer > 0.0:
+		defensive_gcd_timer = maxf(0.0, defensive_gcd_timer - delta)
+
+	if bulwark_barrier_timer > 0.0:
+		bulwark_barrier_timer = maxf(0.0, bulwark_barrier_timer - delta)
+		if bulwark_barrier_timer <= 0.0:
+			_deactivate_bulwark_barrier(false)
+
+	if last_bastion_timer > 0.0:
+		last_bastion_timer = maxf(0.0, last_bastion_timer - delta)
+		if last_bastion_timer <= 0.0:
+			_deactivate_last_bastion()
 
 	if crouch_cooldown > 0.0:
 		crouch_cooldown = maxf(0.0, crouch_cooldown - delta)
@@ -183,6 +229,13 @@ func die():
 
 	_interrupt_warrior_actions_on_death()
 	super.die()
+
+
+func revive():
+	super.revive()
+	_update_block_cooldown_ui()
+	_refresh_armor_ui()
+	_update_barrier_ui()
 
 
 func handle_movement(delta: float) -> void:
@@ -304,6 +357,22 @@ func use_special_ability() -> void:
 	if block_phase != BlockPhase.NONE or block_cooldown > 0.0 or crouch_phase != CrouchPhase.NONE:
 		return
 	block()
+
+
+func use_ability_q() -> void:
+	if not _can_use_defensive_ability():
+		return
+	if bulwark_barrier_cooldown > 0.0 or _is_bulwark_barrier_active():
+		return
+	_activate_bulwark_barrier()
+
+
+func use_ability_r() -> void:
+	if not _can_use_defensive_ability():
+		return
+	if last_bastion_cooldown > 0.0 or _is_last_bastion_active():
+		return
+	_activate_last_bastion()
 
 
 func block() -> void:
@@ -441,9 +510,42 @@ func take_damage(amount: int, damage_type: String = "physical", source: String =
 	var final_damage: int = incoming_amount
 	if _is_magical_damage_type(damage_type):
 		final_damage -= int(armor * 0.5)
+		if _is_last_bastion_active():
+			final_damage = int(ceil(maxf(1.0, float(final_damage)) * (1.0 - LAST_BASTION_MAGIC_DAMAGE_REDUCTION)))
 	elif not _is_true_damage_type(damage_type):
 		final_damage -= armor
 	final_damage = max(1, final_damage)
+
+	var barrier_absorbed: int = 0
+	if _is_bulwark_barrier_active():
+		barrier_absorbed = mini(final_damage, bulwark_barrier_strength)
+		if barrier_absorbed > 0:
+			bulwark_barrier_strength = maxi(0, bulwark_barrier_strength - barrier_absorbed)
+			final_damage -= barrier_absorbed
+			var barrier_ratio: float = _get_bulwark_barrier_ratio()
+			if defense_vfx != null and defense_vfx.has_method("pulse_barrier_hit"):
+				defense_vfx.pulse_barrier_hit(barrier_ratio, bulwark_barrier_strength <= 0)
+			combat_action_performed.emit("bulwark_barrier_absorbed", {
+				"amount": barrier_absorbed,
+				"remaining_strength": bulwark_barrier_strength,
+				"source": source,
+				"damage_type": damage_type,
+			})
+			if CombatRuntimeLogger:
+				CombatRuntimeLogger.log_event("warrior_defense", character_name, "barrier_absorb", {
+					"source": source,
+					"damage_type": damage_type,
+					"absorbed": barrier_absorbed,
+					"remaining_strength": bulwark_barrier_strength,
+				})
+			if bulwark_barrier_strength <= 0:
+				_deactivate_bulwark_barrier(true)
+			else:
+				_update_bulwark_barrier_vfx()
+			_update_barrier_ui()
+
+	if final_damage <= 0:
+		return
 
 	current_health = max(0, current_health - final_damage)
 	if Global and Global.has_method("add_damage_taken"):
@@ -470,8 +572,10 @@ func take_damage(amount: int, damage_type: String = "physical", source: String =
 
 
 func recalculate_armor() -> void:
-	armor = warrior_base_armor + equipment_armor_bonus + potion_armor_bonus + block_armor_bonus
+	armor = warrior_base_armor + equipment_armor_bonus + potion_armor_bonus + block_armor_bonus + last_bastion_armor_bonus
 	base_armor = warrior_base_armor + equipment_armor_bonus
+	armor_changed.emit(armor)
+	_refresh_armor_ui()
 
 
 func set_equipment_armor(bonus: int) -> void:
@@ -543,6 +647,7 @@ func _update_shield_rush_state(delta: float) -> void:
 	slide_iframe_active = false
 	var elapsed: float = SHIELD_RUSH_TOTAL_DURATION - shield_rush_timer
 	var current_visual_frame: int = _get_shield_rush_visual_frame_index(elapsed)
+	var final_impact_frame: int = _get_shield_rush_final_impact_frame_index()
 
 	if shield_rush_phase == ShieldRushPhase.APPROACH and elapsed >= SHIELD_RUSH_TRAVEL_TIME:
 		shield_rush_phase = ShieldRushPhase.FOLLOW_THROUGH
@@ -551,7 +656,7 @@ func _update_shield_rush_state(delta: float) -> void:
 			_apply_shield_rush_micro_stagger()
 			shield_rush_micro_stagger_applied = true
 
-	if not shield_rush_final_stun_applied and current_visual_frame >= SHIELD_RUSH_FINAL_IMPACT_VISUAL_FRAME - 1:
+	if not shield_rush_final_stun_applied and current_visual_frame >= final_impact_frame:
 		_apply_shield_rush_final_stun()
 		shield_rush_final_stun_applied = true
 
@@ -601,6 +706,12 @@ func _interrupt_warrior_actions_on_death() -> void:
 
 	if shield_rush_vfx != null and shield_rush_vfx.has_method("stop_rush"):
 		shield_rush_vfx.stop_rush()
+
+	_deactivate_bulwark_barrier(false)
+	_deactivate_last_bastion()
+	defensive_gcd_timer = 0.0
+
+
 func _set_enemy_slide_collision_enabled(enabled: bool) -> void:
 	if enabled:
 		if slide_enemy_collision_disabled:
@@ -740,6 +851,7 @@ func _deal_damage_to_enemies() -> void:
 
 	var attack_dir: float = _get_facing_direction()
 	var attack_range: float = ATTACK_RANGE if _current_attack_animation == "attack" else COUNTER_ATTACK_RANGE
+	_play_sword_hit_sound()
 	for body in _get_attack_hit_targets(attack_dir, attack_range):
 		if body == null or body == self or not body.has_method("take_damage"):
 			continue
@@ -920,9 +1032,24 @@ func _setup_block_audio() -> void:
 	add_child(block_audio_player)
 
 
+func _setup_sword_hit_audio() -> void:
+	if not ResourceLoader.exists(SWORD_HIT_SOUND_PATH):
+		return
+	sword_hit_audio_player = AudioStreamPlayer2D.new()
+	sword_hit_audio_player.name = "SwordHitAudio"
+	sword_hit_audio_player.stream = load(SWORD_HIT_SOUND_PATH)
+	sword_hit_audio_player.max_distance = 1200.0
+	add_child(sword_hit_audio_player)
+
+
 func _play_block_success_sound() -> void:
 	if block_audio_player and block_audio_player.stream:
 		block_audio_player.play()
+
+
+func _play_sword_hit_sound() -> void:
+	if sword_hit_audio_player and sword_hit_audio_player.stream:
+		sword_hit_audio_player.play()
 
 
 func _update_shield_rush_visual() -> void:
@@ -971,6 +1098,27 @@ func _get_shield_rush_visual_frame_index(elapsed: float, frame_count: int = -1) 
 	var follow_elapsed: float = elapsed - SHIELD_RUSH_TRAVEL_TIME
 	var follow_normalized: float = clampf(follow_elapsed / maxf(SHIELD_RUSH_FOLLOW_THROUGH_TIME, 0.001), 0.0, 0.999)
 	return mini(frame_count - 1, travel_frames + int(floor(follow_normalized * follow_through_frames)))
+
+
+func _get_shield_rush_final_impact_frame_index() -> int:
+	if not animated_sprite or animated_sprite.sprite_frames == null:
+		return 0
+
+	var anim_name: String = _get_shield_rush_animation_name()
+	if not animated_sprite.sprite_frames.has_animation(anim_name):
+		return 0
+
+	var frame_count: int = animated_sprite.sprite_frames.get_frame_count(anim_name)
+	if frame_count <= 0:
+		return 0
+
+	if anim_name == "The jerk" and frame_count >= SHIELD_RUSH_TOTAL_VISUAL_FRAMES:
+		return SHIELD_RUSH_FINAL_IMPACT_VISUAL_FRAME - 1
+
+	# Fallback animations can have fewer frames than the 13-frame rush spec.
+	# In that case, fire the shield impact on the penultimate frame and leave
+	# the last frame as the pure finish frame.
+	return maxi(0, frame_count - 2)
 
 
 func _stop_sneak() -> void:
@@ -1076,6 +1224,16 @@ func _update_block_cooldown_ui() -> void:
 			slide_percent = 1.0 - (shield_rush_cooldown / SHIELD_RUSH_COOLDOWN_TIME)
 		Global.game_ui.update_ability_cooldown("slide", clampf(slide_percent, 0.0, 1.0))
 
+		var barrier_percent: float = 1.0
+		if bulwark_barrier_cooldown > 0.0:
+			barrier_percent = 1.0 - (bulwark_barrier_cooldown / BULWARK_BARRIER_COOLDOWN_TIME)
+		Global.game_ui.update_ability_cooldown("ability_q", clampf(barrier_percent, 0.0, 1.0))
+
+		var bastion_percent: float = 1.0
+		if last_bastion_cooldown > 0.0:
+			bastion_percent = 1.0 - (last_bastion_cooldown / LAST_BASTION_COOLDOWN_TIME)
+		Global.game_ui.update_ability_cooldown("ability_r", clampf(bastion_percent, 0.0, 1.0))
+
 
 func _configure_skill_ui() -> void:
 	if not Global or not Global.game_ui:
@@ -1083,6 +1241,14 @@ func _configure_skill_ui() -> void:
 	if Global.game_ui.has_method("configure_ability_slot"):
 		Global.game_ui.configure_ability_slot("block", "Блок", "E", BLOCK_ICON_PATH)
 		Global.game_ui.configure_ability_slot("slide", "Рывок", "ПКМ", SHIELD_RUSH_ICON_PATH)
+		Global.game_ui.configure_ability_slot("ability_q", "Барьер", "Q", BULWARK_BARRIER_ICON_PATH)
+		Global.game_ui.configure_ability_slot("ability_r", "Бастион", "R", LAST_BASTION_ICON_PATH)
+
+
+func refresh_skill_ui() -> void:
+	_configure_skill_ui()
+	_update_block_cooldown_ui()
+	_update_barrier_ui()
 
 
 func apply_artifacts() -> void:
@@ -1100,6 +1266,18 @@ func _setup_shield_rush_vfx() -> void:
 	add_child(shield_rush_vfx)
 	if shield_rush_vfx.has_method("setup"):
 		shield_rush_vfx.setup(self)
+
+
+func _setup_defense_vfx() -> void:
+	if defense_vfx != null:
+		return
+	defense_vfx = WarriorDefenseVfxScript.new()
+	if defense_vfx == null:
+		return
+	defense_vfx.name = "DefenseVfx"
+	add_child(defense_vfx)
+	if defense_vfx.has_method("setup"):
+		defense_vfx.setup(self)
 
 
 func _update_shield_rush_movement(delta: float) -> void:
@@ -1225,3 +1403,118 @@ func _get_shield_rush_animation_name() -> String:
 		if animated_sprite.sprite_frames.has_animation("The jerk"):
 			return "The jerk"
 	return "sliding"
+
+
+func _can_use_defensive_ability() -> bool:
+	if is_dead or is_inventory_open or is_using_consumable:
+		return false
+	if is_sliding or is_casting or is_hurt or reaction_lock_timer > 0.0:
+		return false
+	if defensive_gcd_timer > 0.0:
+		return false
+	return true
+
+
+func _activate_bulwark_barrier() -> void:
+	bulwark_barrier_strength = BULWARK_BARRIER_STRENGTH
+	bulwark_barrier_timer = BULWARK_BARRIER_DURATION
+	bulwark_barrier_cooldown = BULWARK_BARRIER_COOLDOWN_TIME
+	defensive_gcd_timer = DEFENSIVE_GCD_TIME
+	_update_barrier_ui()
+	_update_bulwark_barrier_vfx()
+	if defense_vfx != null and defense_vfx.has_method("activate_barrier"):
+		defense_vfx.activate_barrier(_get_bulwark_barrier_ratio())
+	combat_action_performed.emit("bulwark_barrier_started", {
+		"strength": BULWARK_BARRIER_STRENGTH,
+		"duration": BULWARK_BARRIER_DURATION,
+		"cooldown": BULWARK_BARRIER_COOLDOWN_TIME,
+	})
+	if CombatRuntimeLogger:
+		CombatRuntimeLogger.log_event("warrior_defense", character_name, "barrier_start", {
+			"strength": BULWARK_BARRIER_STRENGTH,
+			"duration": BULWARK_BARRIER_DURATION,
+		})
+	_update_block_cooldown_ui()
+
+
+func _deactivate_bulwark_barrier(broken: bool = false) -> void:
+	var was_active: bool = _is_bulwark_barrier_active()
+	bulwark_barrier_timer = 0.0
+	bulwark_barrier_strength = 0
+	_update_barrier_ui()
+	if defense_vfx != null and defense_vfx.has_method("deactivate_barrier"):
+		defense_vfx.deactivate_barrier(broken)
+	if was_active:
+		combat_action_performed.emit("bulwark_barrier_ended", {
+			"broken": broken,
+		})
+		if CombatRuntimeLogger:
+			CombatRuntimeLogger.log_event("warrior_defense", character_name, "barrier_end", {
+				"broken": broken,
+			})
+	_update_block_cooldown_ui()
+
+
+func _activate_last_bastion() -> void:
+	last_bastion_timer = LAST_BASTION_DURATION
+	last_bastion_cooldown = LAST_BASTION_COOLDOWN_TIME
+	defensive_gcd_timer = DEFENSIVE_GCD_TIME
+	last_bastion_armor_bonus = LAST_BASTION_ARMOR_BONUS
+	recalculate_armor()
+	if defense_vfx != null and defense_vfx.has_method("activate_bastion"):
+		defense_vfx.activate_bastion()
+	combat_action_performed.emit("last_bastion_started", {
+		"duration": LAST_BASTION_DURATION,
+		"armor_bonus": LAST_BASTION_ARMOR_BONUS,
+		"magic_reduction": LAST_BASTION_MAGIC_DAMAGE_REDUCTION,
+		"cooldown": LAST_BASTION_COOLDOWN_TIME,
+	})
+	if CombatRuntimeLogger:
+		CombatRuntimeLogger.log_event("warrior_defense", character_name, "bastion_start", {
+			"duration": LAST_BASTION_DURATION,
+			"armor_bonus": LAST_BASTION_ARMOR_BONUS,
+			"magic_reduction": LAST_BASTION_MAGIC_DAMAGE_REDUCTION,
+		})
+	_update_block_cooldown_ui()
+
+
+func _deactivate_last_bastion() -> void:
+	var was_active: bool = _is_last_bastion_active()
+	last_bastion_timer = 0.0
+	last_bastion_armor_bonus = 0
+	recalculate_armor()
+	if defense_vfx != null and defense_vfx.has_method("deactivate_bastion"):
+		defense_vfx.deactivate_bastion()
+	if was_active:
+		combat_action_performed.emit("last_bastion_ended", {})
+		if CombatRuntimeLogger:
+			CombatRuntimeLogger.log_event("warrior_defense", character_name, "bastion_end", {})
+	_update_block_cooldown_ui()
+
+
+func _is_bulwark_barrier_active() -> bool:
+	return bulwark_barrier_timer > 0.0 and bulwark_barrier_strength > 0
+
+
+func _is_last_bastion_active() -> bool:
+	return last_bastion_timer > 0.0 and last_bastion_armor_bonus > 0
+
+
+func _get_bulwark_barrier_ratio() -> float:
+	return clampf(float(bulwark_barrier_strength) / float(maxi(BULWARK_BARRIER_STRENGTH, 1)), 0.0, 1.0)
+
+
+func _update_bulwark_barrier_vfx() -> void:
+	if defense_vfx != null and defense_vfx.has_method("update_barrier_strength"):
+		defense_vfx.update_barrier_strength(_get_bulwark_barrier_ratio())
+	_update_barrier_ui()
+
+
+func _refresh_armor_ui() -> void:
+	if Global and Global.game_ui and Global.game_ui.has_method("update_armor"):
+		Global.game_ui.update_armor(armor)
+
+
+func _update_barrier_ui() -> void:
+	if Global and Global.game_ui and Global.game_ui.has_method("update_barrier"):
+		Global.game_ui.update_barrier(bulwark_barrier_strength, BULWARK_BARRIER_STRENGTH)

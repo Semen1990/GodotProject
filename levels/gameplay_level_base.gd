@@ -1,8 +1,13 @@
+class_name GameplayLevelBase
 extends Node2D
 
 const DEFAULT_GAME_UI_SCENE := preload("res://scenes/Ui/game_ui.tscn")
-const DEATH_MENU_SCENE := preload("res://scenes/ui/death_menu.tscn")
+const DEATH_MENU_SCENE := preload("res://scenes/Ui/death_menu.tscn")
 const CONSUMABLE_USE_CONTROLLER_SCRIPT := preload("res://scripts/consumables/consumable_use_controller.gd")
+const WARRIOR_PLAYER_SCENE := preload("res://scenes/game_characters/warrior_player.tscn")
+const BERSERK_PLAYER_SCENE := preload("res://scenes/game_characters/berserk_player.tscn")
+const PALADIN_PLAYER_SCENE := preload("res://scenes/game_characters/paladin_player.tscn")
+const ROGUE_PLAYER_SCENE := preload("res://scenes/game_characters/rogue_player.tscn")
 const DEFAULT_ITEM_DATABASE_PATH := "res://data/items/demo_database.tres"
 const ARMOR_POLL_INTERVAL := 0.1
 
@@ -22,6 +27,13 @@ const POTION_MOVE_SPEED_MULTIPLIER := 0.35
 const ENCOUNTER_ENEMY_GROUP := "encounter_enemy"
 const ENCOUNTER_ZONE_FALLBACK_DISTANCE := 320.0
 const MADNESS_RELIEF_ON_NEW_ROOM := 1
+
+const PLAYER_CHARACTER_SCENES := {
+	"warrior": WARRIOR_PLAYER_SCENE,
+	"berserk": BERSERK_PLAYER_SCENE,
+	"paladin": PALADIN_PLAYER_SCENE,
+	"rogue": ROGUE_PLAYER_SCENE,
+}
 
 @export var item_database_path: String = DEFAULT_ITEM_DATABASE_PATH
 @export var camera_limit_left: int = 0
@@ -480,15 +492,13 @@ func _spawn_selected_character() -> void:
 	if not Global.selected_character:
 		Global.selected_character = "warrior"
 
-	var character_scene_path: String = Global.character_player_scenes.get(Global.selected_character, "")
-	if character_scene_path.is_empty() or not ResourceLoader.exists(character_scene_path):
-		push_error("GameplayLevelBase: character scene not found for '%s'" % Global.selected_character)
-		_create_fallback_player()
-		return
+	var character_scene_path: String = ""
+	if Global and Global.character_player_scenes is Dictionary:
+		character_scene_path = String(Global.character_player_scenes.get(Global.selected_character, ""))
 
-	var character_scene: PackedScene = load(character_scene_path) as PackedScene
+	var character_scene: PackedScene = PLAYER_CHARACTER_SCENES.get(Global.selected_character, null) as PackedScene
 	if character_scene == null:
-		push_error("GameplayLevelBase: failed to load character scene '%s'" % character_scene_path)
+		push_error("GameplayLevelBase: character scene not preloaded for '%s'" % Global.selected_character)
 		_create_fallback_player()
 		return
 
@@ -845,6 +855,9 @@ func _setup_ui() -> void:
 
 	_setup_armor_watch()
 
+	if current_player.has_method("refresh_skill_ui"):
+		current_player.call_deferred("refresh_skill_ui")
+
 
 func _setup_armor_watch() -> void:
 	last_armor_value = current_player.armor if current_player and "armor" in current_player else 0
@@ -1023,10 +1036,12 @@ func _apply_potion_effect(effect: Dictionary) -> void:
 
 		InventoryEnums.EffectType.BUFF_ARMOR:
 			potion_bonus_armor += int(value)
-			if "armor" in current_player:
+			if current_player.has_method("add_potion_armor"):
+				current_player.add_potion_armor(int(value))
+			elif "armor" in current_player:
 				current_player.armor = base_player_armor + equipment_bonus_armor + potion_bonus_armor
-				if game_ui and game_ui.has_method("update_armor"):
-					game_ui.update_armor(current_player.armor)
+			if game_ui and game_ui.has_method("update_armor"):
+				game_ui.update_armor(current_player.armor)
 
 		InventoryEnums.EffectType.BUFF_DAMAGE:
 			potion_bonus_damage += int(value)
@@ -1095,7 +1110,10 @@ func _on_equipment_stats_changed(stats: Dictionary) -> void:
 				game_ui.update_mana(current_player.current_mana)
 
 	if "armor" in current_player:
-		current_player.armor = base_player_armor + equipment_bonus_armor + potion_bonus_armor
+		if current_player.has_method("set_equipment_armor"):
+			current_player.set_equipment_armor(equipment_bonus_armor)
+		else:
+			current_player.armor = base_player_armor + equipment_bonus_armor + potion_bonus_armor
 		if game_ui and game_ui.has_method("update_armor"):
 			game_ui.update_armor(current_player.armor)
 
@@ -1312,7 +1330,10 @@ func _clear_level_potion_effects() -> void:
 		return
 
 	if "armor" in current_player:
-		current_player.armor = base_player_armor + equipment_bonus_armor
+		if current_player.has_method("reset_potion_bonuses"):
+			current_player.reset_potion_bonuses()
+		else:
+			current_player.armor = base_player_armor + equipment_bonus_armor
 		if game_ui and game_ui.has_method("update_armor"):
 			game_ui.update_armor(current_player.armor)
 

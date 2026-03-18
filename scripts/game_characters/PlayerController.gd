@@ -8,6 +8,8 @@ extends Node
 # УПРАВЛЕНИЕ:
 # - ЛКМ/attack: Атака
 # - E (special_ability): Спецспособность класса (блок у воина, лечение у паладина...)
+# - Q (ability_q): Первая активная способность класса
+# - R (ability_r): Вторая активная способность класса
 # - F (interact): Взаимодействие (сундуки, предметы) - обрабатывается в других скриптах
 
 @export var character: CharacterBody2D
@@ -48,6 +50,16 @@ func _input(event):
 	if InputMap.has_action("heal") and event.is_action_pressed("heal"):
 		if character.has_method("heal"):
 			character.heal()
+
+	# === АКТИВНАЯ СПОСОБНОСТЬ 1 (Q) ===
+	if InputMap.has_action("ability_q") and event.is_action_pressed("ability_q"):
+		if character.has_method("use_ability_q"):
+			character.use_ability_q()
+
+	# === АКТИВНАЯ СПОСОБНОСТЬ 2 (R) ===
+	if InputMap.has_action("ability_r") and event.is_action_pressed("ability_r"):
+		if character.has_method("use_ability_r"):
+			character.use_ability_r()
 	
 	# === ПОДКАТ (SHIFT) - для разбойника ===
 	if InputMap.has_action("slide") and event.is_action_pressed("slide"):

@@ -16,6 +16,8 @@ enum KeyColor {
 
 const PERSISTENCE_COMPONENT := preload("res://scripts/persistence/persistence_component.gd")
 const LOCK_SPRITESHEET_PATH := "res://assets/Lock/Lock-spritesheet.png"
+const DOOR_OPEN_SOUND := preload("res://sounds/common sounds/door_open.wav")
+const DOOR_CLOSE_SOUND := preload("res://sounds/common sounds/door_close.wav")
 const LOCK_ANIMATION_NAME := &"unlock"
 const LOCK_COLUMNS := 5
 const LOCK_ROWS := 5
@@ -59,6 +61,7 @@ var persistence: PersistenceComponent = null
 var lock_emblem: AnimatedSprite2D = null
 var lock_glow: AnimatedSprite2D = null
 var lock_hide_token: int = 0
+var audio_player: AudioStreamPlayer2D = null
 
 var is_open: bool = false
 var is_unlocking: bool = false
@@ -76,6 +79,7 @@ func _ready() -> void:
 	_ensure_lock_visual_nodes()
 	_configure_lock_visual_nodes()
 	_apply_lock_layout()
+	_ensure_audio_player()
 
 	_ensure_persistence()
 	_configure_persistence()
@@ -190,6 +194,17 @@ func _configure_lock_visual_nodes() -> void:
 	lock_emblem.frame = 0
 
 	_apply_lock_color()
+
+
+func _ensure_audio_player() -> void:
+	audio_player = get_node_or_null("DoorAudio") as AudioStreamPlayer2D
+	if audio_player != null:
+		return
+
+	audio_player = AudioStreamPlayer2D.new()
+	audio_player.name = "DoorAudio"
+	audio_player.max_distance = 1400.0
+	add_child(audio_player)
 
 
 func _build_lock_sprite_frames() -> SpriteFrames:
@@ -377,6 +392,7 @@ func _start_door_open_sequence() -> void:
 	if not is_open:
 		return
 
+	_play_door_sound(DOOR_OPEN_SOUND)
 	is_opening = _has_open_animation()
 	can_enter_open_door = not is_opening
 	_play_door_animation()
@@ -518,6 +534,7 @@ func _save_player_stats_direct() -> void:
 
 
 func _show_locked_feedback() -> void:
+	_play_door_sound(DOOR_CLOSE_SOUND)
 	if animated_sprite:
 		var original: Color = animated_sprite.modulate
 		animated_sprite.modulate = Color(1.5, 0.5, 0.5)
@@ -535,3 +552,10 @@ func _show_locked_feedback() -> void:
 		if hint_label:
 			hint_label.remove_theme_color_override("font_color")
 			_update_hint_text()
+
+
+func _play_door_sound(stream: AudioStream) -> void:
+	if audio_player == null or stream == null:
+		return
+	audio_player.stream = stream
+	audio_player.play()

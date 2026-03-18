@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://cvg82dgx155c"
+path="res://.godot/imported/1. Abyssal Tyrant (Loop).ogg-e0bf3ea792141459fc7e6b706f6c3baf.oggvorbisstr"
+
+[deps]
+
+source_file="res://sounds/music/1. Abyssal Tyrant (Loop).ogg"
+dest_files=["res://.godot/imported/1. Abyssal Tyrant (Loop).ogg-e0bf3ea792141459fc7e6b706f6c3baf.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

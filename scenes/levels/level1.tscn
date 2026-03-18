@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://jfgqord38fwh"]
+[gd_scene load_steps=16 format=3 uid="uid://jfgqord38fwh"]
 
 [ext_resource type="Texture2D" uid="uid://bllirlnx660jk" path="res://assets/background/Lucid_Origin_pixel_art_game_background_sidescrolling_view_cast_2 (14).jpg" id="1_4tcl0"]
 [ext_resource type="Script" uid="uid://qh00mxbtl2vr" path="res://levels/level1.gd" id="1_dd0lh"]
@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" path="res://prefabs/tools/FloorGuides.tscn" id="13_floor_guides"]
 [ext_resource type="PackedScene" path="res://prefabs/tools/CombatFloorArea.tscn" id="14_combat_floor_area"]
 [ext_resource type="Script" path="res://scripts/debug/level1_lizard_overlay.gd" id="15_lizard_overlay"]
+[ext_resource type="AudioStream" path="res://sounds/music/Level1.wav" id="16_level_music"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dd0lh"]
 texture = ExtResource("2_dd0lh")
@@ -578,6 +579,11 @@ size = Vector2(760, 420)
 
 [node name="Level1" type="Node2D" unique_id=1946340499]
 script = ExtResource("1_dd0lh")
+
+[node name="MusicPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("16_level_music")
+volume_db = -8.0
+autoplay = true
 
 [node name="Background" type="Node2D" parent="." unique_id=1368140211]
 

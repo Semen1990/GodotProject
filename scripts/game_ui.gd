@@ -10,6 +10,7 @@ var health_container: VBoxContainer
 var health_bg: ColorRect
 var health_trail_bar: ProgressBar
 var health_bar: ProgressBar
+var health_barrier_bar: ProgressBar
 var health_value_label: Label
 
 var armor_container: HBoxContainer
@@ -92,6 +93,7 @@ func _clear_runtime_ui() -> void:
 	health_bg = null
 	health_trail_bar = null
 	health_bar = null
+	health_barrier_bar = null
 	health_value_label = null
 	armor_container = null
 	armor_value_label = null
@@ -175,6 +177,18 @@ func _create_health_ui() -> void:
 	health_bar.add_theme_stylebox_override("background", transparent_bg_style)
 
 	bar_container.add_child(health_bar)
+
+	health_barrier_bar = ProgressBar.new()
+	health_barrier_bar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	health_barrier_bar.max_value = 12
+	health_barrier_bar.value = 0
+	health_barrier_bar.show_percentage = false
+	var barrier_fill_style: StyleBoxFlat = StyleBoxFlat.new()
+	barrier_fill_style.bg_color = Color(0.24, 0.66, 1.0, 0.82)
+	barrier_fill_style.set_corner_radius_all(4)
+	health_barrier_bar.add_theme_stylebox_override("fill", barrier_fill_style)
+	health_barrier_bar.add_theme_stylebox_override("background", transparent_bg_style)
+	bar_container.add_child(health_barrier_bar)
 
 	health_value_label = Label.new()
 	health_value_label.text = "12 / 12"
@@ -260,8 +274,20 @@ func _create_ability_ui() -> void:
 
 	var block_slot: Dictionary = _create_ability_slot("block", "Блок", "E", "res://assets/Spell/shield_defence.png")
 	var slide_slot: Dictionary = _create_ability_slot("slide", "Подкат", "ПКМ", "res://assets/Spell/Icon43.png")
+	var ability_q_slot: Dictionary = _create_ability_slot("ability_q", "", "", "")
+	var ability_r_slot: Dictionary = _create_ability_slot("ability_r", "", "", "")
 	ability_slots["block"] = block_slot
 	ability_slots["slide"] = slide_slot
+	ability_slots["ability_q"] = ability_q_slot
+	ability_slots["ability_r"] = ability_r_slot
+
+	var q_root: VBoxContainer = ability_q_slot.get("root")
+	if q_root != null:
+		q_root.visible = false
+
+	var r_root: VBoxContainer = ability_r_slot.get("root")
+	if r_root != null:
+		r_root.visible = false
 
 	# Совместимость со старым кодом, который знает только один слот способности.
 	ability_button = block_slot.get("icon")
@@ -419,6 +445,9 @@ func setup_character_ui(stats: Dictionary) -> void:
 	if health_bar:
 		health_bar.max_value = current_stats["max_health"]
 		health_bar.value = current_stats["health"]
+	if health_barrier_bar:
+		health_barrier_bar.max_value = current_stats["max_health"]
+		health_barrier_bar.value = 0
 	if health_trail_bar:
 		health_trail_bar.max_value = current_stats["max_health"]
 		health_trail_bar.value = current_stats["health"]
@@ -470,6 +499,9 @@ func update_health(new_health: int) -> void:
 	current_stats["health"] = clamp(new_health, 0, current_stats["max_health"])
 	if health_bar:
 		health_bar.value = current_stats["health"]
+	if health_barrier_bar:
+		health_barrier_bar.max_value = current_stats["max_health"]
+		health_barrier_bar.value = clamp(health_barrier_bar.value, 0.0, float(current_stats["health"]))
 	if health_trail_bar:
 		if current_stats["health"] >= previous_health or current_stats["health"] >= health_trail_bar.value:
 			health_trail_bar.value = current_stats["health"]
@@ -485,6 +517,9 @@ func update_max_health(new_max: int) -> void:
 	if health_bar:
 		health_bar.max_value = current_stats["max_health"]
 		health_bar.value = clamp(health_bar.value, 0.0, float(current_stats["max_health"]))
+	if health_barrier_bar:
+		health_barrier_bar.max_value = current_stats["max_health"]
+		health_barrier_bar.value = clamp(health_barrier_bar.value, 0.0, float(current_stats["max_health"]))
 	if health_trail_bar:
 		health_trail_bar.max_value = current_stats["max_health"]
 		health_trail_bar.value = clamp(health_trail_bar.value, 0.0, float(current_stats["max_health"]))
@@ -533,6 +568,20 @@ func update_armor(new_armor: int) -> void:
 		armor_container.visible = current_stats["armor"] > 0
 	if armor_value_label:
 		armor_value_label.text = str(current_stats["armor"])
+
+
+func update_barrier(current_strength: int, max_strength: int = -1) -> void:
+	if health_barrier_bar == null:
+		return
+
+	var max_health_value: int = int(current_stats.get("max_health", 1))
+	if max_strength <= 0:
+		max_strength = max_health_value
+
+	var displayed_value: int = clampi(current_strength, 0, max_health_value)
+	displayed_value = mini(displayed_value, int(current_stats.get("health", max_health_value)))
+	health_barrier_bar.max_value = max_health_value
+	health_barrier_bar.value = displayed_value
 
 
 func update_madness(new_stacks: int, max_stacks: int = -1) -> void:
@@ -693,6 +742,7 @@ func configure_ability_slot(id: String, title_text: String = "", hotkey_text: St
 	var icon: TextureRect = slot.get("icon")
 	var title: Label = slot.get("title")
 	var hotkey: Label = slot.get("hotkey")
+	var root: VBoxContainer = slot.get("root")
 
 	if icon != null and not icon_path.is_empty() and ResourceLoader.exists(icon_path):
 		icon.texture = load(icon_path)
@@ -700,6 +750,8 @@ func configure_ability_slot(id: String, title_text: String = "", hotkey_text: St
 		title.text = title_text
 	if hotkey != null and not hotkey_text.is_empty():
 		hotkey.text = hotkey_text
+	if root != null and (not title_text.is_empty() or not hotkey_text.is_empty() or not icon_path.is_empty()):
+		root.visible = true
 
 
 func update_ability_cooldown(id: String, percent: float) -> void:

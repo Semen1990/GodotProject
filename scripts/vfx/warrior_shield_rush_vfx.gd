@@ -1,35 +1,24 @@
 extends Node2D
 
-const TRAIL_COLOR: Color = Color(0.82, 0.93, 1.0, 0.74)
-const TRAIL_OUTER_COLOR: Color = Color(0.34, 0.56, 0.92, 0.36)
 const IMPACT_COLOR: Color = Color(1.0, 0.95, 0.68, 0.95)
 const HEAVY_IMPACT_COLOR: Color = Color(1.0, 0.88, 0.48, 1.0)
-const PARTICLE_SPAWN_INTERVAL: float = 0.025
-const PARTICLE_LIFETIME_MIN: float = 0.18
-const PARTICLE_LIFETIME_MAX: float = 0.28
-const PARTICLE_SCALE_MIN: float = 0.62
-const PARTICLE_SCALE_MAX: float = 1.08
-const PARTICLE_SPEED_MIN: float = 44.0
-const PARTICLE_SPEED_MAX: float = 96.0
-const PARTICLE_MAX_COUNT: int = 72
-
-const TRAIL_ROWS := [
-	{
-		"y_offset": 92.0,
-		"spawn_back_min": 20.0,
-		"spawn_back_max": 38.0,
-		"lifetime_scale": 3.1,
-		"speed_scale": 0.28,
-		"scale": Vector2(1.65, 1.0),
-	},
-]
+const RUSH_TRAIL_TEXTURE_PATH := "res://assets/warrior/effects/The jerk.png"
+const RUSH_TRAIL_HFRAMES := 11
+const RUSH_TRAIL_VFRAMES := 9
+const RUSH_TRAIL_FRAME_COUNT := 11
+const RUSH_TRAIL_ROW_FROM_TOP := 7 # 8th row from the top.
+const RUSH_TRAIL_FPS := 20.0
+const RUSH_TRAIL_GROUND_OFFSET_Y := 92.0
+const RUSH_TRAIL_SCALE_Y := 1.8
+const RUSH_TRAIL_MIN_SCALE_X := 1.15
+const RUSH_TRAIL_PADDING := 22.0
 
 var owner_body: Node2D = null
 var rush_active: bool = false
 var rush_facing: float = 1.0
-var particle_spawn_timer: float = 0.0
-var particles_root: Node2D = null
-var trail_particles: Array[Dictionary] = []
+var rush_start_position: Vector2 = Vector2.ZERO
+var rush_frame_timer: float = 0.0
+var trail_sprite: Sprite2D = null
 
 
 func setup(body: Node2D) -> Node:
@@ -48,11 +37,18 @@ func start_rush(_world_position: Vector2, facing_direction: float) -> void:
 	rush_facing = signf(facing_direction)
 	if rush_facing == 0.0:
 		rush_facing = 1.0
-	particle_spawn_timer = 0.0
+	rush_start_position = _get_ground_anchor_position()
+	rush_frame_timer = 0.0
+	if trail_sprite != null:
+		trail_sprite.visible = true
+		trail_sprite.frame = _get_row_start_frame()
+		_apply_trail_visual(rush_start_position, rush_start_position)
 
 
 func stop_rush() -> void:
 	rush_active = false
+	if trail_sprite != null:
+		trail_sprite.visible = false
 
 
 func emit_contact_flash(world_position: Vector2, heavy: bool) -> void:
@@ -95,103 +91,68 @@ func _process(delta: float) -> void:
 	global_position = Vector2.ZERO
 
 	if rush_active:
-		particle_spawn_timer -= delta
-		while particle_spawn_timer <= 0.0:
-			_spawn_trail_rows()
-			particle_spawn_timer += PARTICLE_SPAWN_INTERVAL
-
-	_update_particles(delta)
+		_update_trail_animation(delta)
+		var current_position: Vector2 = _get_ground_anchor_position()
+		_apply_trail_visual(rush_start_position, current_position)
+	elif trail_sprite != null and trail_sprite.visible:
+		trail_sprite.visible = false
 
 
 func _build_runtime_nodes() -> void:
-	particles_root = Node2D.new()
-	particles_root.top_level = true
-	add_child(particles_root)
+	trail_sprite = Sprite2D.new()
+	var trail_texture := load(RUSH_TRAIL_TEXTURE_PATH) as Texture2D
+	trail_sprite.texture = trail_texture
+	trail_sprite.hframes = RUSH_TRAIL_HFRAMES
+	trail_sprite.vframes = RUSH_TRAIL_VFRAMES
+	trail_sprite.centered = true
+	trail_sprite.visible = false
+	trail_sprite.z_as_relative = false
+	trail_sprite.z_index = 105
+	trail_sprite.top_level = true
+	trail_sprite.modulate = Color(0.98, 0.84, 1.0, 0.95)
+	var material := CanvasItemMaterial.new()
+	material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	trail_sprite.material = material
+	add_child(trail_sprite)
 
 
-func _spawn_trail_rows() -> void:
-	for row_data in TRAIL_ROWS:
-		_spawn_trail_particle(row_data)
+func _get_ground_anchor_position() -> Vector2:
+	if owner_body == null:
+		return Vector2.ZERO
+	return owner_body.global_position + Vector2(0.0, RUSH_TRAIL_GROUND_OFFSET_Y)
 
 
-func _spawn_trail_particle(row_data: Dictionary) -> void:
-	if particles_root == null or owner_body == null:
+func _update_trail_animation(delta: float) -> void:
+	if trail_sprite == null:
 		return
 
-	while trail_particles.size() >= PARTICLE_MAX_COUNT:
-		_remove_oldest_particle()
-
-	var particle_node := Polygon2D.new()
-	particle_node.polygon = PackedVector2Array([
-		Vector2(10.0, 0.0),
-		Vector2(2.0, -6.0),
-		Vector2(-8.0, 0.0),
-		Vector2(2.0, 6.0),
-	])
-	particle_node.color = TRAIL_COLOR
-	var spawn_back_min: float = float(row_data.get("spawn_back_min", 18.0))
-	var spawn_back_max: float = float(row_data.get("spawn_back_max", 34.0))
-	var y_offset: float = float(row_data.get("y_offset", -18.0))
-	particle_node.global_position = owner_body.global_position + Vector2(
-		-rush_facing * randf_range(spawn_back_min, spawn_back_max),
-		y_offset + randf_range(-3.0, 3.0)
-	)
-	particle_node.rotation = randf_range(-0.28, 0.28)
-	var row_scale: Vector2 = row_data.get("scale", Vector2.ONE)
-	particle_node.scale = row_scale * randf_range(PARTICLE_SCALE_MIN, PARTICLE_SCALE_MAX)
-	particles_root.add_child(particle_node)
-
-	var speed_scale: float = float(row_data.get("speed_scale", 1.0))
-	var drift := Vector2(
-		-rush_facing * randf_range(PARTICLE_SPEED_MIN, PARTICLE_SPEED_MAX) * speed_scale,
-		randf_range(-10.0, 10.0)
-	)
-	var lifetime_scale: float = float(row_data.get("lifetime_scale", 1.0))
-	trail_particles.append({
-		"node": particle_node,
-		"velocity": drift,
-		"lifetime": randf_range(PARTICLE_LIFETIME_MIN, PARTICLE_LIFETIME_MAX) * lifetime_scale,
-		"age": 0.0,
-		"base_scale": particle_node.scale,
-		"base_color": TRAIL_OUTER_COLOR.lerp(TRAIL_COLOR, randf()),
-	})
+	rush_frame_timer += delta
+	var frame_duration: float = 1.0 / RUSH_TRAIL_FPS
+	var row_start: int = _get_row_start_frame()
+	while rush_frame_timer >= frame_duration:
+		rush_frame_timer -= frame_duration
+		var current_column: int = trail_sprite.frame - row_start
+		current_column = posmod(current_column + 1, RUSH_TRAIL_FRAME_COUNT)
+		trail_sprite.frame = row_start + current_column
 
 
-func _update_particles(delta: float) -> void:
-	for index in range(trail_particles.size() - 1, -1, -1):
-		var particle: Dictionary = trail_particles[index]
-		var node: Polygon2D = particle.get("node") as Polygon2D
-		if node == null or not is_instance_valid(node):
-			trail_particles.remove_at(index)
-			continue
-
-		var age: float = float(particle.get("age", 0.0)) + delta
-		var lifetime: float = maxf(float(particle.get("lifetime", PARTICLE_LIFETIME_MAX)), 0.001)
-		var normalized: float = clampf(age / lifetime, 0.0, 1.0)
-		var velocity: Vector2 = particle.get("velocity", Vector2.ZERO)
-		var base_scale: Vector2 = particle.get("base_scale", Vector2.ONE)
-		var base_color: Color = particle.get("base_color", TRAIL_COLOR)
-
-		node.global_position += velocity * delta
-		node.rotation += delta * 5.4 * signf(velocity.x if velocity.x != 0.0 else rush_facing)
-		node.scale = base_scale.lerp(base_scale * 1.48, normalized)
-		node.color = Color(base_color.r, base_color.g, base_color.b, lerpf(base_color.a, 0.0, normalized))
-
-		particle["age"] = age
-		trail_particles[index] = particle
-
-		if normalized >= 1.0:
-			node.queue_free()
-			trail_particles.remove_at(index)
-
-
-func _remove_oldest_particle() -> void:
-	if trail_particles.is_empty():
+func _apply_trail_visual(from_position: Vector2, to_position: Vector2) -> void:
+	if trail_sprite == null:
 		return
-	var particle: Dictionary = trail_particles.pop_back()
-	var node: Polygon2D = particle.get("node") as Polygon2D
-	if node != null and is_instance_valid(node):
-		node.queue_free()
+
+	var trail_vector: Vector2 = to_position - from_position
+	var distance: float = absf(trail_vector.x)
+	var midpoint: Vector2 = from_position.lerp(to_position, 0.5)
+	trail_sprite.global_position = midpoint
+	trail_sprite.flip_h = rush_facing < 0.0
+
+	var frame_width: float = 64.0
+	var scale_x: float = maxf((distance + RUSH_TRAIL_PADDING) / frame_width, RUSH_TRAIL_MIN_SCALE_X)
+	trail_sprite.scale = Vector2(scale_x, RUSH_TRAIL_SCALE_Y)
+
+
+func _get_row_start_frame() -> int:
+	return RUSH_TRAIL_ROW_FROM_TOP * RUSH_TRAIL_HFRAMES
 
 
 func _make_ring_points(segments: int, radius: float) -> PackedVector2Array:
